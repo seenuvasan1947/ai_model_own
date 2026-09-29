@@ -8,6 +8,37 @@ v6 fixes this. **Nothing about the architecture changes.** The stack, the memory
 
 ---
 
+## Post-Design Correction — Facts Removed from Layer 1 Training
+
+The first draft of v6's synthetic data included world-facts (capitals of
+countries, planets in the solar system, "the sky is blue", "cats have four
+legs"). That was wrong and got caught before training: **specific facts do
+not belong in Layer 1's frozen weights**, because Layer 2/3 exists precisely
+to hold facts that can be added, updated, and forgotten over time. Baking
+facts into Layer 1 defeats the whole continual-learning design.
+
+Removed from Layer 1 training corpus:
+- Capitals of countries
+- Planet names / solar-system facts
+- Color-of-specific-things ("the sky is blue", "grass is green")
+- Animal-attribute facts ("a cat has four legs")
+
+Kept in Layer 1 training corpus (these are LANGUAGE, not facts):
+- Number words and arithmetic syntax ("three plus four is seven")
+- Day/month names and their canonical order (closed vocabulary, like tense forms)
+- Opposites as closed English word-pairs (hot/cold, big/small, ...)
+- Grammar patterns (tense, negation, questions, plurals, sentence shapes)
+
+Corresponding change to evaluation:
+- `data/eval_qa.jsonl` — language-competence questions ONLY (arithmetic,
+  opposites, day/month sequence, plurals). Tests Layer 1 alone.
+- `data/eval_qa_continual.jsonl` — world-fact questions PAIRED with the fact
+  to feed into memory first via `continual_read.py`. Run by `eval_qa_continual.py`.
+  Tests the memory stack.
+
+Rule of thumb applied throughout: **if the answer could change per-user
+or per-time-period, it belongs in Layer 2/3, not Layer 1.**
+
 ## What Changed vs. v5
 
 ### 1. Layer 1 training corpus — domain-neutral English master, not literary specialist

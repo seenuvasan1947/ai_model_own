@@ -1,545 +1,503 @@
-Q: What color is the sky?
-A: The sky is blue.
-
 Q: What is two plus two?
 A: Two plus two is four.
-
-Q: What do fish live in?
-A: Fish live in water.
-
-Q: What sound does a dog make?
-A: A dog barks.
-
-Q: What season comes after winter?
-A: Spring comes after winter.
-
-Q: What do you use to write on paper?
-A: You use a pen or a pencil to write on paper.
-
-Q: What is the opposite of hot?
-A: The opposite of hot is cold.
-
-Q: What do bees make?
-A: Bees make honey.
-
-Q: What is the capital of France?
-A: The capital of France is Paris.
-
-Q: How many days are in a week?
-A: There are seven days in a week.
-
-Q: What do plants need to grow?
-A: Plants need water, sunlight, and soil to grow.
-
-Q: What is the largest ocean on Earth?
-A: The largest ocean on Earth is the Pacific Ocean.
-
-Q: What do you call a baby dog?
-A: A baby dog is called a puppy.
-
-Q: What is three times three?
-A: Three times three is nine.
-
-Q: What do you wear on your feet?
-A: You wear shoes on your feet.
-
-Q: What is the opposite of up?
-A: The opposite of up is down.
-
-Q: What do birds use to fly?
-A: Birds use their wings to fly.
-
-Q: What is the first month of the year?
-A: January is the first month of the year.
-
-Q: What do you use to see in the dark?
-A: You use a flashlight or a lamp to see in the dark.
-
-Q: What is the opposite of big?
-A: The opposite of big is small.
-
-Q: What animal says meow?
-A: A cat says meow.
-
-Q: How many legs does a spider have?
-A: A spider has eight legs.
-
-Q: What do you call frozen water?
-A: Frozen water is called ice.
-
-Q: What is the opposite of fast?
-A: The opposite of fast is slow.
-
-Q: What shape has three sides?
-A: A triangle has three sides.
-
-Q: What do you use to cut paper?
-A: You use scissors to cut paper.
-
-Q: What is the opposite of happy?
-A: The opposite of happy is sad.
-
-Q: What do cows give us?
-A: Cows give us milk.
-
-Q: What is the color of grass?
-A: The color of grass is green.
-
-Q: What do you call the star closest to Earth?
-A: The star closest to Earth is the Sun.
-
-Q: What is ten minus four?
-A: Ten minus four is six.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is two plus three?
-A: Two plus three is five.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is two plus one?
-A: Two plus one is three.
-
-Q: What is two minus zero?
-A: Two minus zero is two.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is two minus one?
-A: Two minus one is one.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is four minus two?
-A: Four minus two is two.
-
-Q: What is four plus four?
-A: Four plus four is eight.
-
-Q: What is eleven minus zero?
-A: Eleven minus zero is eleven.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is zero plus two?
-A: Zero plus two is two.
-
-Q: What is four plus two?
-A: Four plus two is six.
-
-Q: What is three plus zero?
-A: Three plus zero is three.
-
-Q: What is six plus one?
-A: Six plus one is seven.
-
-Q: What is eight minus eight?
-A: Eight minus eight is zero.
-
-Q: What is eleven minus one?
-A: Eleven minus one is ten.
-
-Q: What is zero plus zero?
-A: Zero plus zero is zero.
-
-Q: What is twelve minus ten?
-A: Twelve minus ten is two.
-
-Q: What is three minus zero?
-A: Three minus zero is three.
-
-Q: What is four minus one?
-A: Four minus one is three.
-
-Q: What is seven minus zero?
-A: Seven minus zero is seven.
-
-Q: What is nine minus seven?
-A: Nine minus seven is two.
-
-Q: What is zero plus five?
-A: Zero plus five is five.
-
-Q: What is three plus three?
-A: Three plus three is six.
-
-Q: What is ten minus seven?
-A: Ten minus seven is three.
-
-Q: What is twelve minus three?
-A: Twelve minus three is nine.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is the opposite of fast?
-A: The opposite of fast is slow.
-
-Q: What is the opposite of hard?
-A: The opposite of hard is soft.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is five plus three?
-A: Five plus three is eight.
-
-Q: What is the capital of Kenya?
-A: The capital of Kenya is Nairobi.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is one plus zero?
-A: One plus zero is one.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is twelve minus four?
-A: Twelve minus four is eight.
-
-Q: What is four minus four?
-A: Four minus four is zero.
-
-Q: What is five plus two?
-A: Five plus two is seven.
-
-Q: What is the opposite of weak?
-A: The opposite of weak is strong.
-
-Q: What is twelve minus twelve?
-A: Twelve minus twelve is zero.
-
-Q: What is ten minus ten?
-A: Ten minus ten is zero.
-
-Q: What is five plus one?
-A: Five plus one is six.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is six plus four?
-A: Six plus four is ten.
 
 Q: What is three plus five?
 A: Three plus five is eight.
 
-Q: What is twelve minus two?
-A: Twelve minus two is ten.
+Q: What is ten minus four?
+A: Ten minus four is six.
 
-Q: What is three minus three?
-A: Three minus three is zero.
+Q: What is three times three?
+A: Three times three is nine.
 
-Q: What is three plus three?
-A: Three plus three is six.
+Q: How many days are in a week?
+A: There are seven days in a week.
 
-Q: What is nine minus five?
-A: Nine minus five is four.
+Q: How many months are in a year?
+A: There are twelve months in a year.
 
-Q: What is three plus six?
-A: Three plus six is nine.
+Q: What is the first month of the year?
+A: January is the first month of the year.
 
-Q: What is eleven minus one?
-A: Eleven minus one is ten.
+Q: What is the last month of the year?
+A: December is the last month of the year.
 
-Q: What is the opposite of open?
-A: The opposite of open is closed.
+Q: What day comes after Monday?
+A: The day after Monday is Tuesday.
 
-Q: What is one plus one?
-A: One plus one is two.
+Q: What day comes before Friday?
+A: The day before Friday is Thursday.
 
-Q: What is the opposite of old?
-A: The opposite of old is new.
+Q: What is the opposite of hot?
+A: The opposite of hot is cold.
 
-Q: What is eleven minus two?
-A: Eleven minus two is nine.
+Q: What is the opposite of big?
+A: The opposite of big is small.
 
-Q: What is the opposite of empty?
-A: The opposite of empty is full.
+Q: What is the opposite of up?
+A: The opposite of up is down.
 
-Q: What is one plus one?
-A: One plus one is two.
+Q: What is the opposite of fast?
+A: The opposite of fast is slow.
 
-Q: What is one plus one?
-A: One plus one is two.
+Q: What is the opposite of happy?
+A: The opposite of happy is sad.
 
-Q: What is six minus three?
-A: Six minus three is three.
+Q: What is the opposite of tall?
+A: The opposite of tall is short.
 
-Q: What is two plus six?
-A: Two plus six is eight.
+Q: What is the number after nine?
+A: The number after nine is ten.
 
-Q: What is five plus five?
-A: Five plus five is ten.
+Q: What is the number before eight?
+A: The number before eight is seven.
 
-Q: What is zero plus five?
-A: Zero plus five is five.
+Q: What is the plural of mouse?
+A: The plural of mouse is mice.
 
-Q: What is four plus six?
-A: Four plus six is ten.
+Q: What is the plural of child?
+A: The plural of child is children.
 
-Q: What is two plus four?
-A: Two plus four is six.
+Q: What is the singular of feet?
+A: The singular of feet is foot.
 
-Q: What is four plus one?
-A: Four plus one is five.
+Q: What is three plus four?
+A: Three plus four is seven.
 
-Q: What is ten minus five?
-A: Ten minus five is five.
+Q: What is five plus zero?
+A: Five plus zero is five.
 
-Q: What is ten minus eight?
-A: Ten minus eight is two.
-
-Q: What is nine minus six?
-A: Nine minus six is three.
-
-Q: What is six plus one?
-A: Six plus one is seven.
-
-Q: What is zero plus zero?
-A: Zero plus zero is zero.
-
-Q: What is eleven minus ten?
-A: Eleven minus ten is one.
-
-Q: What is two plus one?
-A: Two plus one is three.
-
-Q: What is four plus two?
-A: Four plus two is six.
+Q: What is the opposite of happy?
+A: The opposite of happy is sad.
 
 Q: What is eight minus six?
 A: Eight minus six is two.
 
-Q: What is six minus two?
-A: Six minus two is four.
+Q: What is three plus one?
+A: Three plus one is four.
 
-Q: What is four plus zero?
-A: Four plus zero is four.
+Q: What is nine minus one?
+A: Nine minus one is eight.
 
-Q: What is the opposite of slow?
-A: The opposite of slow is fast.
+Q: What is six plus three?
+A: Six plus three is nine.
 
-Q: What is the opposite of light?
-A: The opposite of light is dark.
+Q: What is six minus three?
+A: Six minus three is three.
+
+Q: What is two plus four?
+A: Two plus four is six.
 
 Q: What is one plus two?
 A: One plus two is three.
 
-Q: What is three plus three?
-A: Three plus three is six.
-
-Q: What is three plus one?
-A: Three plus one is four.
-
-Q: What is five plus zero?
-A: Five plus zero is five.
-
-Q: What is eight minus three?
-A: Eight minus three is five.
-
-Q: What is ten minus nine?
-A: Ten minus nine is one.
-
-Q: What is five plus four?
-A: Five plus four is nine.
-
-Q: What is two plus three?
-A: Two plus three is five.
-
-Q: What is eleven minus six?
-A: Eleven minus six is five.
+Q: What is eight minus two?
+A: Eight minus two is six.
 
 Q: What is eleven minus seven?
 A: Eleven minus seven is four.
 
-Q: What is zero minus zero?
-A: Zero minus zero is zero.
-
-Q: What is the opposite of sad?
-A: The opposite of sad is happy.
-
-Q: What is three plus zero?
-A: Three plus zero is three.
-
-Q: What is five plus zero?
-A: Five plus zero is five.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What is six plus five?
-A: Six plus five is eleven.
-
 Q: What is six plus four?
 A: Six plus four is ten.
 
-Q: What is five plus one?
-A: Five plus one is six.
-
-Q: What is seven minus four?
-A: Seven minus four is three.
-
-Q: What is eight minus zero?
-A: Eight minus zero is eight.
-
-Q: What is one plus one?
-A: One plus one is two.
-
-Q: What is three plus six?
-A: Three plus six is nine.
-
-Q: What is three plus three?
-A: Three plus three is six.
-
-Q: What is the opposite of small?
-A: The opposite of small is big.
-
-Q: What is two plus four?
-A: Two plus four is six.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is five plus four?
-A: Five plus four is nine.
-
-Q: What is seven minus three?
-A: Seven minus three is four.
-
-Q: What is the capital of Italy?
-A: The capital of Italy is Rome.
-
-Q: What month comes after September?
-A: The month after September is October.
-
-Q: What is zero plus five?
-A: Zero plus five is five.
-
-Q: What is six plus one?
-A: Six plus one is seven.
-
-Q: What is four minus two?
-A: Four minus two is two.
-
-Q: What is twelve minus six?
-A: Twelve minus six is six.
-
-Q: What is two plus four?
-A: Two plus four is six.
-
-Q: What is two plus four?
-A: Two plus four is six.
-
-Q: What is eleven minus four?
-A: Eleven minus four is seven.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is twelve minus two?
-A: Twelve minus two is ten.
-
-Q: What is zero plus five?
-A: Zero plus five is five.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is nine minus nine?
-A: Nine minus nine is zero.
-
-Q: What is eleven minus ten?
-A: Eleven minus ten is one.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is zero plus two?
-A: Zero plus two is two.
-
-Q: What is ten minus two?
-A: Ten minus two is eight.
-
-Q: What is four minus two?
-A: Four minus two is two.
-
-Q: What is eleven minus three?
-A: Eleven minus three is eight.
-
-Q: What is eight minus five?
-A: Eight minus five is three.
-
-Q: What is eleven minus eleven?
-A: Eleven minus eleven is zero.
-
-Q: What is ten minus two?
-A: Ten minus two is eight.
-
-Q: What is one plus zero?
-A: One plus zero is one.
-
-Q: What is three plus zero?
-A: Three plus zero is three.
-
-Q: What is zero plus four?
-A: Zero plus four is four.
-
-Q: What is zero plus zero?
-A: Zero plus zero is zero.
-
-Q: What is two plus three?
-A: Two plus three is five.
-
-Q: What is the opposite of full?
-A: The opposite of full is empty.
+Q: What day comes after Wednesday?
+A: The day after Wednesday is Thursday.
 
 Q: What is two plus five?
 A: Two plus five is seven.
 
-Q: What is nine minus eight?
-A: Nine minus eight is one.
+Q: What is one plus four?
+A: One plus four is five.
 
-Q: What is one plus five?
-A: One plus five is six.
+Q: What is two plus three?
+A: Two plus three is five.
+
+Q: What is five plus zero?
+A: Five plus zero is five.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is ten minus eight?
+A: Ten minus eight is two.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is zero plus four?
+A: Zero plus four is four.
+
+Q: What is ten minus two?
+A: Ten minus two is eight.
+
+Q: What is nine minus nine?
+A: Nine minus nine is zero.
+
+Q: What is two plus five?
+A: Two plus five is seven.
+
+Q: What is three plus three?
+A: Three plus three is six.
+
+Q: What is four minus four?
+A: Four minus four is zero.
+
+Q: What is six minus one?
+A: Six minus one is five.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What month comes after January?
+A: The month after January is February.
+
+Q: What is five plus two?
+A: Five plus two is seven.
+
+Q: What is six minus one?
+A: Six minus one is five.
+
+Q: What is twelve minus twelve?
+A: Twelve minus twelve is zero.
+
+Q: What is zero plus five?
+A: Zero plus five is five.
+
+Q: What is three plus four?
+A: Three plus four is seven.
+
+Q: What month comes after September?
+A: The month after September is October.
 
 Q: What is zero plus three?
 A: Zero plus three is three.
 
-Q: What is the opposite of dry?
-A: The opposite of dry is wet.
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is the opposite of cold?
+A: The opposite of cold is hot.
+
+Q: What is two plus three?
+A: Two plus three is five.
+
+Q: What is four plus zero?
+A: Four plus zero is four.
+
+Q: What month comes after June?
+A: The month after June is July.
+
+Q: What is four minus two?
+A: Four minus two is two.
+
+Q: What is twelve minus two?
+A: Twelve minus two is ten.
+
+Q: What is the opposite of down?
+A: The opposite of down is up.
+
+Q: What is five plus one?
+A: Five plus one is six.
+
+Q: What is two plus three?
+A: Two plus three is five.
+
+Q: What is ten minus three?
+A: Ten minus three is seven.
+
+Q: What is eleven minus eight?
+A: Eleven minus eight is three.
+
+Q: What is the plural of tree?
+A: The plural of tree is trees.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is three plus three?
+A: Three plus three is six.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is six plus one?
+A: Six plus one is seven.
+
+Q: What is eleven minus eleven?
+A: Eleven minus eleven is zero.
+
+Q: What is four plus two?
+A: Four plus two is six.
+
+Q: What is eleven minus eight?
+A: Eleven minus eight is three.
+
+Q: What is six plus six?
+A: Six plus six is twelve.
+
+Q: What is twelve minus three?
+A: Twelve minus three is nine.
+
+Q: What is eight minus two?
+A: Eight minus two is six.
+
+Q: What is ten minus three?
+A: Ten minus three is seven.
+
+Q: What is three plus zero?
+A: Three plus zero is three.
+
+Q: What is one plus five?
+A: One plus five is six.
+
+Q: What is the plural of woman?
+A: The plural of woman is women.
+
+Q: What is eleven minus eleven?
+A: Eleven minus eleven is zero.
+
+Q: What is one plus five?
+A: One plus five is six.
+
+Q: What is eleven minus five?
+A: Eleven minus five is six.
+
+Q: What is eleven minus seven?
+A: Eleven minus seven is four.
 
 Q: What is five minus four?
 A: Five minus four is one.
 
+Q: What is eleven minus one?
+A: Eleven minus one is ten.
+
+Q: What is the opposite of new?
+A: The opposite of new is old.
+
+Q: What is three plus three?
+A: Three plus three is six.
+
+Q: What is eleven minus eight?
+A: Eleven minus eight is three.
+
+Q: What is zero plus five?
+A: Zero plus five is five.
+
+Q: What is one minus zero?
+A: One minus zero is one.
+
+Q: What is six minus three?
+A: Six minus three is three.
+
+Q: What is eleven minus eight?
+A: Eleven minus eight is three.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is four minus three?
+A: Four minus three is one.
+
+Q: What is one plus six?
+A: One plus six is seven.
+
+Q: What is three plus six?
+A: Three plus six is nine.
+
+Q: What is the opposite of wet?
+A: The opposite of wet is dry.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
 Q: What is two plus four?
 A: Two plus four is six.
 
-Q: What is four plus five?
-A: Four plus five is nine.
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is two plus four?
+A: Two plus four is six.
+
+Q: What is ten minus six?
+A: Ten minus six is four.
+
+Q: What is three plus three?
+A: Three plus three is six.
+
+Q: What is the opposite of sad?
+A: The opposite of sad is happy.
+
+Q: What is the plural of wolf?
+A: The plural of wolf is wolves.
+
+Q: What is the plural of baby?
+A: The plural of baby is babies.
+
+Q: What is the singular of books?
+A: The singular of books is book.
+
+Q: What is five minus four?
+A: Five minus four is one.
+
+Q: What is two minus two?
+A: Two minus two is zero.
+
+Q: What is the plural of box?
+A: The plural of box is boxes.
+
+Q: What is six plus two?
+A: Six plus two is eight.
+
+Q: What is two plus five?
+A: Two plus five is seven.
+
+Q: What is three plus zero?
+A: Three plus zero is three.
+
+Q: What day comes after Sunday?
+A: The day after Sunday is Monday.
+
+Q: What is six plus two?
+A: Six plus two is eight.
+
+Q: What is twelve minus five?
+A: Twelve minus five is seven.
+
+Q: What is nine minus five?
+A: Nine minus five is four.
+
+Q: What is four minus one?
+A: Four minus one is three.
+
+Q: What is one plus four?
+A: One plus four is five.
+
+Q: What is four plus four?
+A: Four plus four is eight.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is eight minus three?
+A: Eight minus three is five.
+
+Q: What is four minus two?
+A: Four minus two is two.
+
+Q: What is six plus one?
+A: Six plus one is seven.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What is five plus one?
+A: Five plus one is six.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
 
 Q: What is six plus five?
 A: Six plus five is eleven.
+
+Q: What is six plus one?
+A: Six plus one is seven.
+
+Q: What is two plus three?
+A: Two plus three is five.
+
+Q: What is five plus three?
+A: Five plus three is eight.
+
+Q: What is twelve minus two?
+A: Twelve minus two is ten.
+
+Q: What is eight minus six?
+A: Eight minus six is two.
+
+Q: What is twelve minus three?
+A: Twelve minus three is nine.
+
+Q: What is twelve minus nine?
+A: Twelve minus nine is three.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What month comes after May?
+A: The month after May is June.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is ten minus two?
+A: Ten minus two is eight.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is twelve minus four?
+A: Twelve minus four is eight.
+
+Q: What is six minus three?
+A: Six minus three is three.
+
+Q: What is nine minus seven?
+A: Nine minus seven is two.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What is four plus two?
+A: Four plus two is six.
+
+Q: What is ten minus zero?
+A: Ten minus zero is ten.
+
+Q: What is one plus six?
+A: One plus six is seven.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
+
+Q: What is two plus one?
+A: Two plus one is three.
+
+Q: What is five plus three?
+A: Five plus three is eight.
+
+Q: What is eleven minus two?
+A: Eleven minus two is nine.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is one plus four?
+A: One plus four is five.
 
 Q: What is zero plus six?
 A: Zero plus six is six.
@@ -547,773 +505,92 @@ A: Zero plus six is six.
 Q: What month comes after July?
 A: The month after July is August.
 
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is five plus one?
-A: Five plus one is six.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What is one plus zero?
-A: One plus zero is one.
-
-Q: What is twelve minus two?
-A: Twelve minus two is ten.
-
-Q: What is one plus two?
-A: One plus two is three.
+Q: What is eight minus three?
+A: Eight minus three is five.
 
 Q: What is three plus six?
 A: Three plus six is nine.
 
-Q: What is ten minus five?
-A: Ten minus five is five.
-
-Q: What is six plus three?
-A: Six plus three is nine.
-
-Q: What is twelve minus six?
-A: Twelve minus six is six.
-
-Q: What is eleven minus ten?
-A: Eleven minus ten is one.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is six minus one?
-A: Six minus one is five.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is the capital of India?
-A: The capital of India is New Delhi.
-
-Q: What is eleven minus eight?
-A: Eleven minus eight is three.
-
-Q: What is five plus zero?
-A: Five plus zero is five.
-
-Q: What is two plus six?
-A: Two plus six is eight.
-
-Q: What is eight minus zero?
-A: Eight minus zero is eight.
-
-Q: What month comes after April?
-A: The month after April is May.
-
-Q: What is eleven minus eleven?
-A: Eleven minus eleven is zero.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is six minus two?
-A: Six minus two is four.
-
-Q: What month comes after June?
-A: The month after June is July.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is five plus three?
-A: Five plus three is eight.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is six plus two?
-A: Six plus two is eight.
-
-Q: What is eleven minus three?
-A: Eleven minus three is eight.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is one plus five?
-A: One plus five is six.
-
-Q: What is eight minus six?
-A: Eight minus six is two.
-
-Q: What is twelve minus nine?
-A: Twelve minus nine is three.
-
-Q: What is seven minus zero?
-A: Seven minus zero is seven.
-
-Q: What is six minus one?
-A: Six minus one is five.
-
-Q: What is two plus three?
-A: Two plus three is five.
-
-Q: What is nine minus seven?
-A: Nine minus seven is two.
-
-Q: What is twelve minus three?
-A: Twelve minus three is nine.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What is five plus three?
-A: Five plus three is eight.
-
-Q: What is six minus five?
-A: Six minus five is one.
-
-Q: What is six plus three?
-A: Six plus three is nine.
-
-Q: What is five plus four?
-A: Five plus four is nine.
-
-Q: What is six plus five?
-A: Six plus five is eleven.
-
-Q: What is ten minus zero?
-A: Ten minus zero is ten.
-
-Q: What is the opposite of clean?
-A: The opposite of clean is dirty.
-
-Q: What is one plus two?
-A: One plus two is three.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is three plus two?
-A: Three plus two is five.
-
-Q: What color is coal?
-A: Coal is black.
-
-Q: What is four minus one?
-A: Four minus one is three.
-
-Q: What is four plus two?
-A: Four plus two is six.
-
-Q: What is five plus four?
-A: Five plus four is nine.
-
-Q: What is six plus one?
-A: Six plus one is seven.
-
-Q: What is five plus three?
-A: Five plus three is eight.
-
-Q: What is seven minus six?
-A: Seven minus six is one.
-
-Q: What is one plus two?
-A: One plus two is three.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is twelve minus four?
-A: Twelve minus four is eight.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is eleven minus seven?
-A: Eleven minus seven is four.
-
-Q: What is one plus one?
-A: One plus one is two.
-
-Q: What is seven minus zero?
-A: Seven minus zero is seven.
-
-Q: What is three plus one?
-A: Three plus one is four.
-
-Q: What color is a leaf?
-A: A leaf is green.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is zero plus two?
-A: Zero plus two is two.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is four plus five?
-A: Four plus five is nine.
-
-Q: What month comes after October?
-A: The month after October is November.
-
-Q: What is zero minus zero?
-A: Zero minus zero is zero.
-
-Q: What is seven minus six?
-A: Seven minus six is one.
-
-Q: What is ten minus three?
-A: Ten minus three is seven.
-
-Q: What is four plus three?
-A: Four plus three is seven.
-
-Q: What is twelve minus five?
-A: Twelve minus five is seven.
-
-Q: What is one plus one?
-A: One plus one is two.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is four minus three?
-A: Four minus three is one.
-
-Q: What is the capital of China?
-A: The capital of China is Beijing.
-
-Q: What month comes after January?
-A: The month after January is February.
-
-Q: What is the opposite of tall?
-A: The opposite of tall is short.
-
-Q: What is three plus zero?
-A: Three plus zero is three.
-
 Q: What is five plus two?
 A: Five plus two is seven.
 
-Q: What is four plus one?
-A: Four plus one is five.
+Q: What is the singular of leaves?
+A: The singular of leaves is leaf.
 
-Q: What is two plus four?
-A: Two plus four is six.
+Q: What is five plus six?
+A: Five plus six is eleven.
 
-Q: What is the opposite of short?
-A: The opposite of short is tall.
+Q: What is the singular of women?
+A: The singular of women is woman.
 
-Q: What is two plus three?
-A: Two plus three is five.
-
-Q: What is zero plus four?
-A: Zero plus four is four.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What is three minus one?
-A: Three minus one is two.
-
-Q: What is three plus four?
-A: Three plus four is seven.
-
-Q: What is one minus zero?
-A: One minus zero is one.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is one plus four?
-A: One plus four is five.
+Q: What is eight minus eight?
+A: Eight minus eight is zero.
 
 Q: What is two plus three?
 A: Two plus three is five.
 
-Q: What is the opposite of strong?
-A: The opposite of strong is weak.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is zero plus four?
-A: Zero plus four is four.
-
-Q: What is zero plus one?
-A: Zero plus one is one.
-
-Q: What is the opposite of out?
-A: The opposite of out is in.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is zero plus zero?
-A: Zero plus zero is zero.
-
-Q: What is one plus six?
-A: One plus six is seven.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is ten minus three?
-A: Ten minus three is seven.
-
-Q: What is zero plus zero?
-A: Zero plus zero is zero.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is three minus two?
-A: Three minus two is one.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What color is the sun?
-A: The sun is yellow.
-
-Q: What is one plus five?
-A: One plus five is six.
-
-Q: What is seven minus six?
-A: Seven minus six is one.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
 Q: What is six plus two?
 A: Six plus two is eight.
-
-Q: What is nine minus two?
-A: Nine minus two is seven.
-
-Q: What is twelve minus eight?
-A: Twelve minus eight is four.
-
-Q: What is three minus one?
-A: Three minus one is two.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is eight minus zero?
-A: Eight minus zero is eight.
-
-Q: What is six minus three?
-A: Six minus three is three.
-
-Q: What is two plus five?
-A: Two plus five is seven.
-
-Q: What is five plus four?
-A: Five plus four is nine.
-
-Q: What month comes after February?
-A: The month after February is March.
-
-Q: What is the opposite of wet?
-A: The opposite of wet is dry.
-
-Q: What is three plus zero?
-A: Three plus zero is three.
-
-Q: What is zero plus five?
-A: Zero plus five is five.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is eleven minus three?
-A: Eleven minus three is eight.
-
-Q: What is one plus five?
-A: One plus five is six.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is two plus five?
-A: Two plus five is seven.
-
-Q: What is four minus one?
-A: Four minus one is three.
-
-Q: What day comes after Wednesday?
-A: The day after Wednesday is Thursday.
-
-Q: What is nine minus two?
-A: Nine minus two is seven.
-
-Q: What is five minus two?
-A: Five minus two is three.
-
-Q: What is five minus zero?
-A: Five minus zero is five.
-
-Q: What is three plus four?
-A: Three plus four is seven.
-
-Q: What is eleven minus six?
-A: Eleven minus six is five.
-
-Q: What is two plus one?
-A: Two plus one is three.
-
-Q: What color is snow?
-A: Snow is white.
-
-Q: What is twelve minus eleven?
-A: Twelve minus eleven is one.
-
-Q: What is eight minus one?
-A: Eight minus one is seven.
-
-Q: What is six plus two?
-A: Six plus two is eight.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is three plus one?
-A: Three plus one is four.
-
-Q: What is ten minus six?
-A: Ten minus six is four.
-
-Q: What is three minus three?
-A: Three minus three is zero.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is five plus zero?
-A: Five plus zero is five.
 
 Q: What is one plus zero?
 A: One plus zero is one.
-
-Q: What is ten minus zero?
-A: Ten minus zero is ten.
-
-Q: What is twelve minus one?
-A: Twelve minus one is eleven.
-
-Q: What is three plus three?
-A: Three plus three is six.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is twelve minus four?
-A: Twelve minus four is eight.
-
-Q: What is five minus four?
-A: Five minus four is one.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What is five plus three?
-A: Five plus three is eight.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is five plus zero?
-A: Five plus zero is five.
-
-Q: What is six minus five?
-A: Six minus five is one.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
 
 Q: What is one plus three?
 A: One plus three is four.
 
-Q: What is four plus three?
-A: Four plus three is seven.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is the capital of Egypt?
-A: The capital of Egypt is Cairo.
-
-Q: What is nine minus zero?
-A: Nine minus zero is nine.
-
-Q: What is five minus one?
-A: Five minus one is four.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is nine minus one?
-A: Nine minus one is eight.
+Q: What is eleven minus ten?
+A: Eleven minus ten is one.
 
 Q: What is five plus five?
 A: Five plus five is ten.
 
-Q: What is ten minus eight?
-A: Ten minus eight is two.
-
-Q: What is the capital of Brazil?
-A: The capital of Brazil is Brasilia.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is two plus six?
-A: Two plus six is eight.
-
-Q: What day comes after Friday?
-A: The day after Friday is Saturday.
-
-Q: What is three plus three?
-A: Three plus three is six.
-
-Q: What is twelve minus eight?
-A: Twelve minus eight is four.
-
-Q: What is four plus four?
-A: Four plus four is eight.
-
-Q: What is four plus two?
-A: Four plus two is six.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is eleven minus two?
-A: Eleven minus two is nine.
-
-Q: What is one plus six?
-A: One plus six is seven.
-
-Q: What is zero plus one?
-A: Zero plus one is one.
-
-Q: What is ten minus nine?
-A: Ten minus nine is one.
-
-Q: What is two plus five?
-A: Two plus five is seven.
-
-Q: What is two plus five?
-A: Two plus five is seven.
-
-Q: What is three plus six?
-A: Three plus six is nine.
-
-Q: What is five plus four?
-A: Five plus four is nine.
-
-Q: What is the opposite of dirty?
-A: The opposite of dirty is clean.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is eleven minus five?
-A: Eleven minus five is six.
-
-Q: What is five plus two?
-A: Five plus two is seven.
-
-Q: What is one plus four?
-A: One plus four is five.
-
-Q: What is one plus two?
-A: One plus two is three.
-
-Q: What is the opposite of down?
-A: The opposite of down is up.
-
-Q: What is eight minus two?
-A: Eight minus two is six.
-
-Q: What is four plus three?
-A: Four plus three is seven.
-
-Q: What is twelve minus zero?
-A: Twelve minus zero is twelve.
-
-Q: What is eight minus three?
-A: Eight minus three is five.
-
-Q: What month comes after November?
-A: The month after November is December.
-
-Q: What is the opposite of in?
-A: The opposite of in is out.
-
-Q: What is four minus four?
-A: Four minus four is zero.
-
-Q: What is three plus five?
-A: Three plus five is eight.
-
-Q: What is ten minus zero?
-A: Ten minus zero is ten.
-
-Q: What is one plus six?
-A: One plus six is seven.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is five plus one?
-A: Five plus one is six.
-
-Q: What is ten minus eight?
-A: Ten minus eight is two.
-
-Q: What is six plus five?
-A: Six plus five is eleven.
-
-Q: What is twelve minus nine?
-A: Twelve minus nine is three.
-
-Q: What is six plus four?
-A: Six plus four is ten.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is two plus four?
-A: Two plus four is six.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is three plus six?
-A: Three plus six is nine.
-
-Q: What is six plus two?
-A: Six plus two is eight.
-
-Q: What is nine minus four?
-A: Nine minus four is five.
-
-Q: What is four plus one?
-A: Four plus one is five.
-
-Q: What is four minus three?
-A: Four minus three is one.
-
-Q: What is eleven minus eleven?
-A: Eleven minus eleven is zero.
-
-Q: What is four plus zero?
-A: Four plus zero is four.
-
-Q: What is four plus four?
-A: Four plus four is eight.
-
-Q: What is two plus five?
-A: Two plus five is seven.
-
-Q: What is four plus six?
-A: Four plus six is ten.
-
-Q: What is three plus six?
-A: Three plus six is nine.
-
-Q: What day comes after Sunday?
-A: The day after Sunday is Monday.
-
-Q: What is two minus two?
-A: Two minus two is zero.
-
-Q: What is ten minus seven?
-A: Ten minus seven is three.
-
-Q: What is seven minus two?
-A: Seven minus two is five.
-
-Q: What is eleven minus eight?
-A: Eleven minus eight is three.
-
-Q: What is four plus three?
-A: Four plus three is seven.
-
-Q: What is one plus two?
-A: One plus two is three.
-
-Q: What is three plus one?
-A: Three plus one is four.
-
-Q: What is three plus four?
-A: Three plus four is seven.
-
-Q: What is four plus four?
-A: Four plus four is eight.
-
-Q: What is the opposite of soft?
-A: The opposite of soft is hard.
-
-Q: What color is blood?
-A: Blood is red.
-
-Q: What is seven minus three?
-A: Seven minus three is four.
-
-Q: What is two plus one?
-A: Two plus one is three.
-
-Q: What month comes after August?
-A: The month after August is September.
-
-Q: What is zero plus one?
-A: Zero plus one is one.
-
-Q: What is eleven minus zero?
-A: Eleven minus zero is eleven.
-
-Q: What day comes after Tuesday?
-A: The day after Tuesday is Wednesday.
-
-Q: What is six plus two?
-A: Six plus two is eight.
+Q: What is four plus five?
+A: Four plus five is nine.
 
 Q: What is three plus zero?
 A: Three plus zero is three.
 
-Q: What is the capital of Spain?
-A: The capital of Spain is Madrid.
+Q: What is ten minus five?
+A: Ten minus five is five.
 
-Q: What is the capital of England?
-A: The capital of England is London.
+Q: What is three plus zero?
+A: Three plus zero is three.
 
-Q: What month comes after March?
-A: The month after March is April.
+Q: What is twelve minus two?
+A: Twelve minus two is ten.
+
+Q: What is six plus three?
+A: Six plus three is nine.
+
+Q: What is nine minus two?
+A: Nine minus two is seven.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is six plus two?
+A: Six plus two is eight.
+
+Q: What is nine minus six?
+A: Nine minus six is three.
+
+Q: What is the singular of boxes?
+A: The singular of boxes is box.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is eleven minus six?
+A: Eleven minus six is five.
+
+Q: What is six minus five?
+A: Six minus five is one.
+
+Q: What is five plus three?
+A: Five plus three is eight.
+
+Q: What is zero plus two?
+A: Zero plus two is two.
 
 Q: What is one plus four?
 A: One plus four is five.
@@ -1321,62 +598,164 @@ A: One plus four is five.
 Q: What day comes after Saturday?
 A: The day after Saturday is Sunday.
 
-Q: What is six plus six?
-A: Six plus six is twelve.
+Q: What is eight minus zero?
+A: Eight minus zero is eight.
 
-Q: What is five plus four?
-A: Five plus four is nine.
+Q: What is ten minus ten?
+A: Ten minus ten is zero.
 
-Q: What color is milk?
-A: Milk is white.
+Q: What month comes after August?
+A: The month after August is September.
 
 Q: What is two plus zero?
 A: Two plus zero is two.
 
-Q: What is six plus one?
-A: Six plus one is seven.
+Q: What is two plus five?
+A: Two plus five is seven.
 
-Q: What is zero plus two?
-A: Zero plus two is two.
+Q: What is five plus three?
+A: Five plus three is eight.
 
-Q: What is two plus one?
-A: Two plus one is three.
+Q: What is six plus six?
+A: Six plus six is twelve.
 
-Q: What is six minus six?
-A: Six minus six is zero.
+Q: What is four plus one?
+A: Four plus one is five.
 
-Q: What is eleven minus eleven?
-A: Eleven minus eleven is zero.
+Q: What is the opposite of clean?
+A: The opposite of clean is dirty.
 
-Q: What is ten minus six?
-A: Ten minus six is four.
+Q: What is one plus four?
+A: One plus four is five.
 
-Q: What is zero plus four?
-A: Zero plus four is four.
+Q: What is six plus three?
+A: Six plus three is nine.
 
-Q: What is the opposite of closed?
-A: The opposite of closed is open.
+Q: What is nine minus six?
+A: Nine minus six is three.
 
-Q: What is five plus six?
-A: Five plus six is eleven.
+Q: What is eleven minus zero?
+A: Eleven minus zero is eleven.
+
+Q: What is nine minus four?
+A: Nine minus four is five.
+
+Q: What is twelve minus eleven?
+A: Twelve minus eleven is one.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is zero minus zero?
+A: Zero minus zero is zero.
 
 Q: What is seven minus one?
 A: Seven minus one is six.
 
-Q: What is nine minus eight?
-A: Nine minus eight is one.
+Q: What is two plus one?
+A: Two plus one is three.
 
-Q: What is eight minus six?
-A: Eight minus six is two.
+Q: What is five plus three?
+A: Five plus three is eight.
 
-Q: What is five plus two?
-A: Five plus two is seven.
+Q: What is three minus three?
+A: Three minus three is zero.
 
-Q: What is three plus zero?
-A: Three plus zero is three.
+Q: What is five plus zero?
+A: Five plus zero is five.
 
-Q: What is eight minus two?
-A: Eight minus two is six.
+Q: What is three plus four?
+A: Three plus four is seven.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is four minus one?
+A: Four minus one is three.
+
+Q: What month comes after October?
+A: The month after October is November.
+
+Q: What is one plus six?
+A: One plus six is seven.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is seven minus six?
+A: Seven minus six is one.
+
+Q: What is six minus two?
+A: Six minus two is four.
+
+Q: What is the opposite of short?
+A: The opposite of short is tall.
+
+Q: What is one plus zero?
+A: One plus zero is one.
+
+Q: What is one plus four?
+A: One plus four is five.
+
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is six minus six?
+A: Six minus six is zero.
+
+Q: What is zero plus one?
+A: Zero plus one is one.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is the opposite of in?
+A: The opposite of in is out.
+
+Q: What is one plus two?
+A: One plus two is three.
+
+Q: What month comes after March?
+A: The month after March is April.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is eleven minus three?
+A: Eleven minus three is eight.
+
+Q: What is two plus five?
+A: Two plus five is seven.
+
+Q: What is eight minus three?
+A: Eight minus three is five.
+
+Q: What is four plus four?
+A: Four plus four is eight.
+
+Q: What is one plus six?
+A: One plus six is seven.
+
+Q: What is zero plus four?
+A: Zero plus four is four.
+
+Q: What is zero plus one?
+A: Zero plus one is one.
+
+Q: What is the singular of feet?
+A: The singular of feet is foot.
+
+Q: What is ten minus five?
+A: Ten minus five is five.
+
+Q: What is the plural of foot?
+A: The plural of foot is feet.
+
+Q: What is ten minus ten?
+A: Ten minus ten is zero.
 
 Q: What is four plus six?
 A: Four plus six is ten.
@@ -1384,143 +763,767 @@ A: Four plus six is ten.
 Q: What is nine minus six?
 A: Nine minus six is three.
 
-Q: What is five plus two?
-A: Five plus two is seven.
-
-Q: What is six plus three?
-A: Six plus three is nine.
-
-Q: What is five plus three?
-A: Five plus three is eight.
-
-Q: What is five plus zero?
-A: Five plus zero is five.
+Q: What is two plus five?
+A: Two plus five is seven.
 
 Q: What is six plus two?
 A: Six plus two is eight.
 
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is nine minus four?
-A: Nine minus four is five.
-
-Q: What is six plus two?
-A: Six plus two is eight.
-
-Q: What is six plus three?
-A: Six plus three is nine.
-
-Q: What is six plus zero?
-A: Six plus zero is six.
-
-Q: What is six minus three?
-A: Six minus three is three.
-
-Q: What is eight minus two?
-A: Eight minus two is six.
-
-Q: What is two plus three?
-A: Two plus three is five.
-
-Q: What is eleven minus three?
-A: Eleven minus three is eight.
+Q: What is seven minus three?
+A: Seven minus three is four.
 
 Q: What is four plus six?
 A: Four plus six is ten.
 
-Q: What is nine minus four?
-A: Nine minus four is five.
+Q: What is five minus one?
+A: Five minus one is four.
 
-Q: What is the opposite of cold?
-A: The opposite of cold is hot.
+Q: What is the opposite of old?
+A: The opposite of old is new.
 
-Q: What is one plus one?
-A: One plus one is two.
+Q: What is seven minus zero?
+A: Seven minus zero is seven.
 
-Q: What is four minus two?
-A: Four minus two is two.
+Q: What is five plus two?
+A: Five plus two is seven.
 
-Q: What day comes after Thursday?
-A: The day after Thursday is Friday.
-
-Q: What is one plus three?
-A: One plus three is four.
-
-Q: What is ten minus two?
-A: Ten minus two is eight.
-
-Q: What is six plus three?
-A: Six plus three is nine.
-
-Q: What is one plus six?
-A: One plus six is seven.
-
-Q: What is six minus one?
-A: Six minus one is five.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is zero plus four?
-A: Zero plus four is four.
+Q: What is six plus six?
+A: Six plus six is twelve.
 
 Q: What is three plus six?
 A: Three plus six is nine.
 
-Q: What is five plus three?
-A: Five plus three is eight.
+Q: What is five plus two?
+A: Five plus two is seven.
 
-Q: What is eleven minus seven?
-A: Eleven minus seven is four.
-
-Q: What is the capital of Russia?
-A: The capital of Russia is Moscow.
-
-Q: What month comes after May?
-A: The month after May is June.
-
-Q: What is six plus five?
-A: Six plus five is eleven.
-
-Q: What is four plus four?
-A: Four plus four is eight.
-
-Q: What is twelve minus one?
-A: Twelve minus one is eleven.
+Q: What is two plus five?
+A: Two plus five is seven.
 
 Q: What is six plus zero?
 A: Six plus zero is six.
 
-Q: What is one plus one?
-A: One plus one is two.
+Q: What is zero plus two?
+A: Zero plus two is two.
 
-Q: What is eleven minus eight?
-A: Eleven minus eight is three.
+Q: What month comes after April?
+A: The month after April is May.
+
+Q: What is one plus four?
+A: One plus four is five.
+
+Q: What is the plural of man?
+A: The plural of man is men.
+
+Q: What is zero plus four?
+A: Zero plus four is four.
+
+Q: What is four plus two?
+A: Four plus two is six.
+
+Q: What is zero plus zero?
+A: Zero plus zero is zero.
+
+Q: What is five minus zero?
+A: Five minus zero is five.
+
+Q: What is the opposite of full?
+A: The opposite of full is empty.
+
+Q: What is eleven minus zero?
+A: Eleven minus zero is eleven.
+
+Q: What is two plus one?
+A: Two plus one is three.
+
+Q: What day comes after Tuesday?
+A: The day after Tuesday is Wednesday.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is zero plus four?
+A: Zero plus four is four.
+
+Q: What is three plus zero?
+A: Three plus zero is three.
+
+Q: What is five plus zero?
+A: Five plus zero is five.
+
+Q: What is three minus two?
+A: Three minus two is one.
+
+Q: What is zero plus zero?
+A: Zero plus zero is zero.
+
+Q: What is eight minus zero?
+A: Eight minus zero is eight.
+
+Q: What is seven minus zero?
+A: Seven minus zero is seven.
+
+Q: What is zero plus five?
+A: Zero plus five is five.
+
+Q: What is two plus four?
+A: Two plus four is six.
+
+Q: What is the plural of city?
+A: The plural of city is cities.
+
+Q: What is three plus six?
+A: Three plus six is nine.
+
+Q: What is ten minus nine?
+A: Ten minus nine is one.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is zero minus zero?
+A: Zero minus zero is zero.
+
+Q: What is twelve minus twelve?
+A: Twelve minus twelve is zero.
+
+Q: What is eleven minus two?
+A: Eleven minus two is nine.
+
+Q: What is nine minus zero?
+A: Nine minus zero is nine.
+
+Q: What is four plus zero?
+A: Four plus zero is four.
+
+Q: What is six plus six?
+A: Six plus six is twelve.
+
+Q: What is twelve minus four?
+A: Twelve minus four is eight.
+
+Q: What is three minus one?
+A: Three minus one is two.
+
+Q: What is one plus zero?
+A: One plus zero is one.
+
+Q: What is five plus one?
+A: Five plus one is six.
+
+Q: What is twelve minus eight?
+A: Twelve minus eight is four.
+
+Q: What is one plus four?
+A: One plus four is five.
+
+Q: What is the plural of child?
+A: The plural of child is children.
+
+Q: What is the opposite of dry?
+A: The opposite of dry is wet.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is three plus three?
+A: Three plus three is six.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
+
+Q: What is eleven minus three?
+A: Eleven minus three is eight.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is zero plus zero?
+A: Zero plus zero is zero.
+
+Q: What is twelve minus nine?
+A: Twelve minus nine is three.
+
+Q: What is the plural of boy?
+A: The plural of boy is boys.
+
+Q: What is five minus two?
+A: Five minus two is three.
+
+Q: What is the opposite of dark?
+A: The opposite of dark is light.
+
+Q: What is six minus two?
+A: Six minus two is four.
+
+Q: What is ten minus eight?
+A: Ten minus eight is two.
+
+Q: What is six plus five?
+A: Six plus five is eleven.
+
+Q: What is ten minus six?
+A: Ten minus six is four.
+
+Q: What is four plus four?
+A: Four plus four is eight.
+
+Q: What is seven minus two?
+A: Seven minus two is five.
+
+Q: What is eleven minus eleven?
+A: Eleven minus eleven is zero.
+
+Q: What is eleven minus three?
+A: Eleven minus three is eight.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is zero plus two?
+A: Zero plus two is two.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What is six minus one?
+A: Six minus one is five.
 
 Q: What is the opposite of up?
 A: The opposite of up is down.
 
-Q: What is eleven minus eight?
-A: Eleven minus eight is three.
+Q: What is four plus one?
+A: Four plus one is five.
 
-Q: What is eight minus three?
-A: Eight minus three is five.
+Q: What is one plus zero?
+A: One plus zero is one.
+
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is four minus three?
+A: Four minus three is one.
+
+Q: What is the opposite of fast?
+A: The opposite of fast is slow.
+
+Q: What is two plus three?
+A: Two plus three is five.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is nine minus eight?
+A: Nine minus eight is one.
+
+Q: What is seven minus six?
+A: Seven minus six is one.
+
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is two plus six?
+A: Two plus six is eight.
+
+Q: What is nine minus two?
+A: Nine minus two is seven.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is three plus one?
+A: Three plus one is four.
+
+Q: What is two plus one?
+A: Two plus one is three.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is one plus two?
+A: One plus two is three.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What day comes after Friday?
+A: The day after Friday is Saturday.
+
+Q: What is seven minus three?
+A: Seven minus three is four.
+
+Q: What is eleven minus three?
+A: Eleven minus three is eight.
+
+Q: What is eleven minus eleven?
+A: Eleven minus eleven is zero.
+
+Q: What is eleven minus ten?
+A: Eleven minus ten is one.
+
+Q: What is six plus two?
+A: Six plus two is eight.
+
+Q: What is the opposite of closed?
+A: The opposite of closed is open.
+
+Q: What is the singular of trees?
+A: The singular of trees is tree.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is four plus three?
+A: Four plus three is seven.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is the plural of girl?
+A: The plural of girl is girls.
+
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is eleven minus seven?
+A: Eleven minus seven is four.
 
 Q: What is zero plus three?
 A: Zero plus three is three.
 
-Q: What is the opposite of happy?
-A: The opposite of happy is sad.
+Q: What is one plus five?
+A: One plus five is six.
 
-Q: What is three plus five?
-A: Three plus five is eight.
+Q: What is two plus three?
+A: Two plus three is five.
+
+Q: What is eleven minus six?
+A: Eleven minus six is five.
+
+Q: What is nine minus four?
+A: Nine minus four is five.
+
+Q: What is five plus two?
+A: Five plus two is seven.
+
+Q: What is ten minus zero?
+A: Ten minus zero is ten.
+
+Q: What is three plus six?
+A: Three plus six is nine.
+
+Q: What is two plus five?
+A: Two plus five is seven.
+
+Q: What is four plus three?
+A: Four plus three is seven.
+
+Q: What is two plus six?
+A: Two plus six is eight.
+
+Q: What month comes after November?
+A: The month after November is December.
+
+Q: What is six plus one?
+A: Six plus one is seven.
+
+Q: What is ten minus seven?
+A: Ten minus seven is three.
+
+Q: What is four plus two?
+A: Four plus two is six.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What is four plus four?
+A: Four plus four is eight.
+
+Q: What is two minus one?
+A: Two minus one is one.
+
+Q: What is nine minus eight?
+A: Nine minus eight is one.
+
+Q: What is zero plus one?
+A: Zero plus one is one.
+
+Q: What is ten minus eight?
+A: Ten minus eight is two.
+
+Q: What is four minus one?
+A: Four minus one is three.
+
+Q: What is nine minus six?
+A: Nine minus six is three.
+
+Q: What is the opposite of small?
+A: The opposite of small is big.
+
+Q: What is the opposite of dirty?
+A: The opposite of dirty is clean.
+
+Q: What is six minus five?
+A: Six minus five is one.
+
+Q: What is six plus two?
+A: Six plus two is eight.
+
+Q: What is eight minus zero?
+A: Eight minus zero is eight.
+
+Q: What is three plus three?
+A: Three plus three is six.
+
+Q: What is one plus three?
+A: One plus three is four.
+
+Q: What is six plus three?
+A: Six plus three is nine.
+
+Q: What is seven minus zero?
+A: Seven minus zero is seven.
+
+Q: What is one plus two?
+A: One plus two is three.
+
+Q: What is the opposite of out?
+A: The opposite of out is in.
+
+Q: What is eight minus one?
+A: Eight minus one is seven.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is zero plus one?
+A: Zero plus one is one.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is two plus one?
+A: Two plus one is three.
+
+Q: What is three plus two?
+A: Three plus two is five.
+
+Q: What is zero plus five?
+A: Zero plus five is five.
 
 Q: What is three minus two?
 A: Three minus two is one.
+
+Q: What is three plus zero?
+A: Three plus zero is three.
+
+Q: What is three minus one?
+A: Three minus one is two.
+
+Q: What is twelve minus one?
+A: Twelve minus one is eleven.
+
+Q: What is five plus three?
+A: Five plus three is eight.
+
+Q: What is six plus six?
+A: Six plus six is twelve.
+
+Q: What is four plus four?
+A: Four plus four is eight.
+
+Q: What is zero plus two?
+A: Zero plus two is two.
+
+Q: What is three plus six?
+A: Three plus six is nine.
+
+Q: What is the plural of book?
+A: The plural of book is books.
+
+Q: What is the singular of cities?
+A: The singular of cities is city.
+
+Q: What is twelve minus four?
+A: Twelve minus four is eight.
+
+Q: What is ten minus seven?
+A: Ten minus seven is three.
+
+Q: What is the singular of children?
+A: The singular of children is child.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is six plus five?
+A: Six plus five is eleven.
+
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is six plus two?
+A: Six plus two is eight.
+
+Q: What is the opposite of hard?
+A: The opposite of hard is soft.
+
+Q: What is the singular of babies?
+A: The singular of babies is baby.
+
+Q: What is zero minus zero?
+A: Zero minus zero is zero.
+
+Q: What is one plus four?
+A: One plus four is five.
+
+Q: What is the singular of mice?
+A: The singular of mice is mouse.
+
+Q: What is five plus five?
+A: Five plus five is ten.
+
+Q: What is eight minus two?
+A: Eight minus two is six.
+
+Q: What month comes after December?
+A: The month after December is January.
+
+Q: What is one plus two?
+A: One plus two is three.
+
+Q: What is four plus four?
+A: Four plus four is eight.
+
+Q: What is four plus five?
+A: Four plus five is nine.
+
+Q: What is the opposite of weak?
+A: The opposite of weak is strong.
+
+Q: What is ten minus two?
+A: Ten minus two is eight.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is the singular of girls?
+A: The singular of girls is girl.
+
+Q: What is five plus zero?
+A: Five plus zero is five.
+
+Q: What is four plus one?
+A: Four plus one is five.
+
+Q: What is eleven minus nine?
+A: Eleven minus nine is two.
+
+Q: What is two plus one?
+A: Two plus one is three.
+
+Q: What is six plus one?
+A: Six plus one is seven.
+
+Q: What is two plus six?
+A: Two plus six is eight.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is eleven minus four?
+A: Eleven minus four is seven.
+
+Q: What is six minus five?
+A: Six minus five is one.
+
+Q: What is twelve minus zero?
+A: Twelve minus zero is twelve.
+
+Q: What is eleven minus one?
+A: Eleven minus one is ten.
+
+Q: What is zero plus five?
+A: Zero plus five is five.
+
+Q: What day comes after Thursday?
+A: The day after Thursday is Friday.
+
+Q: What is two plus four?
+A: Two plus four is six.
+
+Q: What is nine minus seven?
+A: Nine minus seven is two.
+
+Q: What is ten minus nine?
+A: Ten minus nine is one.
+
+Q: What month comes after February?
+A: The month after February is March.
+
+Q: What is five plus four?
+A: Five plus four is nine.
+
+Q: What is six plus five?
+A: Six plus five is eleven.
+
+Q: What is twelve minus ten?
+A: Twelve minus ten is two.
+
+Q: What is six plus six?
+A: Six plus six is twelve.
+
+Q: What is nine minus four?
+A: Nine minus four is five.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is six plus four?
+A: Six plus four is ten.
+
+Q: What is six plus three?
+A: Six plus three is nine.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is six plus six?
+A: Six plus six is twelve.
+
+Q: What is the singular of wolves?
+A: The singular of wolves is wolf.
+
+Q: What is four plus three?
+A: Four plus three is seven.
+
+Q: What is four minus two?
+A: Four minus two is two.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is one plus two?
+A: One plus two is three.
+
+Q: What is six plus six?
+A: Six plus six is twelve.
+
+Q: What is twelve minus eight?
+A: Twelve minus eight is four.
+
+Q: What is four minus four?
+A: Four minus four is zero.
+
+Q: What is three plus zero?
+A: Three plus zero is three.
+
+Q: What is two minus zero?
+A: Two minus zero is two.
+
+Q: What is five plus three?
+A: Five plus three is eight.
+
+Q: What is twelve minus six?
+A: Twelve minus six is six.
+
+Q: What is the opposite of soft?
+A: The opposite of soft is hard.
+
+Q: What is one plus four?
+A: One plus four is five.
+
+Q: What is four minus two?
+A: Four minus two is two.
+
+Q: What is the singular of boys?
+A: The singular of boys is boy.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is ten minus eight?
+A: Ten minus eight is two.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is three minus three?
+A: Three minus three is zero.
+
+Q: What is two plus zero?
+A: Two plus zero is two.
+
+Q: What is the plural of leaf?
+A: The plural of leaf is leaves.
+
+Q: What is four plus three?
+A: Four plus three is seven.
+
+Q: What is two plus four?
+A: Two plus four is six.
+
+Q: What is eleven minus ten?
+A: Eleven minus ten is one.
+
+Q: What is three plus one?
+A: Three plus one is four.
+
+Q: What is the singular of men?
+A: The singular of men is man.
+
+Q: What is five plus zero?
+A: Five plus zero is five.
+
+Q: What is one plus three?
+A: One plus three is four.
+
+Q: What is seven minus four?
+A: Seven minus four is three.
+
+Q: What is six plus zero?
+A: Six plus zero is six.
+
+Q: What is four plus six?
+A: Four plus six is ten.
+
+Q: What is the opposite of slow?
+A: The opposite of slow is fast.
+
+Q: What is the opposite of light?
+A: The opposite of light is dark.
+
+Q: What is eight minus zero?
+A: Eight minus zero is eight.
+
+Q: What is eight minus six?
+A: Eight minus six is two.
+
+Q: What is one plus two?
+A: One plus two is three.
+
+Q: What is the opposite of open?
+A: The opposite of open is closed.
+
+Q: What is zero plus six?
+A: Zero plus six is six.
+
+Q: What is eight minus five?
+A: Eight minus five is three.
 
 Q: What is zero plus three?
 A: Zero plus three is three.
@@ -1528,108 +1531,90 @@ A: Zero plus three is three.
 Q: What is four plus zero?
 A: Four plus zero is four.
 
-Q: What is zero plus six?
-A: Zero plus six is six.
+Q: What is zero plus zero?
+A: Zero plus zero is zero.
 
-Q: What is four plus four?
-A: Four plus four is eight.
-
-Q: What is zero plus three?
-A: Zero plus three is three.
-
-Q: What is six plus six?
-A: Six plus six is twelve.
-
-Q: What is one plus two?
-A: One plus two is three.
-
-Q: What is zero plus one?
-A: Zero plus one is one.
-
-Q: What is six plus two?
-A: Six plus two is eight.
-
-Q: What is two plus five?
-A: Two plus five is seven.
-
-Q: What is two plus zero?
-A: Two plus zero is two.
-
-Q: What is six minus five?
-A: Six minus five is one.
-
-Q: What is the opposite of dark?
-A: The opposite of dark is light.
+Q: What is four plus one?
+A: Four plus one is five.
 
 Q: What is zero plus three?
 A: Zero plus three is three.
 
-Q: What is twelve minus twelve?
-A: Twelve minus twelve is zero.
+Q: What is two plus zero?
+A: Two plus zero is two.
 
-Q: What is two plus one?
-A: Two plus one is three.
+Q: What is six plus five?
+A: Six plus five is eleven.
 
-Q: What is three plus five?
-A: Three plus five is eight.
+Q: What is two plus four?
+A: Two plus four is six.
 
-Q: What is zero minus zero?
-A: Zero minus zero is zero.
+Q: What is one plus three?
+A: One plus three is four.
 
-Q: What is five plus zero?
-A: Five plus zero is five.
-
-Q: What is eight minus zero?
-A: Eight minus zero is eight.
-
-Q: What is zero plus six?
-A: Zero plus six is six.
-
-Q: What is the opposite of new?
-A: The opposite of new is old.
+Q: What is zero plus zero?
+A: Zero plus zero is zero.
 
 Q: What is two plus zero?
 A: Two plus zero is two.
 
-Q: What is five plus zero?
-A: Five plus zero is five.
+Q: What is ten minus zero?
+A: Ten minus zero is ten.
 
-Q: What is three plus five?
-A: Three plus five is eight.
+Q: What is the opposite of empty?
+A: The opposite of empty is full.
 
-Q: What is the capital of Germany?
-A: The capital of Germany is Berlin.
+Q: What is one plus five?
+A: One plus five is six.
 
-Q: What is two plus three?
-A: Two plus three is five.
+Q: What is twelve minus six?
+A: Twelve minus six is six.
+
+Q: What is five plus one?
+A: Five plus one is six.
+
+Q: What is zero plus four?
+A: Zero plus four is four.
+
+Q: What is three minus zero?
+A: Three minus zero is three.
+
+Q: What is one plus one?
+A: One plus one is two.
+
+Q: What is seven minus six?
+A: Seven minus six is one.
+
+Q: What is zero plus three?
+A: Zero plus three is three.
+
+Q: What is the opposite of strong?
+A: The opposite of strong is weak.
+
+Q: What is three plus six?
+A: Three plus six is nine.
+
+Q: What is three plus one?
+A: Three plus one is four.
+
+Q: What is six plus four?
+A: Six plus four is ten.
 
 Q: What is four plus three?
 A: Four plus three is seven.
 
-Q: What is two plus five?
-A: Two plus five is seven.
+Q: What is two plus zero?
+A: Two plus zero is two.
 
-Q: What is eleven minus nine?
-A: Eleven minus nine is two.
+Q: What is five plus zero?
+A: Five plus zero is five.
 
-Q: What month comes after December?
-A: The month after December is January.
+Q: What is five plus zero?
+A: Five plus zero is five.
 
-Q: What is nine minus six?
-A: Nine minus six is three.
+Q: What is two plus three?
+A: Two plus three is five.
 
-Q: What is ten minus ten?
-A: Ten minus ten is zero.
-
-Q: What is ten minus eight?
-A: Ten minus eight is two.
-
-Q: What is one plus three?
-A: One plus three is four.
-
-Q: What is one plus three?
-A: One plus three is four.
-
-Q: What is nine minus six?
-A: Nine minus six is three.
+Q: What is twelve minus one?
+A: Twelve minus one is eleven.
 

@@ -1,11 +1,14 @@
 """Expand the Q&A-behavior training set programmatically.
 
-The original data/qa_behavior.txt has ~30 pairs -- fine as a proof-of-concept,
-too small to reliably teach the "answer directly" pattern in a bigger model.
-This script generates ~1000+ Q&A pairs covering common patterns (arithmetic,
-opposites, calendar, colors, capitals, plurals, negation) without overlapping
-the held-out eval set in data/eval_qa.jsonl -- so improvements in eval scores
-still reflect generalization, not memorization.
+REVISED to only generate LANGUAGE-COMPETENCE Q&A pairs (arithmetic patterns,
+opposites-as-vocabulary, calendar sequences, plurals). No world-facts
+(capitals, planets, "the sky is blue") -- those belong in Layer 2/3 and
+are tested via eval_qa_continual.py after being fed through continual_read.py.
+
+The Q&A-behavior set's purpose is to teach the *skill of answering questions*
+(the "A:" pattern), NOT to teach specific factual knowledge. Both are needed
+in Layer 1, but only the behavior skill -- so this script deliberately keeps
+the pattern-teaching content and drops factual content.
 
 Output: data/qa_behavior.txt (overwrites, keeps all original hand-written pairs
 at the top so nothing is lost, then appends the generated pairs).
@@ -89,26 +92,18 @@ def calendar_qa():
     return out
 
 
-def capital_qa():
-    caps = [("England", "London"), ("Japan", "Tokyo"), ("Germany", "Berlin"),
-            ("Italy", "Rome"), ("Spain", "Madrid"), ("India", "New Delhi"),
-            ("China", "Beijing"), ("Russia", "Moscow"), ("Egypt", "Cairo"),
-            ("Kenya", "Nairobi"), ("Brazil", "Brasilia")]
+def plural_qa():
+    """Q&A patterns exercising English plurals (grammar, not facts)."""
+    pairs = [("boy", "boys"), ("girl", "girls"), ("book", "books"),
+             ("child", "children"), ("man", "men"), ("woman", "women"),
+             ("mouse", "mice"), ("foot", "feet"), ("tree", "trees"),
+             ("box", "boxes"), ("leaf", "leaves"), ("wolf", "wolves"),
+             ("baby", "babies"), ("city", "cities")]
     out = []
-    for country, cap in caps:
-        out.append((f"What is the capital of {country}?",
-                    f"The capital of {country} is {cap}."))
+    for sing, plur in pairs:
+        out.append((f"What is the plural of {sing}?", f"The plural of {sing} is {plur}."))
+        out.append((f"What is the singular of {plur}?", f"The singular of {plur} is {sing}."))
     return out
-
-
-def color_qa():
-    facts = [("What color is snow?", "Snow is white."),
-             ("What color is coal?", "Coal is black."),
-             ("What color is milk?", "Milk is white."),
-             ("What color is blood?", "Blood is red."),
-             ("What color is the sun?", "The sun is yellow."),
-             ("What color is a leaf?", "A leaf is green.")]
-    return facts
 
 
 def main():
@@ -119,8 +114,7 @@ def main():
     generated += arith_qa()
     generated += opposite_qa()
     generated += calendar_qa()
-    generated += capital_qa()
-    generated += color_qa()
+    generated += plural_qa()
 
     # Filter out any generated Q that verbatim-matches the eval set (extreme
     # caution -- keyword overlap in eval scoring means near-matches don't cause

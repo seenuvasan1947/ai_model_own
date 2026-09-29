@@ -1,0 +1,10 @@
+{"fact": "The capital of France is Paris.", "question": "What is the capital of France?", "expected_keywords": ["capital", "France", "Paris"]}
+{"fact": "The largest ocean on Earth is the Pacific Ocean.", "question": "What is the largest ocean on Earth?", "expected_keywords": ["largest", "ocean", "Pacific"]}
+{"fact": "There are eight planets in our solar system.", "question": "How many planets are in our solar system?", "expected_keywords": ["eight", "planets", "solar"]}
+{"fact": "Earth is the third planet from the sun.", "question": "What is the third planet from the sun?", "expected_keywords": ["third", "planet", "sun", "Earth"]}
+{"fact": "The capital of Japan is Tokyo.", "question": "What is the capital of Japan?", "expected_keywords": ["capital", "Japan", "Tokyo"]}
+{"fact": "Frozen water is called ice.", "question": "What is frozen water called?", "expected_keywords": ["frozen", "water", "ice"]}
+{"fact": "The sky appears blue during the day.", "question": "What color is the sky?", "expected_keywords": ["sky", "blue"]}
+{"fact": "Grass is green in color.", "question": "What is the color of grass?", "expected_keywords": ["color", "grass", "green"]}
+{"fact": "A cat has four legs.", "question": "How many legs does a cat have?", "expected_keywords": ["cat", "four", "legs"]}
+{"fact": "Fish live in water.", "question": "Where does a fish live?", "expected_keywords": ["fish", "water"]}

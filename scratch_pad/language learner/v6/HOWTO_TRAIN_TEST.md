@@ -156,26 +156,57 @@ The Zeta test, same as v5:
 
 ---
 
-## Stage 6: Run the Full Q&A Eval Harness (5-15 minutes)
+## Stage 6: Run the Two Eval Harnesses (10-20 minutes)
 
-The quantitative test — this is what v6 added that we couldn't do before.
+v6 has **two separate evals** because Layer 1 competence and continual
+learning are two separate things and shouldn't share a test set.
+
+### 6a. Language-competence eval — tests Layer 1 (memory OFF vs ON, no facts fed)
 
 ```bash
 ./.venv/bin/python eval_qa.py
 ```
 
 **What it does:**
-1. Loads `data/eval_qa.jsonl` (held-out test questions with expected answers).
-2. Runs each question through `ask.py` twice: with memory, without memory.
-3. Scores by keyword overlap between generated and expected answers.
-4. Prints per-question results + aggregate scores + the memory-on-vs-off delta.
+1. Loads `data/eval_qa.jsonl` — only questions Layer 1 should be able to
+   answer from its training (arithmetic, opposites, day/month sequence, plurals).
+   No world-facts here.
+2. Runs each question through `ask.py` twice: with memory ON, without.
+3. Scores by keyword overlap.
 
-**How to read the output:**
-- **Memory-ON score higher than Memory-OFF** = memory actually helps. This is the outcome we're hoping for.
-- **Roughly equal scores** = memory isn't contributing measurably. Would mean the recall pathway isn't working as intended.
-- **Memory-ON worse** = memory is actively hurting (destabilizing generation). Would need to tune `stack_cfg.memory_feedback_strength` down.
+**Expected:** memory-ON and memory-OFF scores should be similar for this eval —
+these questions don't require memory. The point of running with memory ON is
+to check memory doesn't *hurt* on questions where it shouldn't help.
 
-To add your own test questions, edit `data/eval_qa.jsonl` — one JSON per line: `{"question": "...", "expected_keywords": ["word1", "word2"]}`.
+### 6b. Continual-learning eval — tests Layer 2/3 (feed a fact, then ask)
+
+```bash
+./.venv/bin/python eval_qa_continual.py
+```
+
+**What it does:**
+1. Loads `data/eval_qa_continual.jsonl` — world-fact questions PAIRED with
+   the fact needed to answer (e.g., fact: "The capital of France is Paris.",
+   question: "What is the capital of France?").
+2. For each item: resets memory to empty, feeds the fact through
+   `stack.observe()` multiple times so it consolidates, then asks with memory
+   ON and OFF. Fresh memory per question — no cross-contamination.
+3. Scores + reports the memory delta.
+
+**Expected:** memory-ON score should be measurably HIGHER than memory-OFF.
+Since Layer 1 was never trained on these facts, memory-OFF should score near
+zero. Any memory-ON gain is direct evidence continual learning works.
+
+- **Big positive delta (>0.15)** = continual learning works well.
+- **Small positive delta (0.05-0.15)** = works partially; memory is contributing
+  but not dominant. Try tuning `stack_cfg.memory_feedback_strength` up.
+- **Zero or negative delta** = something's wrong. Either the fact isn't
+  reaching L3 (check L2/L3 unit counts in the output), or memory feedback
+  is being drowned out by Layer 1's own generation preferences.
+
+To add your own tests, edit either JSONL file — format is one JSON per line.
+`eval_qa.jsonl` uses `{"question", "expected_keywords"}`;
+`eval_qa_continual.jsonl` adds `"fact"`.
 
 ---
 
