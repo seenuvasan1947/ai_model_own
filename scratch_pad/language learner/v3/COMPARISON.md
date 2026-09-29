@@ -1,5 +1,7 @@
 # v3: Scale Up — Dimensions, Layers, and Training Data
 
+> **⚠️ CORRECTION (see Section 6):** the loss numbers below (Section 2) were **training loss only** — v3 originally had no held-out validation split, so they could not distinguish real generalization from memorization. Section 6 re-runs v3's *exact* original setup with a validation split added and shows the model was significantly overfitting the whole time. The comparisons in Sections 3-5 (generated output quality) are unaffected by this — those are still real, honest qualitative improvements — but the "scale helps, measurably" framing in Section 5 needs the correction in Section 6 read alongside it.
+
 v1 and v2 kept the model deliberately tiny (64-dim, 2 layers, 358K params, one ~26.5k-word book) to prove the *architecture* works before spending compute on *quality*. v3 keeps the same architecture (all of v2's Titans-inspired upgrades carry over unchanged) and scales the two things that actually determine output quality: model capacity and training data volume.
 
 ---
@@ -80,3 +82,29 @@ Notable: the answer starts by correctly reciting a fact from the generic Q&A set
 - **Sherlock Holmes content is present but not yet reliably surfaced** — a real limitation to address with either more training steps, a larger model, or better-targeted retrieval, not a sign the corpus mixing failed.
 - **Subword-level garbling ("crudow", "loul") is new at this scale** and wasn't visible in v1/v2's more repetitive, smaller-vocabulary-usage output — likely an artifact of a larger, more diverse corpus outrunning the model's current capacity to fully resolve token boundaries. Worth watching as training continues.
 - **v2's mechanism upgrades and v3's scale upgrades are independent and additive** — nothing here required changing Pair 2/3's logic; the next natural experiment is combining more scale with the mechanism fixes flagged as still open in v2 (looser retrieval threshold, no learned memory).
+
+---
+
+## 6. Corrected Results — v3's Original Setup, Re-run With a Validation Split
+
+v4 (`v4/UPDATES.md`, fix #3) added a held-out train/val split and discovered overfitting invisible in v1-v3. To check whether that was specific to v4's other changes (fixed tokenizer, bigger vocab) or was already present in v3 as originally run, v3's *exact* original setup — same buggy tokenizer (trained on Alice-only text, not the full combined corpus — see `v4/UPDATES.md` fix #2 for why this was a bug), same `vocab_size=4000`, same 128-dim/3-layer model, same 6,000 steps — was re-run with only the val-split measurement added, nothing else changed.
+
+**Result: the same overfitting pattern v4 found is confirmed present in v3's original configuration too.**
+
+| Step | Train loss | Val loss |
+|---|---|---|
+| 0 | 8.32 | 8.32 |
+| 500 | 4.41 | 5.11 |
+| 1500 | 3.60 | 4.77 |
+| 3000 | 3.22 | 4.64 |
+| 4500 | 2.95 | 4.46 |
+| 5500 | 2.84 | 4.54 |
+
+Train loss (2.84) closely matches the originally-reported final loss (2.87 — the small difference is just normal run-to-run variance). But val loss plateaued in the 4.4-4.6 range from roughly step 2000 onward and never approached the train loss — a persistent ~1.6-1.7 gap by the end of training.
+
+**What this means for Sections 2-5 above:**
+- The **loss numbers in Section 2** were real but incomplete — they measured memorization capability, not generalization, and should not be read as "the model got objectively better at language modeling" without this caveat.
+- The **generated-output comparisons in Sections 3-4** are not undermined by this — a model can overfit its training loss while still producing more coherent output than a much smaller, undertrained model, because the *output quality* comparisons were direct, qualitative, human-read comparisons, not loss-derived. v3's answers genuinely were more coherent than v1/v2's, independent of the overfitting finding.
+- The **"scale helps" conclusion in Section 5** needs a qualifier: **scale helped *this specific corpus size become memorizable* by a 1.1M-parameter model, not necessarily *generalizable*.** A larger corpus, more regularization (dropout, weight decay tuning), or fewer training steps (early stopping around where val loss was lowest) would be needed to know whether scale genuinely improves generalization here, or only gives the model enough capacity to memorize a bigger dataset.
+
+This correction doesn't invalidate v3's real, observed output-quality improvements — but it does mean "v3 proves scale straightforwardly helps" was an overclaim. The honest version: **v3 proves scale improves observed output quality on this size of corpus, while also being large enough to overfit it — both things are true at once, and future work should track val loss, not just train loss, to tell which effect is doing the work.**

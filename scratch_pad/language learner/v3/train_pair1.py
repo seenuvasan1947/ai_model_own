@@ -2,6 +2,12 @@
 (b) the small generic Q&A-behavior set (the answering-pattern skill).
 See piece_collect.md, "Knowledge vs. the skill of answering."
 
+RETROACTIVE CORRECTION: this version adds the held-out train/val split from
+v4/UPDATES.md fix #3, applied back onto v3's original setup (same tokenizer
+bug, same vocab_size=4000, same model/data config) to get a corrected
+before/after comparison for COMPARISON.md's original claims. See that file's
+"Corrected Results" section for what this run actually showed.
+
 Usage:
     python tokenizer.py
     python train_pair1.py
@@ -22,6 +28,12 @@ from tokenizer import load_tokenizer
 # tiny (a few hundred words) compared to the book (~26k words), so without
 # oversampling it, the answering-pattern would barely be seen during training.
 QA_SAMPLE_RATIO = 0.35
+
+
+def split_train_val(data: np.ndarray, val_split: float):
+    """Held-out contiguous tail split -- see v4/train_pair1.py."""
+    n_val = max(1, int(len(data) * val_split))
+    return data[:-n_val], data[-n_val:]
 
 
 def get_batch(book_data, qa_data, batch_size, context_size, device):
@@ -67,10 +79,17 @@ def main():
     with open(tcfg.qa_path, "r", encoding="utf-8") as f:
         qa_ids = tokenizer.encode(f.read()).ids
 
-    book_data = np.array(book_ids, dtype=np.uint16)
-    qa_data = np.array(qa_ids, dtype=np.uint16)
+    book_all = np.array(book_ids, dtype=np.uint16)
+    qa_all = np.array(qa_ids, dtype=np.uint16)
 
-    print(f"book tokens: {len(book_data):,}  qa tokens: {len(qa_data):,}  vocab: {vocab_size:,}")
+    book_train, book_val = split_train_val(book_all, tcfg.val_split)
+    qa_train, qa_val = split_train_val(qa_all, tcfg.val_split)
+
+    print(
+        f"book tokens: {len(book_all):,} (train {len(book_train):,} / val {len(book_val):,})  "
+        f"qa tokens: {len(qa_all):,} (train {len(qa_train):,} / val {len(qa_val):,})  "
+        f"vocab: {vocab_size:,}"
+    )
 
     model = Pair1Foundation(gcfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -82,11 +101,14 @@ def main():
 
     for it in range(tcfg.max_iters):
         if it % tcfg.eval_interval == 0:
-            loss_est = estimate_loss(model, book_data, qa_data, tcfg, gcfg, device)
-            print(f"step {it}: loss {loss_est:.4f}")
+            train_loss = estimate_loss(model, book_train, qa_train, tcfg, gcfg, device)
+            val_loss = estimate_loss(model, book_val, qa_val, tcfg, gcfg, device)
+            gap = val_loss - train_loss
+            flag = "  <- val loss notably higher than train: overfitting signal" if gap > 0.3 else ""
+            print(f"step {it}: train loss {train_loss:.4f}  val loss {val_loss:.4f}{flag}")
             torch.save(model.state_dict(), os.path.join(tcfg.out_dir, "pair1_checkpoint.pt"))
 
-        x, y = get_batch(book_data, qa_data, tcfg.batch_size, gcfg.context_size, device)
+        x, y = get_batch(book_train, qa_train, tcfg.batch_size, gcfg.context_size, device)
         _, loss = model(x, y)
 
         optimizer.zero_grad(set_to_none=True)

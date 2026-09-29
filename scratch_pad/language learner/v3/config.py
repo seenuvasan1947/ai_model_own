@@ -33,6 +33,11 @@ class TrainConfig:
     grad_clip: float = 1.0
     device: str = "cuda"          # falls back to cpu automatically if unavailable
 
+    # Added retroactively to re-measure v3's original run with a held-out
+    # split (see v4/UPDATES.md fix #3) -- v3's own architecture/vocab/data
+    # are otherwise left exactly as originally configured.
+    val_split: float = 0.1
+
 
 @dataclass
 class Pair2Config:
