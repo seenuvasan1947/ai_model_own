@@ -1,3 +1,11 @@
+# Large files excluded from text-generation-experiments (over GitHub's
+# 100MB per-file limit) -- kept ignored here so they don't get re-added by
+# accident if the full source folders are copied in again later.
+spam_phish/final_dataset.csv
+spam_phish/security_classifier.pth
+spam_phish/spam-ham-and-phishing-message-dataset-for-nlp.zip
+text_gen_polity/nanoGPT-master/out-polity/ckpt.pt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
