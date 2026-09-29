@@ -1,0 +1,3 @@
+numpy
+torch  # only needed for --encoder gru, od/full_model.py and titan_way
+sentence-transformers  # optional: titan_way --encoder minilm (downloads a ~90 MB model)

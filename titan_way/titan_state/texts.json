@@ -1,0 +1,81 @@
+{
+ "texts": [
+  "hi",
+  "New Delhi",
+  "A parliamentary system is a form of government in which the executive branch is drawn from the legislature and depends on its support to stay in power.",
+  "A parliamentary system is a form of government in which the executive branch, the prime minister and cabinet, is drawn from the legislature and depends on its support to stay in power.",
+  "Voters elect members of parliament, and the party or coalition holding a majority of seats forms the government.",
+  "The prime minister is the head of government, while a separate head of state, such as a monarch or a president, performs mainly ceremonial duties.",
+  "Parliament makes laws, approves the budget, and questions ministers.",
+  "If parliament passes a vote of no confidence, the government must resign or call a new election.",
+  "This differs from a presidential system, where the president is elected separately and cannot be removed simply by losing a legislative vote.",
+  "India, the United Kingdom, Canada, and Germany are examples of parliamentary democracies."
+ ],
+ "updates": 136,
+ "pairs": [
+  {
+   "q": "hi",
+   "a": "hi",
+   "count": 2,
+   "imp": false,
+   "sal": 1.35
+  },
+  {
+   "q": "capital of India",
+   "a": "New Delhi",
+   "count": 1,
+   "imp": false,
+   "sal": 0.9
+  },
+  {
+   "q": "A parliamentary system is a form of government in which the executive branch, the prime minister and cabinet, is drawn from the legislature and depends on its support to stay in power.",
+   "a": "A parliamentary system is a form of government in which the executive branch, the prime minister and cabinet, is drawn from the legislature and depends on its support to stay in power.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  },
+  {
+   "q": "Voters elect members of parliament, and the party or coalition holding a majority of seats forms the government.",
+   "a": "Voters elect members of parliament, and the party or coalition holding a majority of seats forms the government.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  },
+  {
+   "q": "The prime minister is the head of government, while a separate head of state, such as a monarch or a president, performs mainly ceremonial duties.",
+   "a": "The prime minister is the head of government, while a separate head of state, such as a monarch or a president, performs mainly ceremonial duties.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  },
+  {
+   "q": "Parliament makes laws, approves the budget, and questions ministers.",
+   "a": "Parliament makes laws, approves the budget, and questions ministers.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  },
+  {
+   "q": "If parliament passes a vote of no confidence, the government must resign or call a new election.",
+   "a": "If parliament passes a vote of no confidence, the government must resign or call a new election.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  },
+  {
+   "q": "This differs from a presidential system, where the president is elected separately and cannot be removed simply by losing a legislative vote.",
+   "a": "This differs from a presidential system, where the president is elected separately and cannot be removed simply by losing a legislative vote.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  },
+  {
+   "q": "India, the United Kingdom, Canada, and Germany are examples of parliamentary democracies.",
+   "a": "India, the United Kingdom, Canada, and Germany are examples of parliamentary democracies.",
+   "count": 1,
+   "imp": false,
+   "sal": 1.0
+  }
+ ],
+ "mistakes": []
+}
