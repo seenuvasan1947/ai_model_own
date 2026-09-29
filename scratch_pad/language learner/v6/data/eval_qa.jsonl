@@ -1,0 +1,20 @@
+{"question": "What color is the sky?", "expected_keywords": ["sky", "blue"]}
+{"question": "How many days are in a week?", "expected_keywords": ["seven", "days", "week"]}
+{"question": "What is two plus two?", "expected_keywords": ["two", "four"]}
+{"question": "What is the capital of France?", "expected_keywords": ["capital", "France", "Paris"]}
+{"question": "How many months are in a year?", "expected_keywords": ["twelve", "months", "year"]}
+{"question": "What is the opposite of hot?", "expected_keywords": ["opposite", "hot", "cold"]}
+{"question": "What is the largest ocean on Earth?", "expected_keywords": ["largest", "ocean", "Pacific"]}
+{"question": "What is frozen water?", "expected_keywords": ["frozen", "water", "ice"]}
+{"question": "What day comes after Monday?", "expected_keywords": ["day", "Monday", "Tuesday"]}
+{"question": "What is the color of grass?", "expected_keywords": ["color", "grass", "green"]}
+{"question": "What is the first month of the year?", "expected_keywords": ["first", "month", "January"]}
+{"question": "How many legs does a cat have?", "expected_keywords": ["cat", "four", "legs"]}
+{"question": "Where does a fish live?", "expected_keywords": ["fish", "water"]}
+{"question": "What is the opposite of big?", "expected_keywords": ["opposite", "big", "small"]}
+{"question": "What comes after winter?", "expected_keywords": ["winter", "spring"]}
+{"question": "How many planets are in our solar system?", "expected_keywords": ["eight", "planets", "solar"]}
+{"question": "What is the third planet from the sun?", "expected_keywords": ["third", "planet", "sun", "Earth"]}
+{"question": "What is ten minus four?", "expected_keywords": ["ten", "minus", "four", "six"]}
+{"question": "What is the capital of Japan?", "expected_keywords": ["capital", "Japan", "Tokyo"]}
+{"question": "What is the last month of the year?", "expected_keywords": ["last", "month", "December"]}
