@@ -1,0 +1,78 @@
+English is the mother tongue for this model. This corpus is a starter foundation covering grammar, common word meanings, and context-dependent usage, matching the Phase 1 design: deep single-language grounding before any continual learning happens.
+
+PART ONE: BASIC GRAMMAR
+
+A sentence needs a subject and a verb. The subject performs the action. The verb describes the action. For example: The dog runs. Here, "the dog" is the subject and "runs" is the verb.
+
+Nouns name people, places, things, or ideas. Examples of nouns: teacher, city, book, happiness, river, bank, money, storm, house, child, water, wind, fear.
+
+Verbs describe actions or states. Examples of verbs: run, walk, think, feel, remember, destroy, deposit, save, borrow, tremble, rain, blow, learn, speak, read, write.
+
+Adjectives describe nouns. Examples: fast, slow, happy, sad, strong, weak, cold, warm, old, new, big, small.
+
+Adverbs describe verbs, adjectives, or other adverbs. Examples: quickly, slowly, happily, sadly, very, extremely, always, never, often, sometimes.
+
+Pronouns replace nouns. Examples: he, she, it, they, we, I, you, this, that, these, those.
+
+A sentence can be a statement, a question, or a command. Statement: She reads a book. Question: Does she read a book? Command: Read the book.
+
+Tenses show when an action happens. Present tense: She walks to the bank. Past tense: She walked to the bank. Future tense: She will walk to the bank.
+
+Plural nouns usually add "s": one book, two books. One river, two rivers. One child, two children (irregular plural).
+
+PART TWO: WORD MEANING AND CONTEXT
+
+Many English words have more than one meaning, and the correct meaning depends on the words around it. This is called context.
+
+The word "bank" has at least two common meanings.
+
+First meaning: a financial institution where people keep money. Example sentences: She deposited her paycheck at the bank. He borrowed money from the bank to buy a house. The bank charges interest on loans. I need to open a bank account. The bank is closed on Sunday.
+
+Second meaning: the land alongside a river. Example sentences: They sat on the bank and watched the water flow. The river bank was covered in tall grass. Fish gathered near the bank where the water was shallow. Heavy rain caused the river to overflow its bank. Children played by the river bank all afternoon.
+
+Notice how the surrounding words signal which meaning is correct. Words like "money," "loan," "account," "deposit," and "interest" signal the financial meaning. Words like "river," "water," "fish," and "grass" signal the geographic meaning.
+
+Another example word: "storm." A storm is a period of strong wind, heavy rain, thunder, and lightning. Example sentences: The storm destroyed the old barn. She trembled, remembering the storm that destroyed her childhood home. Dark clouds warned that a storm was coming. Thunder rumbled as the storm approached. After the storm, the streets were flooded. Sailors feared the storm because it could sink their ship.
+
+Storms are often associated with fear because they can be dangerous. The word "storm" frequently appears near words like "fear," "danger," "destroy," "flood," and "dark," which is why the word carries an emotional weight for many people.
+
+PART THREE: SIMPLE NARRATIVE TEXT
+
+A woman named Anna lived near a river. Every morning, she walked along the river bank to watch the water. One day, a storm came. The sky turned dark, and thunder rumbled. Anna trembled with fear. The wind blew hard, and rain fell heavily. The river rose over its bank and flooded the nearby fields.
+
+After the storm, Anna went to the bank in town to check on her savings. The bank manager told her that the town would help families whose homes were damaged. Anna felt relieved. She remembered the storm for many years afterward, and the memory still made her feel a small amount of fear whenever dark clouds gathered.
+
+PART FOUR: QUESTIONS AND ANSWERS
+
+Question: What is a bank?
+Answer: A bank can mean a financial institution that holds money, or the land beside a river, depending on context.
+
+Question: What is a storm?
+Answer: A storm is a weather event with strong wind, rain, thunder, and sometimes lightning.
+
+Question: Why did Anna feel fear?
+Answer: Anna felt fear because the storm was dangerous and reminded her of past danger.
+
+Question: Where did Anna walk every morning?
+Answer: Anna walked along the river bank every morning.
+
+Question: What did Anna do after the storm?
+Answer: After the storm, Anna went to the bank in town to check on her savings.
+
+PART FIVE: ADDITIONAL VOCABULARY IN CONTEXT
+
+Happiness: She felt happiness when she saw her family again. Happiness is the feeling of joy and contentment.
+
+Fear: Fear is the feeling of being afraid, often caused by danger. He felt fear when he heard the loud thunder.
+
+Memory: A memory is something you remember from the past. She had a clear memory of the storm from her childhood.
+
+Learning: Learning means gaining new knowledge or skill. Children spend many years learning language and grammar.
+
+Water: Water is a clear liquid found in rivers, lakes, and oceans. The river was full of cold, clear water.
+
+Money: Money is used to buy goods and services. She kept her money safe at the bank.
+
+Wind: Wind is moving air. The wind blew the leaves across the yard during the storm.
+
+This concludes the starter corpus. For real training, expand this file with a much larger volume of clean English text (books, articles, dialogue) while keeping the same principle: explicit grammar coverage plus many context-rich examples of ambiguous words like "bank," so the model has enough co-occurrence evidence to disambiguate meaning the way we discussed.

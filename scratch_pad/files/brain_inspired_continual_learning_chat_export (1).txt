@@ -1,0 +1,308 @@
+BRAIN-INSPIRED CONTINUAL LEARNING RESEARCH — CONVERSATION EXPORT
+==================================================================
+(Exported for use as project context in Claude Code)
+
+PROJECT GOAL
+------------
+Build a small, CPU-trainable neural network architecture inspired by how the
+human brain learns and remembers, to explore continual learning without
+catastrophic forgetting. Independent researcher, no large compute budget,
+targeting an incremental, testable, publishable-scale project (arXiv /
+workshop level), not a full "solve AGI" attempt.
+
+CORE INTUITIONS THE USER DEVELOPED IN THIS CONVERSATION
+---------------------------------------------------------
+1. Current LLMs are fundamentally next-token predictors: random weight
+   initialization -> forward pass -> loss -> backprop -> gradient descent,
+   repeated over huge datasets. Embeddings self-organize into semantic
+   clusters as an emergent side effect of this process (not manually designed).
+
+2. Core distinction between AI training and human brains:
+   - AI: train-then-freeze. Weights are static at inference time.
+   - Brain: continuous, always-on synaptic plasticity. No train/inference split.
+   - This split is the root cause of "catastrophic forgetting" in ANNs.
+
+3. The brain is NOT randomly initialized like a fresh neural net. It has
+   structured, evolution-specified wiring before experience (genomic
+   bottleneck, critical periods, retinal waves, rich-club organization
+   present before birth). Learning refines this scaffold; it doesn't build
+   from scratch.
+
+4. The brain almost certainly does NOT run literal backpropagation
+   (weight transport problem, need for symmetric forward/backward weights,
+   non-local global error signals). Leading biologically plausible
+   alternatives: Hebbian learning / STDP, predictive coding, target
+   propagation, feedback alignment, equilibrium propagation, dendritic
+   error microcircuits. Whether the brain approximates gradient descent via
+   these local mechanisms (NGRAD hypothesis) remains actively debated
+   (2023-2026 research: prospective configuration, target-learning studies).
+
+5. Memory is NOT a single monolithic store. Two axes:
+   HORIZONTAL: specialized regions/modules handle different content types
+   (faces, language, motor skills, episodic events) somewhat independently
+   -- confirmed by patient H.M. losing hippocampus-dependent recall while
+   retaining motor skill learning and familiarity-based recognition.
+   Engineering analogue: Mixture-of-Experts (MoE) architectures.
+
+   VERTICAL: layered memory tiers --
+     sensory/cache buffer (milliseconds) ->
+     working memory (seconds, small capacity) ->
+     consolidation (hippocampus-driven, sleep-dependent, decides what gets
+       promoted, compresses raw experience into gist) ->
+     long-term memory (durable, itself split into episodic/semantic/procedural)
+
+6. What determines what gets consolidated into durable long-term memory:
+   (a) REPETITION / spaced retrieval (testing effect, strengthens via LTP)
+   (b) EMOTIONAL SALIENCE / "surprise" (amygdala tags significant events;
+       hippocampal consolidation is boosted for emotionally arousing events)
+   Content with neither repetition nor emotional salience tends to fade
+   (synaptic pruning / downscaling, interference from new learning).
+
+7. Recognition vs. Recall are separate systems, not one system at different
+   speeds:
+   - Recognition/familiarity: fast, automatic, unconscious, huge capacity
+     (dedicated face-recognition pathway through limbic areas).
+   - Recall: slow, effortful, two-stage (search candidates, then verify),
+     hippocampus-dependent, reconstructs rather than just matches.
+
+8. Fixed brain capacity + continuous new input => an active policy is
+   REQUIRED for what to compress, strengthen, or drop. This is not a flaw;
+   it's a necessary consequence of finite storage + infinite incoming
+   experience.
+
+9. External memory (diary, notes, indexed archives) is the human workaround
+   for the brain's necessary forgetting -- structurally identical in
+   function to RAG (Retrieval-Augmented Generation) systems used in
+   current AI: embed content, store in a vector DB, retrieve by similarity
+   at query time, optionally write new facts back. Real robots described
+   in the conversation ("robot remembers what you told it") use exactly
+   this RAG pattern, not weight updates -- the underlying model does NOT
+   change; only an external database changes.
+
+10. Reviewed related work directly:
+    - Titans (Behrouz, Zhong, Mirrokni; Google Research, Jan 2025,
+      arXiv:2501.00663): neural long-term memory module that updates its
+      OWN weights at test time via a "surprise" metric (gradient of loss
+      w.r.t. input = how unexpected the input is), with a learned decay
+      (forget) mechanism. Three integration variants: Memory as Context
+      (MAC), Memory as Gate (MAG), Memory as Layer (MAL). Combined with
+      short-term memory (limited-window attention) and fixed persistent
+      memory (task knowledge). Claimed to beat Transformers and modern
+      linear recurrent models (Mamba, DeltaNet, etc.), scale to >2M token
+      context, and outperform GPT-4 / RAG-augmented Llama3.1-8B on
+      BABILong long-context reasoning with far fewer parameters.
+
+    - "Titans Revisited" (Di Nepi, Siciliano, Silvestri; Sapienza
+      University of Rome, Oct 2025, arXiv:2510.09551): independent
+      lightweight reimplementation + critical reproduction study. Key
+      findings:
+        * Original paper had unresolved ambiguities (chunking strategy,
+          prediction source, MAC block depth, attention hyperparameters),
+          hindering reproducibility.
+        * Neural Memory component CONSISTENTLY improved results over
+          attention-only baselines across MLM, time series forecasting,
+          and recommendation tasks.
+        * Full Titans (MAC) did NOT always beat established baselines
+          (e.g., lost to BERT4Rec on MovieLens recommendation), largely
+          due to the performance cost/degradation from chunking.
+        * CRITICAL FINDING: when they froze the Transformer backbone and
+          updated ONLY the neural memory weights at test time over many
+          epochs, performance stayed flat/slowly degraded -- i.e.,
+          "memory updates alone are insufficient for meaningful test-time
+          learning." They attribute this to a mismatch between the frozen
+          backbone's key/value projections and how the memory evolves,
+          and propose JOINT adaptation of memory + backbone as necessary
+          future work.
+
+    ==> IDENTIFIED OPEN RESEARCH GAP (small-scale, testable, currently
+        unresolved as of these two papers): does jointly fine-tuning a
+        small portion of the backbone alongside the neural memory (rather
+        than freezing the backbone entirely) restore meaningful test-time
+        learning? No published answer found in either paper.
+
+PROPOSED ARCHITECTURE (staged, layer by layer)
+------------------------------------------------
+Terminology clarification (user-identified and confirmed as a genuine,
+field-recognized distinction):
+  - "Weights" = slow parameters, updated gradually via backprop over many
+    examples, never from a single exposure (standard deep learning sense).
+  - "Memory state / fast weights" = separate parameters that CAN change
+    drastically from one or a few exposures, decay over time if not
+    reinforced, and are updated by a local, immediate, surprise-gated rule
+    -- NOT standard backprop over a training set. Directly maps to the
+    user's question: "can it remember something after seeing it once, and
+    then forget it after a few days if unused?" Answer: yes, this is
+    exactly what the fast-weights/memory-state layer with a decay term is
+    for; it's a categorically different object from a standard weight.
+
+Layer 0 -- Input encoder (slow weights): standard small network (MLP or
+  small transformer) converting raw input into vector representations.
+  Trained conventionally via backprop. Analogous to early sensory cortex.
+
+Layer 1 -- Working memory / cache: short buffer holding only current input
+  (and maybe last few interactions). Not "learned" in the weight sense;
+  temporary, constantly overwritten. Analogous to sensory/working memory.
+
+Layer 2 -- Surprise / salience gate: computes a scalar signal each step
+  from the model's own prediction error (loss or gradient magnitude) on
+  the current input -- high surprise = high salience = gates whether
+  Layer 3 gets updated at all. Directly implements the amygdala-style
+  "is this significant?" tagging mechanism, mathematically approximated
+  the same way Titans does it.
+
+Layer 3 -- Fast memory / neural memory module: separate small associative
+  memory network whose OWN parameters update at test/run time via a rule
+  of the form:
+      Memory_t = (1 - decay) * Memory_(t-1) + surprise_gated_update
+  This is where "remember after one exposure, fade after N days/steps if
+  unreinforced" behavior lives. Decay rate is a tunable hyperparameter
+  directly controlling how long an un-reinforced memory persists.
+
+Layer 4 -- Consolidation / compression step: run PERIODICALLY (not every
+  step, analogous to sleep). Scans current fast-memory contents; items
+  reinforced multiple times (repetition) OR with high cumulative salience
+  get compressed and promoted to Layer 5. Two competing implementation
+  choices worth testing head-to-head:
+    (a) fold consolidated info into slow weights via periodic fine-tuning
+        (closer to biological cortex), or
+    (b) write a compressed summary into an external retrievable database
+        (closer to RAG / "diary with topic-wise index").
+
+Layer 5 -- Long-term store: durable retention, via (a) or (b) above.
+
+Layer 6 -- Modular routing (add LAST, after 0-5 validated individually):
+  split memory into multiple parallel specialized instances via a
+  Mixture-of-Experts-style router, so unrelated knowledge doesn't compete
+  for the same storage slots. Implements the "horizontal" specialization
+  axis (different brain regions for different content types).
+
+RECOMMENDED BUILD ORDER (staged, validate each before adding next)
+---------------------------------------------------------------------
+1. Baseline: plain small model trained sequentially on Task A then Task B
+   (synthetic classification tasks in the same input space, different
+   class clusters) -- to concretely OBSERVE catastrophic forgetting
+   (accuracy on Task A collapses after training on Task B).
+2. Add ONE existing mitigation (simple replay buffer, or EWC-style
+   elastic weight consolidation) -- confirm it measurably reduces
+   forgetting vs. the baseline.
+3. Add the surprise-gated fast-memory layer (Layer 2+3 above) -- test
+   whether it beats plain replay/EWC on retention of Task A while still
+   learning Task B.
+4. If 1-3 succeed, add a second memory tier (fast + slow, Fast-Weights /
+   Titans style) and test whether combining tiers compounds the benefit.
+5. Add modular routing (Layer 6) LAST -- most architecturally complex,
+   easiest to introduce instability.
+
+Rationale for this order: isolate one new mechanism at a time so any
+improvement (or failure) can be attributed to a specific, identifiable
+design choice, rather than confounding multiple untested ideas at once.
+Each stage, even if the project stops early, is a legitimate small
+reproducibility/ablation-style result on its own.
+
+PRACTICAL / COMPUTE CONTEXT
+------------------------------
+- Independent researcher, no large GPU budget assumed by default.
+- Small models (thousands to low millions of parameters), small synthetic
+  or toy datasets, CPU-feasible for the early stages; free GPU (Google
+  Colab / Kaggle) recommended once models/sequences grow, since CPU-only
+  becomes painfully slow (hours per run) well before results get
+  interesting at larger scale.
+- User's own prior working style: started this exploration first in a
+  sandboxed cloud code environment using raw NumPy (no internet access
+  for pip installs, no PyTorch available in that sandbox) to hand-build
+  Layer 0-3 with explicit forward passes and manual gradients, specifically
+  so every weight update is visible and nothing is hidden inside a
+  framework. Now moving the actual development to local Claude Code on
+  their own laptop, where PyTorch (or any other framework) should be
+  installable normally with internet access.
+
+FIRST CONCRETE CODE ARTIFACT STARTED (NumPy, not yet completed)
+-------------------------------------------------------------------
+A toy continual-learning task generator: two sequential synthetic
+classification tasks (Task A, Task B) in the same input feature space
+(10 features, 3 classes each), with different random Gaussian cluster
+centers per task, explicitly designed so a naive model trained on A then
+B will exhibit catastrophic forgetting of A. Includes train/test splits
+for both tasks. (Task.py -- generation logic only; model/training loop
+not yet implemented at the point of export.)
+
+WHAT TO DO NEXT (for Claude Code, on the user's local laptop)
+------------------------------------------------------------------
+1. Reproduce/port the toy task generator (synthetic Task A / Task B,
+   shared input space, different class clusters) in PyTorch or NumPy,
+   whichever the user prefers locally.
+2. Implement Layer 0 (small MLP/encoder) + plain classifier head; train
+   sequentially on Task A then Task B; measure accuracy on both task
+   test sets after each training phase to concretely demonstrate
+   catastrophic forgetting.
+3. Implement one baseline mitigation (replay buffer is simplest to start).
+4. Implement the surprise-gated fast-memory module (Layer 2+3) as
+   described above; compare against baseline and replay.
+5. Iterate per the staged build order above, keeping every stage runnable
+   and measurable independently.
+
+PRACTICAL OBSTACLES TO EXPECT (solve roughly in this order)
+------------------------------------------------------------------
+1. ENVIRONMENT / DEPENDENCY SETUP
+   Need Python + a framework with autograd. PyTorch recommended over
+   hand-rolled NumPy gradients (easier, less error-prone). Sandbox
+   environment used earlier had no internet access, so PyTorch could not
+   be installed and NumPy-only code was started instead. On a local
+   laptop with normal internet access, `pip install torch` should work
+   with no special issue.
+
+2. DEBUGGING THE FAST-MEMORY DECAY RULE (the big one, specific to this
+   design)
+   Rule: Memory_t = (1 - decay) * Memory_(t-1) + surprise_gated_update
+   - decay too high -> memory forgets almost instantly -> layer is
+     useless.
+   - decay too low -> memory never forgets -> defeats the purpose, and
+     the memory value can grow unbounded, destabilizing training.
+   Expect to spend real, dedicated time tuning this one scalar before
+   anything downstream (consolidation, routing, etc.) can be evaluated
+   meaningfully.
+
+3. DISTINGUISHING "LEARNED NOTHING" vs. "FORGOT EVERYTHING" vs. "GATE
+   NEVER FIRES"
+   With three new interacting moving parts (encoder, surprise gate, fast
+   memory), a bad final accuracy number alone will not tell you which
+   piece is broken. Fix: log each piece's internal signal separately from
+   the start --
+     - surprise score per input (over time / over task)
+     - memory state norm/magnitude over time
+     - accuracy per task, measured separately, after each training phase
+   Do not rely on final accuracy alone to debug.
+
+4. THE SURPRISE GATE NEEDS A STABLE REFERENCE POINT
+   Surprise is measured relative to what the model currently expects. If
+   the Layer 0 encoder is still changing rapidly (early in training), the
+   surprise signal is noisy/unreliable, and the fast-memory layer will
+   store low-quality or garbage updates. Practical fix: let the encoder
+   stabilize somewhat (e.g., pretrain it briefly, or use a warm-up period)
+   before trusting/enabling the surprise gate.
+
+5. TUNING THE TOY TASK'S DIFFICULTY TO ACTUALLY DEMONSTRATE FORGETTING
+   If Task A and Task B's synthetic class clusters are too well-separated
+   / too easy, even the naive sequential-training baseline will not show
+   much forgetting, so there is nothing for the new mechanism to visibly
+   fix. If clusters are too close / too hard, even the improved
+   architecture may not show a benefit. Expect one round of adjusting
+   cluster separation / noise level in the synthetic task generator
+   before it is a good, sensitive testbed for measuring forgetting.
+
+6. REPRODUCIBILITY DISCIPLINE
+   Fix random seeds everywhere (data generation, weight init, any
+   stochastic gating). Log every hyperparameter with every run (decay
+   rate, learning rate, gate threshold, task difficulty settings, etc.).
+   Without this, it will be impossible to tell whether an observed
+   improvement is a real effect of the architecture or just a lucky
+   random seed -- this exact ambiguity (unspecified/unlogged design
+   choices) is what the "Titans Revisited" reproduction paper flagged as
+   a major reproducibility problem in the original Titans work.
+
+RECOMMENDED ORDER TO ADDRESS THESE
+--------------------------------------
+Solve (1) and (2) first -- nothing else in the pipeline is testable or
+meaningful until the environment works and the decay rule is in a
+sane operating range. Then proceed to (3)-(6) as each stage of the build
+order is implemented.

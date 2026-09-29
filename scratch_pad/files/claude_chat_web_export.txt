@@ -1,0 +1,10 @@
+const req = indexedDB.open('claude-conversation-store');
+req.onsuccess = (e) => {
+  const db = e.target.result;
+  const tx = db.transaction('trees', 'readonly');
+  const store = tx.objectStore('trees');
+  const getReq = store.get('39535e67-e2c4-4e42-9296-9b164b106449');
+  getReq.onsuccess = () => console.log(getReq.result);
+  getReq.onerror = (err) => console.error('Not found or key mismatch:', err);
+};
+req.onerror = (err) => console.error('DB open failed:', err);
