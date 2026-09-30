@@ -18,6 +18,9 @@ Usage:
 """
 
 import os
+import subprocess
+import time
+from datetime import datetime, timedelta
 
 import numpy as np
 import torch
@@ -32,6 +35,29 @@ from tokenizer import load_tokenizer
 # tiny (a few hundred words) compared to the book, so without oversampling
 # it, the answering-pattern would barely be seen during training.
 QA_SAMPLE_RATIO = 0.35
+
+# How often to print a lightweight heartbeat (step number, recent loss, timing).
+# Every N training steps -- separate from the heavier eval every eval_interval.
+HEARTBEAT_INTERVAL = 100
+
+# How often to probe GPU status (nvidia-smi is a subprocess, so keep it rare).
+GPU_PROBE_INTERVAL = 500
+
+
+def gpu_status() -> str:
+    """Return a short 'temp / power / clock' string, or '' if no GPU / no nvidia-smi.
+    Never raises -- silently returns empty string on any failure."""
+    try:
+        out = subprocess.check_output(
+            ["nvidia-smi",
+             "--query-gpu=temperature.gpu,power.draw,clocks.sm,utilization.gpu",
+             "--format=csv,noheader,nounits"],
+            stderr=subprocess.DEVNULL, timeout=2,
+        ).decode().strip().splitlines()[0]
+        temp, power, sm_clock, util = [x.strip() for x in out.split(",")]
+        return f"GPU {temp}°C, {power}W, {sm_clock}MHz, {util}% util"
+    except Exception:
+        return ""
 
 
 def split_train_val(data: np.ndarray, val_split: float):
@@ -112,13 +138,26 @@ def main():
     checkpoints_since_improvement = 0
     final_path = os.path.join(tcfg.out_dir, "layer1_final.pt")
 
+    # v6: heartbeat/timing state
+    training_start = time.time()
+    heartbeat_window_start = training_start   # rolls forward each heartbeat
+    recent_losses = []                          # short rolling window for smoother reporting
+    print(f"[start] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  device={device}  "
+          f"max_iters={tcfg.max_iters:,}  heartbeat every {HEARTBEAT_INTERVAL} steps",
+          flush=True)
+    gs = gpu_status()
+    if gs:
+        print(f"[start] {gs}", flush=True)
+
     for it in range(tcfg.max_iters):
-        if it % tcfg.eval_interval == 0:
+        if it > 0 and it % tcfg.eval_interval == 0:
             train_loss = estimate_loss(model, book_train, qa_train, tcfg, gcfg, device)
             val_loss = estimate_loss(model, book_val, qa_val, tcfg, gcfg, device)
             gap = val_loss - train_loss
             flag = "  <- val>train gap widening: overfitting signal" if gap > 0.3 else ""
-            print(f"step {it}: train loss {train_loss:.4f}  val loss {val_loss:.4f}{flag}")
+            elapsed = time.time() - training_start
+            print(f"[EVAL step {it:,}] train {train_loss:.4f}  val {val_loss:.4f}  "
+                  f"elapsed {timedelta(seconds=int(elapsed))}{flag}", flush=True)
             torch.save(model.state_dict(), os.path.join(tcfg.out_dir, "layer1_checkpoint.pt"))
 
             # v6: early stopping -- save "final" only when val loss improves
@@ -127,15 +166,18 @@ def main():
                 best_step = it
                 checkpoints_since_improvement = 0
                 torch.save(model.state_dict(), final_path)
-                print(f"  [best-so-far saved to layer1_final.pt: val_loss={val_loss:.4f}]")
+                print(f"  [best-so-far saved to layer1_final.pt: val_loss={val_loss:.4f}]",
+                      flush=True)
             else:
                 checkpoints_since_improvement += 1
                 if checkpoints_since_improvement >= tcfg.patience:
                     print(
                         f"\nEarly stopping: val loss hasn't improved in {tcfg.patience} "
-                        f"checkpoints. Best was step {best_step} at val_loss={best_val_loss:.4f}."
+                        f"checkpoints. Best was step {best_step} at val_loss={best_val_loss:.4f}.",
+                        flush=True,
                     )
-                    print(f"layer1_final.pt already holds the best-val-loss weights.")
+                    print(f"layer1_final.pt already holds the best-val-loss weights.",
+                          flush=True)
                     return
 
         x, y = get_batch(book_train, qa_train, tcfg.batch_size, gcfg.context_size, device)
@@ -146,8 +188,35 @@ def main():
         torch.nn.utils.clip_grad_norm_(model.parameters(), tcfg.grad_clip)
         optimizer.step()
 
-    print(f"\nReached max_iters. Best val loss was {best_val_loss:.4f} at step {best_step}.")
-    print(f"layer1_final.pt holds those best-val-loss weights (not the last step's weights).")
+        recent_losses.append(loss.item())
+
+        # v6: lightweight heartbeat every N steps -- proves training is alive,
+        # shows recent loss + step timing + ETA, doesn't require an eval pass
+        if (it + 1) % HEARTBEAT_INTERVAL == 0:
+            now = time.time()
+            window_time = now - heartbeat_window_start
+            ms_per_step = 1000.0 * window_time / HEARTBEAT_INTERVAL
+            steps_left = tcfg.max_iters - (it + 1)
+            eta_seconds = int(steps_left * window_time / HEARTBEAT_INTERVAL)
+            avg_recent_loss = sum(recent_losses) / len(recent_losses)
+            recent_losses = []
+            heartbeat_window_start = now
+
+            gs_str = ""
+            if (it + 1) % GPU_PROBE_INTERVAL == 0:
+                gs = gpu_status()
+                if gs:
+                    gs_str = f"  |  {gs}"
+
+            print(f"  step {it+1:>6,}/{tcfg.max_iters:,}  loss {avg_recent_loss:.4f}  "
+                  f"{ms_per_step:.0f}ms/step  ETA {timedelta(seconds=eta_seconds)}{gs_str}",
+                  flush=True)
+
+    total = int(time.time() - training_start)
+    print(f"\nReached max_iters after {timedelta(seconds=total)}. "
+          f"Best val loss was {best_val_loss:.4f} at step {best_step}.", flush=True)
+    print(f"layer1_final.pt holds those best-val-loss weights (not the last step's weights).",
+          flush=True)
 
 
 if __name__ == "__main__":
