@@ -50,19 +50,22 @@ excluding any that verbatim-match the held-out eval set.
 # updates data/qa_behavior.txt in place
 ```
 
-### 1b. TinyStories (download + subset, 15-30 minutes)
-Public dataset, downloads via HuggingFace. Default subset is ~10M tokens (adjustable in the script).
+### 1b. TinyStories (download + subset, 30-60 minutes)
+Public dataset, downloads via HuggingFace. Default subset is now **30M words**
+(bumped from 10M — we're doing one long training run, so more real data is
+worth the extra download time).
 ```bash
 ./.venv/bin/python data_prep/download_tinystories.py
-# writes data/tinystories.txt (~10M tokens by default)
+# writes data/tinystories.txt (~30M words)
 ```
-**Disk usage:** ~1-2 GB for the full download cache, then only the subset text file stays.
+**Disk usage:** ~2-3 GB for the full download cache, then only the subset text file stays.
 
-### 1c. Simple English Wikipedia (download + clean, 15-30 minutes)
-Same pattern — HuggingFace download, then cleaned + subsetted.
+### 1c. Simple English Wikipedia (download + clean, 30-45 minutes)
+Same pattern — HuggingFace download, then cleaned + subsetted. Default subset
+is now **15M words** (bumped from 5M).
 ```bash
 ./.venv/bin/python data_prep/download_wikipedia.py
-# writes data/simple_wiki.txt (~5M tokens by default)
+# writes data/simple_wiki.txt (~15M words)
 ```
 
 ### 1d. Combine into the final corpus
@@ -75,7 +78,8 @@ Verify the corpus size looks right:
 ```bash
 wc -w data/foundation_corpus.txt
 ```
-Expected: **~15-25 million words** total.
+Expected: **~45-50 million words** total (30M TinyStories + 15M Simple Wiki
++ 44K synthetic + Q&A behavior).
 
 ---
 
@@ -100,11 +104,12 @@ This is the substantive investment. Layer 1 becomes the English master; once don
 ./.venv/bin/python -u train_layer1.py 2>&1 | tee out/training.log
 ```
 
-**Time estimates (rough, based on prior runs on this hardware):**
+**Time estimates (rough, based on prior runs on this hardware) — for the
+70K-iter run on ~45M-token corpus:**
 | Hardware | ~10M param model | ~15M param model |
 |---|---|---|
-| RTX 2050 GPU (when not throttled) | ~1.5-3 hours | ~2-4 hours |
-| RTX 2050 GPU (throttled, as seen in v3/v4) | ~3-6 hours | ~4-8 hours |
+| RTX 2050 GPU (when not throttled) | ~3-6 hours | ~4-8 hours |
+| RTX 2050 GPU (throttled, as seen in v3/v4) | ~6-12 hours | ~8-14 hours |
 | CPU only | Don't try. |
 
 **Early stopping is on by default:** if val loss doesn't improve for 5 consecutive eval checkpoints, training stops automatically and saves the best checkpoint. So actual wall time may be less than the max above.
@@ -264,13 +269,13 @@ Once Stage 3 finishes and `out/layer1_final.pt` exists:
 | Stage | Time |
 |---|---|
 | 0. Setup | 5-10 min |
-| 1. Build corpus | 30-90 min (network-bound) |
+| 1. Build corpus (bumped to ~45M words) | **60-120 min** (network-bound) |
 | 2. Train tokenizer | 5-10 min |
-| 3. Train Layer 1 | **2-8 hours** (main cost) |
+| 3. Train Layer 1 (bumped to 70K iters) | **4-14 hours** (main cost) |
 | 4. Sanity check | 2 min |
 | 5. Continual learning test | 5 min |
-| 6. Q&A eval | 5-15 min |
+| 6. Both evals (language + continual) | 10-20 min |
 | 7. Optional before/after eval | 15 min |
-| **Total** | **3-10 hours** end to end |
+| **Total** | **6-16 hours** end to end |
 
 The good news: after Stage 3, Layer 1 is done forever. Everything after Stage 3 is minutes, not hours.

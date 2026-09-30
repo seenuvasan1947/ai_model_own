@@ -14,7 +14,7 @@ Run:    python data_prep/download_wikipedia.py
 import os
 import re
 
-TARGET_WORDS = 5_000_000
+TARGET_WORDS = 15_000_000
 OUT_PATH = "data/simple_wiki.txt"
 
 

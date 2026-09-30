@@ -11,7 +11,7 @@ Run:    python data_prep/download_tinystories.py
 
 import os
 
-TARGET_WORDS = 10_000_000  # subset to this many words
+TARGET_WORDS = 30_000_000  # subset to this many words
 OUT_PATH = "data/tinystories.txt"
 
 

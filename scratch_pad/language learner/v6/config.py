@@ -28,8 +28,8 @@ class TrainConfig:
     tokenizer_path: str = "data/tokenizer.json"
     out_dir: str = "out"
     batch_size: int = 16                # v6: was 8
-    max_iters: int = 40000              # v6: was 6000; matches bigger corpus
-    eval_interval: int = 500
+    max_iters: int = 70000              # v6 corpus-bump: 40K -> 70K, matches ~45M-token corpus
+    eval_interval: int = 1000           # v6: bumped so eval overhead stays small over longer run
     eval_iters: int = 20
     learning_rate: float = 3e-4
     weight_decay: float = 0.1
