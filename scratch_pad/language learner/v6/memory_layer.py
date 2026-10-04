@@ -49,33 +49,42 @@ class MemoryLayer:
     def _activate(self, hidden_vec: torch.Tensor) -> Dict[int, float]:
         """Compute activation of every existing unit for this hidden vector.
         Returns {unit_index: activation_strength} for units above activity_floor.
-        Distributed activation -- many units can activate partially at once."""
+        Distributed activation -- many units can activate partially at once.
+
+        Vectorized: one matmul against all preferred vectors instead of a
+        Python-level torch.dot per unit, which is the hot path at scale
+        (called once per token)."""
+        if not self.units:
+            return {}
         hidden_vec = F.normalize(hidden_vec, dim=0)
-        activations: Dict[int, float] = {}
-        for i, unit in enumerate(self.units):
-            sim = float(torch.dot(hidden_vec, unit.preferred_vector))
-            if sim > self.cfg.activity_floor:
-                activations[i] = sim
-        return activations
+        pref = torch.stack([u.preferred_vector for u in self.units])  # (N, dim)
+        sims = pref @ hidden_vec  # (N,)
+        above = (sims > self.cfg.activity_floor).nonzero(as_tuple=True)[0]
+        return {int(i): float(sims[i]) for i in above}
 
     # ------------------------------------------------------------------
     # Growing: create a new unit when nothing existing matches well enough
     # ------------------------------------------------------------------
     @torch.no_grad()
-    def _grow(self, hidden_vec: torch.Tensor) -> int:
-        """Create a new unit whose preferred vector is this hidden vector."""
+    def _grow(self, hidden_vec: torch.Tensor) -> Tuple[int, int | None]:
+        """Create a new unit whose preferred vector is this hidden vector.
+        Returns (new_idx, evicted_idx). evicted_idx is None unless capacity
+        was hit; callers that hold an activations dict indexed against the
+        unit list *before* this call must remap it using evicted_idx, since
+        eviction reindexes every unit after it."""
+        evicted = None
         if len(self.units) >= self.cfg.max_units:
             # capacity hit -- evict the unit with the lowest total_activations
             # (least-used, most disposable) to free room for something new
-            worst = min(range(len(self.units)),
-                        key=lambda k: self.units[k].total_activations)
-            self._remove_unit(worst)
+            evicted = min(range(len(self.units)),
+                          key=lambda k: self.units[k].total_activations)
+            self._remove_unit(evicted)
         self.units.append(_Unit(
             preferred_vector=F.normalize(hidden_vec, dim=0).clone(),
             last_active_step=self.step_count,
             total_activations=1.0,
         ))
-        return len(self.units) - 1
+        return len(self.units) - 1, evicted
 
     def _remove_unit(self, idx: int):
         """Remove a unit and all its connections. Reindexes remaining units
@@ -151,7 +160,17 @@ class MemoryLayer:
 
         # 2. Growth: if nothing matched well enough, spawn a new unit
         if len(activations) == 0 or max(activations.values()) < self.cfg.novelty_threshold:
-            new_idx = self._grow(hidden_vec)
+            new_idx, evicted_idx = self._grow(hidden_vec)
+            if evicted_idx is not None:
+                # _grow evicted a unit, which reindexed everything after it.
+                # `activations` was computed against the pre-eviction indices,
+                # so remap it: drop the evicted unit, shift indices above it
+                # down by one.
+                activations = {
+                    (idx - 1 if idx > evicted_idx else idx): act
+                    for idx, act in activations.items()
+                    if idx != evicted_idx
+                }
             activations[new_idx] = 1.0
 
         # 3. Bookkeeping on each activated unit

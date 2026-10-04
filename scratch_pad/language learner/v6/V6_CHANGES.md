@@ -64,7 +64,7 @@ v1-v5 used a 1.37M-parameter model — vastly too small for its corpus and overf
 | n_layer | 3 | **6** |
 | n_head | 4 | **8** |
 | context_size | 64 | **256** |
-| Parameters | 1.37M | **~10-15M** |
+| Parameters | 1.37M | **~7.4M** |
 | Vocab size | 6000 | **8000-12000** (rechecked against new corpus) |
 
 Bigger model + much bigger corpus = memorization becomes structurally harder than generalization. Should measurably help the overfitting problem v4's held-out val split revealed.
@@ -82,7 +82,7 @@ data is worth it. Rationale:
 - Bigger real corpus = numbers appear more often in natural context ("10 cars
   stolen", "third chapter", "twice as many"), teaching number-in-context, not
   just synthetic arithmetic templates.
-- Ratio of ~3-4 tokens per parameter (45M / ~12M) is a healthy training regime
+- Ratio of ~6 tokens per parameter (45M / ~7.4M) is a healthy training regime
   vs. ~1 token per parameter at the smaller size, which was overparameterized.
 
 Corresponding config bumps: `max_iters` 40K -> 70K to actually use the larger

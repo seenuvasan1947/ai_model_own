@@ -76,7 +76,11 @@ def main():
                 for t in range(hidden.size(1)):
                     stack.observe(hidden[0, t])
 
+        # Seed identically before each generation so ON vs OFF differ only in
+        # the memory contribution, not in which random tokens got sampled.
+        torch.manual_seed(1234 + i)
         ans_on = ask(layer1, stack, tokenizer, device, q, use_memory=True, max_new_tokens=40)
+        torch.manual_seed(1234 + i)
         ans_off = ask(layer1, stack, tokenizer, device, q, use_memory=False, max_new_tokens=40)
 
         s_on = score(ans_on, kws)
@@ -100,8 +104,8 @@ def main():
     print(f"  memory OFF: {avg_off:.3f}")
     print(f"  delta (ON - OFF): {delta:+.3f}   " +
           ("<- continual learning WORKS: taught facts get recalled" if delta > 0.05 else
-           "<- continual learning did NOT measurably help" if delta < 0.05 else
-           "<- marginal effect"))
+           "<- continual learning HURT (memory made answers worse)" if delta < -0.05 else
+           "<- marginal effect: memory didn't measurably help or hurt"))
 
 
 if __name__ == "__main__":

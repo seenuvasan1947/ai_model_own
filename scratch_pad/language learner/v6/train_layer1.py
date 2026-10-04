@@ -69,6 +69,31 @@ def split_train_val(data: np.ndarray, val_split: float):
     return data[:-n_val], data[-n_val:]
 
 
+def split_train_val_per_source(tokenizer, source_paths, val_split: float):
+    """v6 fix: foundation_corpus.txt is sources concatenated in order
+    (synthetic, then simple_wiki, then tinystories -- see
+    data_prep/build_corpus.py). Taking a tail split of that single file
+    held out only the last source (TinyStories), so validation/early
+    stopping never saw Wikipedia or synthetic data at all.
+
+    Fix: hold out a tail from EACH source separately, then concatenate
+    the train tails and val tails. Every source is represented in both
+    splits in the same proportion."""
+    train_parts, val_parts = [], []
+    for path in source_paths:
+        if not os.path.exists(path):
+            continue
+        with open(path, "r", encoding="utf-8") as f:
+            ids = tokenizer.encode(f.read()).ids
+        arr = np.array(ids, dtype=np.uint16)
+        tr, va = split_train_val(arr, val_split)
+        train_parts.append(tr)
+        val_parts.append(va)
+    if not train_parts:
+        raise SystemExit(f"No source files found among: {source_paths}")
+    return np.concatenate(train_parts), np.concatenate(val_parts)
+
+
 def get_batch(book_data, qa_data, batch_size, context_size, device):
     n_qa = max(1, int(batch_size * QA_SAMPLE_RATIO))
     n_book = batch_size - n_qa
@@ -107,19 +132,21 @@ def main():
     vocab_size = tokenizer.get_vocab_size()
     gcfg = Layer1Config(vocab_size=vocab_size)
 
-    with open(tcfg.book_path, "r", encoding="utf-8") as f:
-        book_ids = tokenizer.encode(f.read()).ids
+    # v6 fix: split train/val per source (synthetic/wiki/tinystories), not
+    # by taking a tail of the already-concatenated foundation_corpus.txt --
+    # that tail was 100% TinyStories, so val/early-stopping never saw the
+    # other two sources. See split_train_val_per_source.
+    book_train, book_val = split_train_val_per_source(
+        tokenizer, tcfg.book_source_paths, tcfg.val_split
+    )
+
     with open(tcfg.qa_path, "r", encoding="utf-8") as f:
         qa_ids = tokenizer.encode(f.read()).ids
-
-    book_all = np.array(book_ids, dtype=np.uint16)
     qa_all = np.array(qa_ids, dtype=np.uint16)
-
-    book_train, book_val = split_train_val(book_all, tcfg.val_split)
     qa_train, qa_val = split_train_val(qa_all, tcfg.val_split)
 
     print(
-        f"book tokens: {len(book_all):,} (train {len(book_train):,} / val {len(book_val):,})  "
+        f"book tokens: {len(book_train) + len(book_val):,} (train {len(book_train):,} / val {len(book_val):,})  "
         f"qa tokens: {len(qa_all):,} (train {len(qa_train):,} / val {len(qa_val):,})  "
         f"vocab: {vocab_size:,}"
     )

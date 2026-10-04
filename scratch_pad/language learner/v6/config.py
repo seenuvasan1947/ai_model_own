@@ -19,11 +19,24 @@ class Layer1Config:
     bias: bool = True
 
 
+def _default_sources():
+    # Must match data_prep/build_corpus.py's SOURCES. Kept as separate
+    # files (rather than relying on a tail split of the concatenated
+    # foundation_corpus.txt) so train/val can be split per-source -- see
+    # train_layer1.split_train_val_per_source.
+    return [
+        "data/synthetic.txt",
+        "data/simple_wiki.txt",
+        "data/tinystories.txt",
+    ]
+
+
 @dataclass
 class TrainConfig:
     # v6: unified corpus of TinyStories + Simple Wikipedia + synthetic +
     # QA-behavior, built by data_prep/build_corpus.py. See V6_CHANGES.md.
     book_path: str = "data/foundation_corpus.txt"
+    book_source_paths: list = None  # set in __post_init__ to _default_sources()
     qa_path: str = "data/qa_behavior.txt"
     tokenizer_path: str = "data/tokenizer.json"
     out_dir: str = "out"
@@ -41,6 +54,10 @@ class TrainConfig:
     # layer1_final.pt; stop training if no improvement for `patience`
     # eval checkpoints.
     patience: int = 5
+
+    def __post_init__(self):
+        if self.book_source_paths is None:
+            self.book_source_paths = _default_sources()
 
 
 @dataclass
