@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Large generated training data/tokenizer artifacts (language learner)
+scratch_pad/language learner/*/data/*.txt
+scratch_pad/language learner/*/data/tokenizer.json
