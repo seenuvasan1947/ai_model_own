@@ -9,6 +9,7 @@ Usage:
 """
 
 import sys
+from datetime import datetime
 
 import torch
 
@@ -16,6 +17,17 @@ from config import Layer1Config, Layer2Config, Layer3Config, StackConfig, TrainC
 from layer1_language import Pair1Foundation as Layer1Foundation
 from stack import MemoryStack
 from tokenizer import load_tokenizer
+
+
+def log_session(out_dir: str, lines: list[str]):
+    """Append a timestamped record to out/session_log.md. Plain text, so
+    unlike the .pt checkpoints this is meant to be committed -- it's the
+    per-version snapshot of what was taught and what the stack looked
+    like before/after, for later comparison across versions."""
+    with open(f"{out_dir}/session_log.md", "a", encoding="utf-8") as f:
+        f.write(f"\n## {datetime.now().isoformat(timespec='seconds')} -- continual_read.py\n")
+        for line in lines:
+            f.write(line + "\n")
 
 
 def main():
@@ -64,6 +76,14 @@ def main():
     print(f"\nLayer 2: +{l2_grown} units, {l2_new_conns:+d} connections")
     print(f"Layer 3: +{l3_grown} units, {l3_new_conns:+d} connections")
     print(f"State saved to {tcfg.out_dir}/layer2_state.pt and layer3_state.pt")
+
+    log_session(tcfg.out_dir, [
+        f"taught: `{text_path}`",
+        f"before: {before}",
+        f"after:  {after}",
+        f"Layer 2: +{l2_grown} units, {l2_new_conns:+d} connections",
+        f"Layer 3: +{l3_grown} units, {l3_new_conns:+d} connections",
+    ])
 
 
 if __name__ == "__main__":

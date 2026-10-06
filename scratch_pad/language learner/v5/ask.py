@@ -12,6 +12,7 @@ Usage:
 
 import os
 import sys
+from datetime import datetime
 
 import torch
 
@@ -19,6 +20,15 @@ from config import Layer1Config, Layer2Config, Layer3Config, StackConfig, TrainC
 from layer1_language import Pair1Foundation as Layer1Foundation
 from stack import MemoryStack
 from tokenizer import load_tokenizer
+
+
+def log_session(out_dir: str, lines: list[str]):
+    """Append a timestamped record to out/session_log.md -- see
+    continual_read.py's log_session for why this is a tracked text file."""
+    with open(f"{out_dir}/session_log.md", "a", encoding="utf-8") as f:
+        f.write(f"\n## {datetime.now().isoformat(timespec='seconds')} -- ask.py\n")
+        for line in lines:
+            f.write(line + "\n")
 
 
 def ask(layer1, stack, tokenizer, device, question: str, use_memory: bool = True,
@@ -75,7 +85,13 @@ def main():
 
     def run(question):
         print(f"\nQ: {question}")
-        print("A:", ask(layer1, stack, tokenizer, device, question, use_memory=use_memory))
+        answer = ask(layer1, stack, tokenizer, device, question, use_memory=use_memory)
+        print("A:", answer)
+        log_session(tcfg.out_dir, [
+            f"memory: {'ON' if use_memory else 'OFF (ablation)'}",
+            f"Q: {question}",
+            f"A: {answer}",
+        ])
 
     if args:
         run(" ".join(args))
