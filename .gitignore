@@ -220,3 +220,5 @@ __marimo__/
 # Large generated training data/tokenizer artifacts (language learner)
 scratch_pad/language learner/*/data/*.txt
 scratch_pad/language learner/*/data/tokenizer.json
+scratch_pad/language learner/*/out/*.pt
+scratch_pad/language learner/**/__pycache__/
