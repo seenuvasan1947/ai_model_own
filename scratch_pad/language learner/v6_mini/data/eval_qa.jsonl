@@ -1,0 +1,15 @@
+{"question": "How many days are in a week?", "expected_keywords": ["seven", "days", "week"]}
+{"question": "What is two plus two?", "expected_keywords": ["two", "four"]}
+{"question": "How many months are in a year?", "expected_keywords": ["twelve", "months", "year"]}
+{"question": "What is the opposite of hot?", "expected_keywords": ["opposite", "hot", "cold"]}
+{"question": "What day comes after Monday?", "expected_keywords": ["day", "Monday", "Tuesday"]}
+{"question": "What is the first month of the year?", "expected_keywords": ["first", "month", "January"]}
+{"question": "What is the opposite of big?", "expected_keywords": ["opposite", "big", "small"]}
+{"question": "What is ten minus four?", "expected_keywords": ["ten", "minus", "four", "six"]}
+{"question": "What is the last month of the year?", "expected_keywords": ["last", "month", "December"]}
+{"question": "What day comes before Friday?", "expected_keywords": ["day", "Friday", "Thursday"]}
+{"question": "What is three plus five?", "expected_keywords": ["three", "plus", "five", "eight"]}
+{"question": "What is the opposite of tall?", "expected_keywords": ["opposite", "tall", "short"]}
+{"question": "What comes after nine?", "expected_keywords": ["nine", "ten"]}
+{"question": "How many children do the girls make?", "expected_keywords": ["children"]}
+{"question": "What is the plural of mouse?", "expected_keywords": ["mice"]}
