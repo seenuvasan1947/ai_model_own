@@ -1,0 +1,30 @@
+# Strong words: texts containing these are treated as more important
+# (kept longer, revised more). A simple stand-in for emotion. Add your own, one per line.
+danger
+dangerous
+fire
+help
+stop
+never
+always
+die
+death
+kill
+hurt
+pain
+love
+hate
+fear
+afraid
+scared
+warning
+poison
+emergency
+important
+must
+attack
+war
+safe
+happy
+sad
+angry

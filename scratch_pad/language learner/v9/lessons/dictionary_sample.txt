@@ -1,0 +1,20 @@
+# Sample dictionary. Format:  word: definition
+# Use with:  python3 run.py chat --dict lessons/dictionary_sample.txt
+apple: a round fruit that is red or green and grows on trees
+banana: a long yellow fruit with a soft inside
+elephant: a very big grey animal with a long nose called a trunk
+giraffe: a tall animal with a very long neck
+umbrella: a thing you hold over your head to stay dry in the rain
+library: a place with many books that you can borrow
+doctor: a person who helps sick people get well
+river: a long line of water that flows to the sea
+mountain: a very high hill
+happy: feeling good and glad
+brave: not afraid to do something hard
+enormous: very very big
+tiny: very very small
+whisper: to speak very quietly
+gigantic: very very big
+curious: wanting to know or learn something
+journey: a long trip from one place to another
+forest: a big place with many trees
