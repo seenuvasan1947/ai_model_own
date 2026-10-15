@@ -269,7 +269,83 @@ Next steps:
 - Classes 7–12 and university English lesson files (code ready, files not written)
 - z-loss
 
-## 11. Roadmap
+## 11. Master–slave linkage: design decisions for the next version (not implemented)
+
+Agreed 2026-10-15. Design notes only, no code yet.
+
+### Principle
+
+**English is the heart of the model.** The model learns by reading and expresses itself by
+writing, and both happen through language. So the English section is the **master** and the
+knowledge section is the **slave**: every read, write and update of knowledge goes through
+the master.
+
+### The problem v6 hit
+
+The slave stores knowledge in the master's internal numbers (representations).
+
+- If the master is **frozen**, the slave's stored knowledge stays findable, but English
+  can never improve.
+- If the master **learns freely**, English improves, but the slave's knowledge is filed under
+  the master's *old* representations and can no longer be found ("the librarian keeps
+  renaming the shelves").
+
+The goal: **the master keeps learning without breaking the slave's filing system.**
+
+### Four tools
+
+1. **One stable doorway.** The slave connects to the master at a single point (`know_tap`).
+   Master layers *below* the doorway change slowly (high resistance). Upper layers and newly
+   grown layers do most of the learning. Human version: basics are firmly set, style and
+   vocabulary keep improving on top.
+2. **Learning flows through the master** (already in v8's gated split).
+   - Reading: the master turns text into understanding; the slave reads that.
+   - Writing: the slave's addition goes back through the master's upper layers, which turn
+     it into proper words.
+   - Learning signal: the slave is corrected only through the master's output, so it only
+     learns what the master can express.
+3. **Doorway check.** When the master learns, it also checks that its understanding of old
+   text *at the doorway* has barely changed (like the KL teacher check, but on the doorway's
+   internal numbers instead of the output). New words and grammar get learned, but "apple"
+   still points to the same shelf.
+4. **Re-reading old notes during sleep.** Episodes are kept as text. When the master has
+   changed a lot, sleep makes the slave re-read old notes with the improved English and
+   re-file them under the current representations. Human version: re-reading school notes
+   years later and understanding them better. This removes any need to freeze the master.
+
+### New words and the dictionary
+
+- Byte-level input means a new word never needs a new slot; any word is letters the model
+  can already read.
+- Learning a new word = the master learns `word means definition`, with revision, so it
+  understands the word in any later sentence.
+- New vocabulary keeps appearing in the world (even experts miss words), so lookup happens
+  for life, only when a word is unknown, never reading the whole dictionary.
+- Because the slave reads the master's understanding, **every word the master learns
+  automatically helps the slave**: science, newspapers, any subject.
+
+### Subject reading and English
+
+- While reading other subjects, English learns only from **sentences made of words it
+  already knows** (pure language practice, so it gets stronger).
+- **New words and unusual patterns** go to the dictionary and the knowledge section, not
+  blindly into English.
+
+### Decisions
+
+| Decision | Choice |
+|---|---|
+| Master (English) | Never frozen. Lower layers change slowly; upper and new layers learn freely |
+| Slave (knowledge) | Learns only through the master (gated split, already in v8) |
+| Linkage | One doorway (`know_tap`), kept steady by the doorway check |
+| Master changed a lot | Sleep re-reads old notes and re-files them |
+| New words | Dictionary lookup → master learns → slave benefits automatically |
+| Subject reading | English learns only from known-word sentences |
+| Emotion | Simple word-strength list (strong / destructive words → higher importance, slower decay). Later |
+| Short-term / long-term memory | Later version (still an open idea) |
+| Exact recall vs own words | Early classes: exact recall. Later classes: same meaning in different words |
+
+## 12. Roadmap
 
 - v8.1: expert offload to CPU/disk, DeepSeek-style top-k block selection in global layers
 - v8.2: width growth (256 → 384 → 512)
