@@ -16,6 +16,7 @@ class Config:
     # each entry is one layer: English section -> [is_global]; knowledge section -> [is_global, n_experts]
     lang_layers: list = field(default_factory=lambda: [False, True, False, True])
     know_layers: list = field(default_factory=lambda: [[False, 1], [True, 1]])
+    know_tap: int = 2              # knowledge branch reads/writes after this many English layers
     max_lang_layer: int = 8
     max_total_layer: int = 30
     max_experts: int = 8
@@ -33,15 +34,16 @@ class Config:
     lr: float = 1e-3
     fast_lr: float = 1e-2
     warmup: int = 100              # steps of warmup (also after every growth)
-    lang_lr_normal: float = 0.0    # English-section lr scale during feed/chat (0 = frozen)
+    lang_lr_normal: float = 0.1    # English section keeps learning slowly during feed/chat (0 = frozen)
+    dict_lr_scale: float = 0.3     # dictionary lessons learn gently
     chat_lr_scale: float = 0.3
     batch_size: int = 32
     batch_tokens: int = 16384      # cap on bytes per step (long documents use fewer rows)
     grad_clip: float = 1.0
     replay_ratio: float = 0.25
     grammar_ratio: float = 0.25    # English anchor during knowledge learning (half learned English lessons, half grammar)
-    anchor_kl: float = 5.0         # how strongly knowledge layers must keep the English section's output on English text
-    english_gap_ok: float = 0.05   # feed is done only when English output drift is below this
+    gate_penalty: float = 1.0      # pushes the knowledge gate to 0 on plain English lessons
+    english_gap_ok: float = 0.05   # feed is done only when the knowledge gate on English lessons is below this
 
     # --- plasticity ---
     strength_keep: float = 0.999

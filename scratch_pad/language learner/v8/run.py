@@ -77,10 +77,10 @@ def learn_file(L, args, kind):
         avg = sum(losses) / len(losses)
         gap = sum(gaps) / len(gaps) if kind == "know" else 0.0
         if e == 1 or e % 10 == 0:
-            print(f"epoch {e} loss {avg:.3f}" + (f" English gap {gap:.3f}" if kind == "know" else ""))
-        # done when the file is learned AND English output is back to what the English section says
+            print(f"epoch {e} loss {avg:.3f}" + (f" English gate {gap:.3f}" if kind == "know" else ""))
+        # done when the file is learned AND the knowledge gate stays closed on plain English
         if not args.epochs and avg < args.target_loss and gap < L.cfg.english_gap_ok:
-            print(f"learned the file after {e} epochs (loss {avg:.3f}, English gap {gap:.3f})")
+            print(f"learned the file after {e} epochs (loss {avg:.3f}, English gate {gap:.3f})")
             break
     L.save(args.ckpt)
     print("saved")

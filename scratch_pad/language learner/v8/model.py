@@ -229,8 +229,14 @@ class LanguageModel(nn.Module):
         self.emb = nn.Embedding(cfg.vocab_size, cfg.d_model)
         self.lang = nn.ModuleList([Block(cfg, g) for g in cfg.lang_layers])
         self.know = nn.ModuleList([Block(cfg, g, n) for g, n in cfg.know_layers])
+        # gate for the knowledge side branch: per-byte gate x overall strength.
+        # know_alpha starts at 0 -> tanh(0) = 0 -> knowledge adds nothing until it learns to.
+        self.know_gate = nn.Linear(cfg.d_model, 1)
+        self.know_alpha = nn.Parameter(torch.zeros(1))
         self.norm = RMSNorm(cfg.d_model)
         self.apply(_init)
+        nn.init.zeros_(self.know_gate.bias)
+        self.last_gate = None
         cos, sin = rope_cache(cfg.max_ctx + 1, cfg.d_model // cfg.n_head, cfg.rope_base, "cpu")
         self.register_buffer("cos", cos, persistent=False)
         self.register_buffer("sin", sin, persistent=False)
@@ -238,16 +244,34 @@ class LanguageModel(nn.Module):
     def blocks(self):
         return list(self.lang) + list(self.know)
 
+    def _run(self, b, x, cache, key):
+        if cache is not None:
+            return b(x, self.cos, self.sin, cache.setdefault(key, {}))
+        if self.training and self.cfg.grad_ckpt and x.shape[1] > self.cfg.ckpt_min_len:
+            return checkpoint(b, x, self.cos, self.sin, use_reentrant=False)
+        return b(x, self.cos, self.sin)
+
     def forward(self, idx, targets=None, cache=None, english_only=False):
+        """English path makes the output. Knowledge is a gated side branch:
+            emb -> English lower layers -> (+ gate * knowledge) -> English upper layers -> output
+        english_only=True skips the knowledge branch (used by en-train)."""
         x = self.emb(idx)
         aux_total = x.new_zeros((), dtype=torch.float32)
-        for i, b in enumerate(list(self.lang) if english_only else self.blocks()):
-            if cache is not None:
-                x, aux = b(x, self.cos, self.sin, cache.setdefault(i, {}))
-            elif self.training and self.cfg.grad_ckpt and idx.shape[1] > self.cfg.ckpt_min_len:
-                x, aux = checkpoint(b, x, self.cos, self.sin, use_reentrant=False)
-            else:
-                x, aux = b(x, self.cos, self.sin)
+        tap = min(self.cfg.know_tap, len(self.lang))
+        for i in range(tap):
+            x, aux = self._run(self.lang[i], x, cache, ("lang", i))
+            aux_total = aux_total + aux
+        self.last_gate = None
+        if not english_only and len(self.know):
+            k = x
+            for j, b in enumerate(self.know):                 # knowledge reads English understanding
+                k, aux = self._run(b, k, cache, ("know", j))
+                aux_total = aux_total + aux
+            gate = torch.tanh(self.know_alpha) * torch.sigmoid(self.know_gate(x))   # (B, T, 1)
+            x = x + gate.to(x.dtype) * (k - x)               # adds only what knowledge contributes
+            self.last_gate = gate
+        for i in range(tap, len(self.lang)):                  # English has the final say on the form
+            x, aux = self._run(self.lang[i], x, cache, ("lang", i))
             aux_total = aux_total + aux
         logits = self.norm(x) @ self.emb.weight.t()
         if targets is None:
@@ -264,6 +288,7 @@ class LanguageModel(nn.Module):
 
     @torch.no_grad()
     def grow_lang(self):
+        # appended to the upper English part (after the knowledge tap); identity, so output unchanged
         g = not self.cfg.lang_layers[-1]
         self.lang.append(self._new_block(g))
         self.cfg.lang_layers.append(g)
@@ -322,4 +347,4 @@ class LanguageModel(nn.Module):
 def section_of(name):
     if "fast_" in name:
         return "fast_lang" if name.startswith("lang.") else "fast_know"
-    return "know" if name.startswith("know.") else "lang"   # emb, lang.*, final norm = English section
+    return "know" if name.startswith("know") else "lang"    # know.*, know_gate, know_alpha = knowledge; rest = English

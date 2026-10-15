@@ -1,6 +1,6 @@
 """Always-on learner with two sections:
   kind="en"   -> trains the English section only (en-train, dictionary lessons)
-  kind="know" -> trains the knowledge section (feed, chat); English section frozen by default
+  kind="know" -> trains the knowledge branch (feed, chat); English section keeps learning slowly
 """
 import os
 import random
@@ -77,8 +77,8 @@ class Learner:
         return x.to(self.device), y.to(self.device)
 
     def _update(self, batch, kind, lr_scale=1.0, train_fast=True, anchor=()):
-        """anchor: English lessons. In knowledge mode the full model must give the same output on
-        them as the English section alone (teacher), so knowledge layers can't bend the English."""
+        """anchor: English lessons. On them the knowledge gate is pushed to 0, so the knowledge
+        branch stays quiet on plain English and only adds where it has something to say."""
         self.model.train()
         self._set_mode(kind, lr_scale)
         if not train_fast:
@@ -94,16 +94,11 @@ class Learner:
             lesson_loss = loss.item()                                  # what feed reports / stops on
             if anchor:
                 ax, ay = self._rows(list(anchor))
-                with torch.no_grad():
-                    teacher, _ = self.model(ax, english_only=True)
-                student, a_loss = self.model(ax, ay)
-                keep = ay.reshape(-1) >= 0
-                kl = torch.nn.functional.kl_div(
-                    torch.log_softmax(student.reshape(-1, 256)[keep].float(), -1),
-                    torch.log_softmax(teacher.reshape(-1, 256)[keep].float(), -1),
-                    log_target=True, reduction="batchmean")
-                loss = loss + a_loss + self.cfg.anchor_kl * kl
-                self.last_gap = kl.item()      # how far English output drifted from the English section
+                _, a_loss = self.model(ax, ay)                 # English keeps practising its lessons
+                gate = self.model.last_gate.squeeze(-1).float()
+                gate_on_english = gate[ay >= 0].abs().mean()
+                loss = loss + a_loss + self.cfg.gate_penalty * gate_on_english
+                self.last_gap = gate_on_english.item()         # how much knowledge leaks into plain English
         self.opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_([p for p in self.model.parameters() if p.requires_grad], self.cfg.grad_clip)
@@ -160,7 +155,8 @@ class Learner:
             lessons = self.words.lookup_lessons(new, self.dictionary)
             # revise old English lessons at the same time, so new words don't push out old ones
             k = max(4, int(len(lessons) * self.cfg.replay_ratio / (1 - self.cfg.replay_ratio)) * 3)
-            self._update(lessons + self.episodes.sample(k, "en", min_count=self.cfg.min_repeats), "en")
+            self._update(lessons + self.episodes.sample(k, "en", min_count=self.cfg.min_repeats), "en",
+                         lr_scale=self.cfg.dict_lr_scale)
             for les in lessons:
                 self.episodes.add(les, self.step, "en")
 

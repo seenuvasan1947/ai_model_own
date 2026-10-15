@@ -14,21 +14,35 @@ memory, sleep, replay, growth) and adds:
 
 ## 1. Architecture
 
+**Gated side-branch split** (changed 2026-10-15, after tests showed the stacked version let
+knowledge bend English; combines v6's "English makes the output" with v8's learned knowledge):
+
 ```
 bytes ──► Embedding (shared with the output head)
              │
    ┌─────────▼──────────┐
-   │  ENGLISH SECTION   │  4 layers to start, grows to 8
-   │  (language module) │  trained ONLY by en-train + dictionary lessons
-   │  dense SwiGLU      │  letters, spelling, words, grammar, punctuation
+   │ ENGLISH lower part │  lang.0 .. lang.(know_tap-1)        (know_tap = 2)
    └─────────┬──────────┘
-   ┌─────────▼──────────┐
-   │ KNOWLEDGE SECTION  │  2 layers to start, grows until total = 30 layers
-   │ attention +        │  trained by feed / chat (normal learning)
-   │ topic experts (MoE)│  1 expert per layer to start, splits up to 8
+             ├──────────────────────────┐
+             │                ┌─────────▼──────────┐
+             │                │ KNOWLEDGE BRANCH   │  reads English understanding
+             │                │ attention + topic  │  2 layers, grows until total = 30
+             │                │ experts (MoE)      │  experts split up to 8 per layer
+             │                └─────────┬──────────┘
+             │◄── + gate × knowledge ───┘   gate = tanh(alpha) × sigmoid(w·x)
+   ┌─────────▼──────────┐                   alpha starts at 0 -> knowledge adds nothing at first
+   │ ENGLISH upper part │  lang.(know_tap) .. ; new English layers are added here
+   │ (final say on form)│
    └─────────┬──────────┘
           RMSNorm ──► output (256 bytes)
 ```
+
+- **English makes the output.** Knowledge only adds through the gate.
+- **The gate is trained to stay ~0 on plain English lessons** (`gate_penalty`), so knowledge
+  only "speaks" where it adds something (e.g. "An apple is" → "a red fruit").
+- **English is not frozen.** It keeps learning: fully in `en-train`, gently from dictionary
+  lessons (`dict_lr_scale` 0.3), and slowly from normal text in feed/chat
+  (`lang_lr_normal` 0.1), always with revision, strength/resistance/fade and sleep.
 
 Every layer: RMSNorm → attention (GQA, RoPE, QK-norm) → RMSNorm → feed-forward
 (+ the fast-memory path from v7). Every 2nd layer is a **global** layer that also
@@ -53,14 +67,15 @@ Width stays at `d_model` chosen at start (256 default; 384 or 512 also fit on 4 
   (`class06_*.txt`, `class07_*.txt`, … up to class 12 and university level).
   You write or collect these files; the code reads them.
 - `python3 run.py en-train some_grammar_book.txt` trains the English section on a file.
-- Normal learning (`feed`, `chat`) trains **only the knowledge section**. The English
-  section is not changed by it (`lang_lr_normal = 0`).
-- `en-train` runs the English section **standalone** (knowledge layers skipped), so the
+- Normal learning (`feed`, `chat`) trains the **knowledge branch** fully and the **English
+  section slowly** (`lang_lr_normal = 0.1`).
+- `en-train` runs the English section **standalone** (knowledge branch skipped), so the
   English section is a complete language model by itself.
-- **English teacher anchor** during `feed`/`chat`: 25% of each step is English lessons
-  (half already-learned English lessons, half grammar). On those, the full model is trained
-  to give the **same output as the English section alone** (KL loss, weight `anchor_kl`).
-  This stops the knowledge layers from bending English. See section 10 for test results.
+- **English anchor** during `feed`/`chat`: 25% of each step is English lessons (half
+  already-learned English lessons, half grammar). English practises them, and the knowledge
+  gate is pushed to 0 on them (`gate_penalty`). `feed` stops only when the file is learned
+  **and** the gate on English lessons is below `english_gap_ok` (0.05).
+- (Replaced: the earlier KL "teacher" anchor, see section 10.)
 
 ### Class file format
 
@@ -229,7 +244,17 @@ Diagnosis so far:
 - The "English gap" measured on the few anchor lessons is low while quizzes are low →
   the gap does not yet measure English quality well.
 
+### Change made after these tests (code written, NOT yet tested)
+
+- Split changed from **stacked** to **gated side branch** (see section 1): English makes the
+  output, knowledge adds through a gate that starts closed and is kept closed on plain English.
+- KL teacher anchor removed; replaced by the gate penalty.
+- English section no longer frozen in feed/chat (`lang_lr_normal` 0.1).
+- Dictionary lessons learn gently (`dict_lr_scale` 0.3) with 3× English revision.
+- Old v8 test checkpoints are not compatible (new gate weights).
+
 Next steps:
+0. Test the gated split: en-train → quiz → feed simple_world → quiz (compare with table above).
 1. Feed with the dictionary off to confirm whether dictionary steps cause the English-section drop.
 2. If yes: make dictionary lessons smaller and safer (more revision, lower lr, or keep them
    in the fast memory until sleep).
