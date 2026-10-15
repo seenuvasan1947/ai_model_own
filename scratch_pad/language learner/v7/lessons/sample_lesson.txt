@@ -1,0 +1,34 @@
+# Lines starting with # are comments. The model does not learn them.
+# Put a BLANK LINE between lessons. Each lesson is learned as one piece.
+# Long paragraphs are cut at full stops, so sentences stay whole.
+# Feed with:  python3 run.py feed lessons/sample_lesson.txt --epochs 5
+
+# ---- numbers ----
+1 2 3 4 5 6 7 8 9 10
+
+10 20 30 40 50 60 70 80 90 100
+
+1 is one. 2 is two. 3 is three. 10 is ten. 100 is one hundred.
+
+I have 2 hands and 10 fingers.
+
+There are 7 days in a week and 12 months in a year.
+
+# ---- punctuation ----
+A full stop (.) ends a sentence. The cat is sleeping.
+
+A question mark (?) ends a question. Where is the cat?
+
+An exclamation mark (!) shows strong feeling. What a big dog!
+
+A comma (,) separates things in a list. I like apples, bananas and mangoes.
+
+Quotation marks show what someone says. Ravi said, "I am happy."
+
+# ---- facts and words ----
+An apple is a red fruit. It is sweet. Apples grow on trees.
+
+A banana is a yellow fruit. Monkeys like bananas.
+
+# ---- a short paragraph ----
+Ravi has a small dog. The dog is brown. Every morning, Ravi and his dog walk to the park. They play with a red ball. When the sun is hot, they sit under a big tree. Ravi loves his dog, and the dog loves Ravi.

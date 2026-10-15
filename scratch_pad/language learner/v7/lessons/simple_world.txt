@@ -1,0 +1,135 @@
+# Simple world: short meaningful sentences reusing the same words many ways.
+# Feed with: python3 run.py feed lessons/simple_world.txt
+
+# ---- fruits ----
+An apple is a red fruit. It is sweet.
+
+A banana is a yellow fruit. It is soft.
+
+A mango is a yellow fruit. It is sweet.
+
+An orange is an orange fruit. It is juicy.
+
+Grapes are small fruits. They are green or purple.
+
+I eat an apple every day.
+
+Ravi likes mangoes. Mangoes are sweet.
+
+Sita likes bananas. Bananas are soft.
+
+# ---- animals ----
+A dog is an animal. A dog says woof.
+
+A cat is an animal. A cat says meow.
+
+A cow is an animal. A cow gives milk.
+
+A bird can fly. A bird has two wings.
+
+A fish lives in water. A fish can swim.
+
+A lion is a big animal. A lion lives in the forest.
+
+A dog has four legs. A cat has four legs.
+
+A bird has two legs. A fish has no legs.
+
+The dog is running in the park.
+
+The cat is sleeping on the bed.
+
+The bird is singing in the tree.
+
+# ---- colours ----
+The sky is blue.
+
+The grass is green.
+
+The sun is yellow.
+
+Milk is white.
+
+The night is dark.
+
+My bag is red. My pen is blue.
+
+# ---- people and family ----
+Ravi is a boy. Ravi is eight years old.
+
+Sita is a girl. Sita is seven years old.
+
+My mother cooks food. My father goes to work.
+
+The teacher teaches us. We learn in school.
+
+Ravi and Sita are friends. They play together.
+
+# ---- daily life ----
+I wake up in the morning.
+
+I brush my teeth.
+
+I eat breakfast and go to school.
+
+I come home in the evening.
+
+I sleep at night.
+
+We drink water when we are thirsty.
+
+We eat food when we are hungry.
+
+We sleep when we are tired.
+
+# ---- weather and nature ----
+The sun is hot in the day.
+
+The moon shines at night.
+
+Rain falls from the clouds.
+
+Trees are tall and green.
+
+Flowers are pretty. Bees like flowers.
+
+# ---- numbers in sentences ----
+I have one nose and two eyes.
+
+A week has seven days.
+
+A year has twelve months.
+
+A hand has five fingers.
+
+Two plus two is four. Three plus two is five.
+
+# ---- questions and answers ----
+Q: What colour is the sky? A: The sky is blue.
+
+Q: What does a cow give? A: A cow gives milk.
+
+Q: How many legs does a dog have? A: A dog has four legs.
+
+Q: Where does a fish live? A: A fish lives in water.
+
+Q: What is an apple? A: An apple is a red fruit.
+
+Q: Who is Ravi? A: Ravi is a boy.
+
+Q: When do we sleep? A: We sleep at night.
+
+Q: What can a bird do? A: A bird can fly.
+
+# ---- short stories ----
+Ravi has a dog. The dog is brown. Ravi and the dog play in the park.
+
+Sita has a cat. The cat is white. The cat sleeps on the bed.
+
+It is morning. The sun is shining. The birds are singing. Ravi goes to school.
+
+It is raining. Sita takes her umbrella. She does not get wet.
+
+Ravi is hungry. He eats a mango. The mango is sweet. Ravi is happy.
+
+The cow is in the field. It eats green grass. It gives us milk.

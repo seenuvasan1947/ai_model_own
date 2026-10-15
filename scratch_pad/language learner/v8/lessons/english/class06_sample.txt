@@ -1,0 +1,22 @@
+# Class 6 sample. Files here are English classes, taken in name order after built-in classes 1-5.
+# Blank line between lessons. Quiz lines:  ?? prompt => answer
+A noun is a naming word. Cat, school and Ravi are nouns.
+
+A verb is an action word. Run, eat and sing are verbs.
+
+An adjective describes a noun. Big, red and happy are adjectives.
+
+An adverb describes a verb. She runs quickly. He speaks softly.
+
+Yesterday I walked to school. Today I walk to school. Tomorrow I will walk to school.
+
+Yesterday she went home. Today she goes home. Tomorrow she will go home.
+
+He is taller than his brother. She is the tallest girl in the class.
+
+This book is better than that book. It is the best book.
+
+?? Run, eat and sing are => verbs.
+?? Big, red and happy are => adjectives.
+?? Yesterday I walked. Tomorrow I will => walk.
+?? He is tall. His brother is taller. He is the => tallest.
