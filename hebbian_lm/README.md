@@ -38,7 +38,7 @@ It combines four parts, each doing the job it is good at:
 pip install -r requirements.txt     # numpy
 python train.py                     # ~20 s; trains and prints a full report
 python chat.py                      # talk to it
-python -m unittest discover -s tests   # 47 tests
+python -m unittest discover -s tests   # 58 tests
 ```
 
 ## A real session (offline dictionary)
@@ -56,7 +56,10 @@ you> what color is the glorp ?                      ai > i do not know the word 
 you> the sky is gray .                              ai > ok , learned it . ( looked up gray )
 you> is the sky blue ?                              ai > no , the sky is gray .                   <- the correction replaced the old belief
 you> what is seven plus eight ?                     ai > seven plus eight is fifteen .
-you> tom has a red ball .  /  what color is the ball ?   ai > the ball is red .
+you> tom has a red ball . anna has a blue ball .   <- two separate balls (ball#1, ball#2)
+you> what color is tom's ball ?                     ai > tom's ball is red .
+you> what color is the ball ?                       ai > which ball ? anna's ball or tom's ball ?
+you> the blue one                                   ai > anna's ball is blue .
 /check the dogs runs .    ->  agreement: plural subject 'the dogs' needs 'run'
 /fix does the cat runs ?  ->  does the cat run ?          /fix a dogs run .  ->  a dog runs .
 ```
@@ -77,6 +80,7 @@ prepositions, numbers) plus 89 facts. 24,324 sentences, and everything built fro
 | **B. Words never met.** 10 dictionary words absent from training (zebra, sparrow, wolf …) | with the dictionary a new word lands in the right category **before any sentence: 10/10** (0/10 without). With the full WordNet the same idea works on 64% of a harder 42-word set (bundled dictionary 93%): WordNet's first-sense heuristics are noisier. "is a X an animal?" and "what is a X?" correct 10/10 right after one sentence |
 | **C. Pronouns across sentences.** "the zebra is brown . it eats the grass . the sparrow is small . it lives in the tree ." then 4 questions, 40 stories | 157/160 = **98.1%** |
 | **D. Reasoning through "is a".** 10 yes/no questions incl. a word defined only by the user and chains of two links | 10/10 |
+| **F. Separate entities.** "tom has a red ball . anna has a blue ball ." (60 random stories: 8 things, 6 names, 10 colours), then possessive questions, an ambiguous "the ball", a follow-up answer, "what does X have", counts, and telling the same thing twice | instances on: **100%** on all six checks; instances off (the old behaviour): 0% on the first four (it collapses to one ball), 100% on the two counts. Synthetic stories written for this feature, so 100% shows the mechanism works, not that it copes with free English |
 | **E. Grammar repair.** one agreement/number error per sentence | exact repair: agreement **98.5%** (406 sentences), number **100%** (77); false alarms on correct sentences 1/400 |
 
 How to read A honestly: the semantic memory is exact by construction, so 100% is expected; the point is the comparison with
@@ -127,7 +131,13 @@ What each mechanism of the language layer contributes (switched off one at a tim
   odd readings until readings were ranked by usage frequency; WordNet remains noisier than the small curated dictionary.
 * **The workspace is a rule-based comprehension engine plus an exact graph; only the language layer is Hebbian
   learning.** The semantic memory uses Hebbian-style strengthening and lateral inhibition on graph edges, not a neural net.
-* **Same noun = same entity.** "tom has a red ball . anna has a blue ball ." collapses to one ball; there are no instances.
+* **Entities are created by simple rules only.** A particular thing gets its own instance when an indefinite noun is the
+  object of a verb whose subject is a name or an instance ("tom has a ball", "anna sees a dog"), or is possessed
+  ("tom's ball", "his ball"). Generic statements ("the bird has a beak", "a dog is an animal", "the zebra is brown") stay at
+  the level of the kind. "the X" with several candidates means the latest one mentioned when reading, and triggers a
+  clarifying question when asked. Telling the same owned thing again (same owner, noun, adjectives) strengthens it instead
+  of making a second one, so "tom has a ball . tom has a ball ." is one ball. Not handled: plural instances ("two balls"
+  are the kind), "whose ball is red ?", `my`/`your`, possessives of plurals, instances of people ("a boy").
 * **Wrong relation, right subject** is still possible in the language layer alone ("what color is the cow ?" → "the cow says moo .");
   the workspace avoids it for patterns it parses, but it has nothing equivalent for questions it cannot parse (it then falls
   back to the language layer).
@@ -145,6 +155,7 @@ What each mechanism of the language layer contributes (switched off one at a tim
 | `hebbian_lm/comprehension.py`, `semantic.py`, `workspace.py` | comprehension, semantic memory, the workspace |
 | `hebbian_lm/curriculum.py`, `evaluate.py`, `evaluate_workspace.py` | the synthetic world and every benchmark above |
 | `train.py`, `chat.py`, `real_text.py`, `fetch_wordnet.py` | train + report, chat, real-English check, optional WordNet download |
-| `tests/` | 47 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
+| `hebbian_lm/entities.py` | the instance registry (`ball#1`, owner, qualifiers) |
+| `tests/` | 58 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
 
 No GitHub Actions or separate build branch was needed: training takes about 20 s and the tests about 25 s on a plain CPU.

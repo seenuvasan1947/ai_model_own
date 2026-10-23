@@ -147,7 +147,13 @@ def main() -> None:
         print(f"  D. reasoning through 'is a': {d['correct']}/{d['total']} right")
         e = ew.benchmark_grammar_repair(lang)
         print(f"  E. grammar repair (one error per sentence): {e}")
+        f_on, f_off = ew.benchmark_entities(True), ew.benchmark_entities(False)
+        print("  F. separate entities per noun (tom has a red ball . anna has a blue ball . ...), instances on / off:")
+        for k in f_on:
+            if k != "stories":
+                print(f"     {k:20} {f_on[k]:>6} {f_off[k]:>6}")
         report["workspace_pronouns"], report["workspace_reasoning"], report["workspace_grammar"] = c, d["correct"], e
+        report["workspace_entities"] = dict(on=f_on, off=f_off)
     if args.ablations:
         print("\n== what each mechanism contributes (switched off one at a time, nothing retrained) ==")
         rows = ev.ablation_report(m, lang, pairs_big, held)

@@ -156,6 +156,26 @@ next to a slow statistical learner.
 * **Dictionary learning at run time**: `a flib is a bird` where *flib* is not in the dictionary adds a learned entry (kind,
   hypernyms) to the lexicon and places the word in the language layer's categories.
 
+### Entities (separate things of the same kind)
+
+Facts are keyed by lemma unless a *particular* thing was introduced; then they are keyed by an instance id (`ball#2`) from
+`entities.py` (id, kind, owner, qualifiers, birth order). Binding rules in `ClauseParser._bind/_introduce`:
+
+* `tom's X`, `his X` (pronoun resolved through the discourse): find the instance of X owned by that owner, else create it
+  (and store `owner has X#n`).
+* indefinite X as the object of a verb, subject a name or an instance: a new instance, unless the same owner already has
+  one with the same adjectives (telling it again strengthens the fact rather than duplicating the thing).
+* generic subjects (`the bird has a beak`, `a dog is an animal`) and bare plurals stay at the kind level.
+* `the X`: the only instance; among several, the one most recently mentioned while *reading*; while *asking*, a clarifying
+  question (`which ball ? tom's ball or anna's ball ?`) whose answer (`anna's`, `the red one`, `the second`) is bound for
+  the retry.
+* adjectives inside a noun phrase become `attr` facts of the instance. An instance inherits from its kind with no discount
+  (`inherits()`), then from the kind's ancestors with the usual `0.6^depth`.
+* Realisation names an instance by the shortest label that tells it from its siblings (`the ball` / `tom's ball` /
+  `the red ball` / `the second ball`).
+
+This is symbolic bookkeeping, not Hebbian learning; it is switched off with `Workspace(instances=False)` for ablation.
+
 ### What is Hebbian here, and what is not
 
 Honestly: **the semantic memory is a symbolic graph with Hebbian-style weights**, the comprehension engine and the

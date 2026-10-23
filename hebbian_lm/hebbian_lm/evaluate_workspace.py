@@ -166,3 +166,31 @@ def benchmark_grammar_repair(lang: Language, n: int = 400, seed: int = 1) -> dic
     out["n_pairs"] = {k: len(v) for k, v in by_kind.items()}
     out["false_alarms_on_correct_sentences"] = f"{false_alarm}/{len(sample)}"
     return out
+
+
+THINGS = ["ball", "hat", "book", "cup", "box", "bag", "car", "toy"]
+OWNERS = ["tom", "anna", "ben", "lily", "sam", "mia"]
+
+
+def benchmark_entities(instances: bool = True, n: int = 60, seed: int = 0) -> dict:
+    """F. Two owners each have a different thing of the same kind ("tom has a red ball . anna has a blue ball ."):
+    are they kept apart? With ``instances=False`` the old behaviour (one noun = one entity) is measured."""
+    rng = random.Random(seed)
+    score = {"possessive_color": 0, "asks_which": 0, "follow_up": 0, "what_do_they_have": 0, "how_many": 0, "same_thing_again": 0}
+    for _ in range(n):
+        thing = rng.choice(THINGS)
+        (o1, o2), (c1, c2) = rng.sample(OWNERS, 2), rng.sample(COLORS, 2)
+        ws = Workspace(model=None, lexicon=Lexicon(), instances=instances)
+        ws.read(f"{o1} has a {c1} {thing} . {o2} has a {c2} {thing} .")
+        score["possessive_color"] += all(_hit(ws.ask(f"what color is {o}'s {thing} ?").text, c) for o, c in ((o1, c1), (o2, c2)))
+        r = ws.ask(f"what color is the {thing} ?")
+        score["asks_which"] += r.kind == "clarify"
+        r2 = ws.converse(f"{o2}'s") if r.kind == "clarify" else r
+        score["follow_up"] += r.kind == "clarify" and _hit(r2.text, c2) and c1 not in r2.text.split()
+        score["what_do_they_have"] += all(f"{c} {thing}" in ws.ask(f"what does {o} have ?").text for o, c in ((o1, c1), (o2, c2)))
+        score["how_many"] += ws.ask(f"how many {thing}s does {o1} have ?").text.startswith(f"{o1} has one {thing}")
+        ws.read(f"{o1} has a {c1} {thing} .")                         # the same thing, told again
+        score["same_thing_again"] += ws.ask(f"how many {thing}s does {o1} have ?").text.startswith(f"{o1} has one {thing}")
+    out = {k: round(v / n, 3) for k, v in score.items()}
+    out["stories"] = n
+    return out

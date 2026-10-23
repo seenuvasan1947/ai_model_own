@@ -274,5 +274,85 @@ class DictionaryInTheLanguageModelTests(unittest.TestCase):
         self.assertGreater(ws.model.logprob("the zebra eats grass ."), ws.model.logprob("grass the eats zebra ."))
 
 
+class EntityTests(unittest.TestCase):
+    def ws(self, instances=True):
+        return Workspace(model=None, lexicon=Lexicon(), instances=instances)
+
+    def test_two_owners_two_balls(self):
+        ws = self.ws()
+        ws.read("tom has a red ball . anna has a blue ball .")
+        self.assertEqual(len(ws.mem.ents.of("ball")), 2)
+        self.assertEqual(ws.ask("what color is tom's ball ?").text, "tom's ball is red .")
+        self.assertEqual(ws.ask("what color is anna's ball ?").text, "anna's ball is blue .")
+        self.assertEqual(ws.ask("what does tom have ?").text, "tom has a red ball .")
+
+    def test_ambiguous_the_asks_which_and_takes_the_answer(self):
+        ws = self.ws()
+        ws.read("tom has a red ball . anna has a blue ball .")
+        r = ws.converse("what color is the ball ?")
+        self.assertEqual(r.kind, "clarify")
+        self.assertIn("tom's ball", r.text)
+        self.assertEqual(ws.converse("anna's").text, "anna's ball is blue .")
+        ws.converse("what color is the ball ?")
+        self.assertEqual(ws.converse("the red one").text, "tom's ball is red .")
+
+    def test_single_instance_resolves_and_pronouns_follow_it(self):
+        ws = self.ws()
+        ws.read("tom has a red ball . it is big .")
+        self.assertEqual(ws.ask("what color is the ball ?").text, "the ball is red .")
+        self.assertEqual(ws.ask("is the ball big ?").text, "yes , the ball is big .")
+
+    def test_reading_the_definite_picks_the_latest_mentioned(self):
+        ws = self.ws()
+        ws.read("tom has a red ball . anna has a blue ball . the ball is big .")
+        self.assertEqual(ws.ask("is anna's ball big ?").text, "yes , anna's ball is big .")
+        self.assertNotEqual(ws.ask("is tom's ball big ?").text.split(" ,")[0], "yes")
+
+    def test_possessive_pronoun(self):
+        ws = self.ws()
+        ws.read("tom has a dog . his dog is brown .")
+        self.assertEqual(ws.ask("what color is tom's dog ?").text, "the dog is brown .")
+
+    def test_telling_the_same_thing_again_does_not_duplicate(self):
+        ws = self.ws()
+        ws.read("tom has a red ball . tom has a red ball .")
+        self.assertEqual(len(ws.mem.ents.of("ball")), 1)
+        ws.read("tom has a blue ball .")
+        self.assertEqual(ws.ask("how many balls does tom have ?").text, "tom has two balls .")
+
+    def test_generic_statements_stay_at_the_kind_level(self):
+        ws = self.ws()
+        ws.read("the zebra is brown . a bird has a beak . the dog eats bones .")
+        self.assertEqual(len(ws.mem.ents), 0)
+        self.assertEqual(ws.ask("what color is the zebra ?").text, "the zebra is brown .")
+
+    def test_instance_inherits_from_its_kind(self):
+        ws = self.ws()
+        ws.read("the dog barks . tom has a dog .")
+        self.assertEqual(ws.ask("is tom's dog an animal ?").text, "yes , the dog is an animal .")
+
+    def test_without_instances_the_old_behaviour_collapses(self):
+        ws = self.ws(instances=False)
+        ws.read("tom has a red ball . anna has a blue ball .")
+        self.assertEqual(len(ws.mem.ents), 0)
+        self.assertEqual(ws.ask("what color is the ball ?").kind, "answer")
+
+    def test_instances_survive_save_and_load(self):
+        ws = self.ws()
+        ws.read("tom has a red ball . anna has a blue ball .")
+        with tempfile.TemporaryDirectory() as d:
+            ws.save(d)
+            w2 = Workspace.open(d, lexicon=Lexicon())
+        self.assertEqual(w2.ask("what color is anna's ball ?").text, "anna's ball is blue .")
+        self.assertEqual(w2.ask("what color is the ball ?").kind, "clarify")
+
+    def test_possessive_token_and_grammar_check(self):
+        toks = tokenize_cased("tom's red ball is big .")
+        tag_sentence(toks, Lexicon())
+        self.assertEqual([t.tag for t in toks][:4], ["PN", "POSS", "ADJ", "N"])
+        ws = self.ws()
+        self.assertEqual(ws.check("tom's ball is red ."), [])
+
+
 if __name__ == "__main__":
     unittest.main()

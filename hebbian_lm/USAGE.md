@@ -80,6 +80,12 @@ Questions: `what color is X` · `what does X say/eat/<verb>` · `where does X li
 `how many Xs are there` · `who <verb>s Y` · `what is a X` / `what does X mean` · `what is the opposite of X` ·
 yes/no (`is X ADJ`, `is X a Y`, `does X VERB Y`, `can X VERB`) · arithmetic (`what is five plus eight`).
 
+Separate things: `tom has a red ball . anna has a blue ball .` makes two balls. Ask `what color is tom's ball ?`; if you
+say `the ball` and there are several it asks `which ball ? anna's ball or tom's ball ?` and takes `anna's` / `the red one` /
+`the second` as the answer. `his/her/its/their` follow the last person or thing mentioned. `/facts ball` lists every
+instance with what is known of it. An instance inherits what is known of its kind (`the dog barks . tom has a dog .`).
+Turn it off with `Workspace(..., instances=False)` (then one noun is one entity, as before).
+
 Not understood (it says so): relative clauses, passives, "if/because", questions about time, metaphor.
 
 ## 4. Using it from Python
@@ -131,7 +137,7 @@ python train.py --report report.json   # write all numbers as JSON
 ## 6. Check it works
 
 ```bash
-python -m unittest discover -s tests   # 47 tests, ~25 s (WordNet tests are skipped if it is not downloaded)
+python -m unittest discover -s tests   # 58 tests, ~25 s (WordNet tests are skipped if it is not downloaded)
 python real_text.py                    # the same language layer on real children's books (downloads ~4 MB once)
 python real_text.py --dictionary wordnet
 ```
@@ -143,6 +149,7 @@ python real_text.py --dictionary wordnet
 | `hebbian_lm/model.py` | the Hebbian language layer: all learning rules |
 | `hebbian_lm/lexicon.py` | dictionary (bundled + WordNet), morphology rules, closed-class words |
 | `hebbian_lm/comprehension.py` | tagger, chunker, sentence → facts, question → query, pronoun resolution |
+| `hebbian_lm/entities.py` | instance registry: `ball#1`, owner, qualifiers |
 | `hebbian_lm/semantic.py` | the semantic memory (graph, Hebbian strengthening, rivals, inheritance) |
 | `hebbian_lm/workspace.py` | ties it together: reading, asking, answers as grammatical sentences, grammar check/fix |
 | `hebbian_lm/curriculum.py`, `evaluate*.py` | the synthetic test world and every benchmark |

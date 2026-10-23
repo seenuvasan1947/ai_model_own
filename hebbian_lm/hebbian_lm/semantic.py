@@ -24,7 +24,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from .comprehension import Prop, Query, evaluate_arithmetic
+from .comprehension import Prop, Query, evaluate_arithmetic, number_word
+from .entities import EntityStore, is_instance, lemma_of
 from .lexicon import Lexicon
 
 SPATIAL = ("in", "on", "at", "near", "under", "inside", "behind", "beside", "above", "below")
@@ -68,6 +69,7 @@ class SemanticMemory:
         self.defs: Dict[str, str] = {}               # definitions learned or told
         self.subj_num: Dict[str, str] = {}           # remembered grammatical number of a subject
         self.proper: Set[str] = set()
+        self.ents = EntityStore()                    # the instances ("ball#1") that facts can be about
         self.t = 0
         self.inhibit_read = 0.25
         self.inhibit_told = 0.8
@@ -109,6 +111,8 @@ class SemanticMemory:
         f.source = source if f.source == "read" else f.source
         f.rel = rel
         self.reverse.setdefault((rel, prop.obj), set()).add(prop.subj)
+        if is_instance(prop.obj):
+            self.reverse.setdefault((rel, lemma_of(prop.obj)), set()).add(prop.subj)
         self.subj_num.setdefault(prop.subj, prop.subj_num)
         if prop.subj_proper:
             self.proper.add(prop.subj)
@@ -133,6 +137,9 @@ class SemanticMemory:
         for f in self.slots.get((x, "isa"), {}).values():
             if not f.neg and f.strength > 0.3:
                 out.append((f.obj, "told"))
+        if is_instance(x):
+            out.append((lemma_of(x), "kind"))
+            return out
         for p in ("n",):
             for s in self.lex.senses(x, p)[:2]:
                 for h in s.hypernyms[:1]:
@@ -160,6 +167,13 @@ class SemanticMemory:
         """True if x is a kind of y; False if both are known and it is not; None if the memory cannot tell."""
         if x == y:
             return True
+        if is_instance(x):
+            if any(f.obj == y and not f.neg and f.strength > 0.3 for f in self.slots.get((x, "isa"), {}).values()):
+                return True
+            for f in self.slots.get((x, "isa"), {}).values():
+                if f.neg and f.obj == y and f.strength > 0.3:
+                    return False
+            return self.is_a(lemma_of(x), y)
         if y in {a for a, _ in self.ancestors(x)}:
             return True
         for f in self.slots.get((x, "isa"), {}).values():
@@ -172,6 +186,20 @@ class SemanticMemory:
         return None
 
     # ------------------------------------------------------------------ reading values out
+    def inherits(self, x: str) -> List[Tuple[str, int]]:
+        """Where to look when nothing is stored about x: an instance first asks its own kind (no discount), then
+        the kind's ancestors; a plain concept goes up its 'is a' chain."""
+        if not is_instance(x):
+            return self.ancestors(x)
+        base = lemma_of(x)
+        out = [(base, 0)]
+        for a, d in self.ancestors(base):
+            out.append((a, d))
+        for a, d in self.ancestors(x):
+            if a != base and all(a != o for o, _ in out):
+                out.append((a, d))
+        return out
+
     def _type_ok(self, obj: str, answer_type: str) -> bool:
         if not answer_type:
             return True
@@ -235,12 +263,17 @@ class SemanticMemory:
             subs: Dict[str, float] = {}
             for s in self.reverse.get((q.rel, q.obj), set()):
                 for f in self.slots.get((s, q.rel), {}).values():
-                    if f.obj == q.obj and not f.neg and f.strength > 0.15:
+                    if lemma_of(f.obj) == q.obj and not f.neg and f.strength > 0.15:
                         subs[s] = max(subs.get(s, 0.0), f.score(now))
             items = [Fact(obj=s, strength=v, rel=q.rel) for s, v in sorted(subs.items(), key=lambda kv: -kv[1])]
             return Answer(items=items[:3], confidence=1.0 if items else 0.0)
         if q.want == "qty":
-            fs = [f for f in self._collect(q.subj, [q.rel], "") if f.obj == q.obj]
+            fs = [f for f in self._collect(q.subj, [q.rel], "") if lemma_of(f.obj) == q.obj]
+            made = [f for f in fs if is_instance(f.obj)]
+            if made:                                  # several particular things: count them
+                n = len({f.obj for f in made}) + sum(1 for f in fs if not is_instance(f.obj) and f.qty == "one")
+                return Answer(items=[Fact(obj=q.obj, qty=number_word(n), strength=1.0, rel=q.rel,
+                                          t=max(f.t for f in made))], confidence=1.0)
             return self._rank(fs, now)
         rels = self._rels_for(q)
         fs = self._collect(q.subj, rels, q.answer_type)
@@ -248,7 +281,7 @@ class SemanticMemory:
         if ans.items:
             return ans
         # nothing stored: inherit from ancestors (stored "is a" + dictionary hypernyms)
-        for anc, depth in self.ancestors(q.subj):
+        for anc, depth in self.inherits(q.subj):
             fs = self._collect(anc, rels, q.answer_type)
             if fs:
                 a = self._rank(fs, now)
@@ -282,9 +315,9 @@ class SemanticMemory:
         if rel == "isa":
             v = self.is_a(s, o)
             return Answer(verdict={True: "yes", False: "no", None: "unknown"}[v], confidence=1.0 if v is not None else 0.0,
-                          chain=[a for a, _ in self.ancestors(s)][:4])
+                          chain=[a for a, _ in self.inherits(s)][:4])
         grp = self._collect(s, [self._slot_rel(rel)], "")
-        pos = [f for f in grp if f.obj == o and (not q.qty or f.qty == q.qty)]
+        pos = [f for f in grp if lemma_of(f.obj) == lemma_of(o) and (not q.qty or f.qty == q.qty)]
         rivals = [f for f in grp if f not in pos and self._conflict(rel, f, o, q.qty)]
         if pos and rivals and max(f.score(self.t) for f in rivals) > max(f.score(self.t) for f in pos):
             return Answer(verdict="no", confidence=0.9, items=[max(rivals, key=lambda f: f.score(self.t))])
@@ -301,14 +334,14 @@ class SemanticMemory:
             if self._conflict(rel, f, o, q.qty):
                 return Answer(verdict="no", confidence=0.8, items=[f])
         if rel == "attr":
-            for anc, depth in self.ancestors(s):
+            for anc, depth in self.inherits(s):
                 for f in self._collect(anc, ["attr"], ""):
                     if f.obj == o:
                         return Answer(verdict="yes", confidence=0.6 ** depth, inferred=True, via=anc)
         if rel not in ("attr", "isa"):
-            for anc, depth in self.ancestors(s):
+            for anc, depth in self.inherits(s):
                 for f in self._collect(anc, [self._slot_rel(rel)], ""):
-                    if f.obj == o:
+                    if lemma_of(f.obj) == lemma_of(o):
                         return Answer(verdict="yes", confidence=0.6 ** depth, inferred=True, via=anc)
         return Answer(verdict="unknown")
 
@@ -325,7 +358,7 @@ class SemanticMemory:
         return sum(len(g) for g in self.slots.values())
 
     def to_dict(self) -> dict:
-        return dict(t=self.t, defs=self.defs, subj_num=self.subj_num, proper=sorted(self.proper),
+        return dict(t=self.t, entities=self.ents.to_dict(), defs=self.defs, subj_num=self.subj_num, proper=sorted(self.proper),
                     facts=[dict(subj=s, rel=r, **{k: getattr(f, k) for k in
                                                   ("obj", "qty", "neg", "strength", "count", "t", "told", "source", "obj_num")})
                            for (s, r), grp in self.slots.items() for f in grp.values()])
@@ -333,6 +366,7 @@ class SemanticMemory:
     def from_dict(self, d: dict) -> None:
         self.t, self.defs, self.subj_num = d["t"], d["defs"], d["subj_num"]
         self.proper = set(d.get("proper", []))
+        self.ents.from_dict(d.get("entities", {}))
         self.slots.clear()
         self.reverse.clear()
         for x in d["facts"]:
@@ -340,6 +374,8 @@ class SemanticMemory:
                      told=x["told"], source=x["source"], obj_num=x["obj_num"], rel=x["rel"])
             self.slots.setdefault((x["subj"], x["rel"]), {})[(f.obj, f.qty, f.neg)] = f
             self.reverse.setdefault((x["rel"], f.obj), set()).add(x["subj"])
+            if is_instance(f.obj):
+                self.reverse.setdefault((x["rel"], lemma_of(f.obj)), set()).add(x["subj"])
 
     def save(self, path: str) -> None:
         with open(path, "w", encoding="utf-8") as fh:

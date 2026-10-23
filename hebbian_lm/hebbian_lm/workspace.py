@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
 from .comprehension import (END, NP, ClauseParser, Discourse, Prop, Query, Tok, number_word, tag_sentence, tokenize_cased)
+from .entities import is_instance, lemma_of
 from .lexicon import PL_DET, SG_DET, Lexicon, inflect_noun, inflect_verb
 from .semantic import SPATIAL, Answer, SemanticMemory
 
@@ -34,7 +35,7 @@ VOWEL_SOUND = set("aeiou")
 @dataclass
 class Reply:
     text: str
-    kind: str = "answer"             # answer | idk | unknown_word | not_understood | learned
+    kind: str = "answer"             # answer | idk | unknown_word | not_understood | learned | clarify
     confidence: float = 0.0
     inferred: bool = False
     note: str = ""
@@ -63,7 +64,8 @@ def a_an(word: str) -> str:
 
 
 class Workspace:
-    def __init__(self, model=None, lexicon: Optional[Lexicon] = None, memory: Optional[SemanticMemory] = None) -> None:
+    def __init__(self, model=None, lexicon: Optional[Lexicon] = None, memory: Optional[SemanticMemory] = None,
+                 instances: bool = True) -> None:
         self.lex = lexicon or Lexicon.default()
         self.model = model
         if model is not None and getattr(model, "lexicon", None) is None:
@@ -73,6 +75,8 @@ class Workspace:
         self.seen: Set[str] = set()                 # lemmas already processed (so each is looked up once)
         self.entities: Set[str] = set()             # every subject/object lemma stored so far
         self.pending: Optional[str] = None          # a word the user has been asked to explain
+        self.instances = instances                  # separate entities for separate mentions ("a red ball", "tom's ball")
+        self.clarifying: Optional[tuple] = None     # (question, lemma, candidate ids) after a "which ball ?" question
 
     # ================================================================== reading
     def new_document(self) -> None:
@@ -88,20 +92,23 @@ class Workspace:
                 continue
             tag_sentence(sent, self.lex)
             self._meet_words(sent, rep)
-            props = ClauseParser(self.lex, self.discourse).parse_declarative(sent)
+            props = ClauseParser(self.lex, self.discourse, self._ents()).parse_declarative(sent)
             for p in props:
                 self._definitional(p, rep)
                 self.mem.add(p, told=told)
-                self.entities.update(x for x in (p.subj, p.obj) if x)
+                self.entities.update(lemma_of(x) for x in (p.subj, p.obj) if x)
                 rep.props.append(p)
             rep.unknown_words = [u for u in rep.unknown_words if u not in rep.defined]
             if learn_lm and self.model is not None:
-                s = " ".join(t.text for t in sent if t.text not in END) + " ."
+                s = " ".join(t.text for t in sent if t.text not in END and t.tag != "POSS") + " ."
                 if told:
                     self.model.tell(s)
                 else:
                     self.model.read(s, learn=True)
         return rep
+
+    def _ents(self):
+        return self.mem.ents if self.instances else None
 
     @staticmethod
     def _sentences(text: str) -> List[List[Tok]]:
@@ -144,6 +151,8 @@ class Workspace:
 
     def _definitional(self, p: Prop, rep: ReadReport) -> None:
         """'a flib is an animal': the text itself explains an unknown word, so the dictionary learns it."""
+        if p.rel == "isa" and not p.neg and is_instance(p.subj):
+            return
         if p.rel == "isa" and not p.neg and not self.lex.senses(p.subj, "n"):
             parent = p.obj
             kind = self.lex.kind(parent) or (parent if parent in ("animal", "person", "food", "place", "plant") else "")
@@ -159,7 +168,7 @@ class Workspace:
             pass
 
     # ================================================================== questions
-    def ask(self, question: str) -> Reply:
+    def ask(self, question: str, prefer: Optional[Dict[str, str]] = None) -> Reply:
         toks = tokenize_cased(question)
         tag_sentence(toks, self.lex)
         unk = [t for t in toks if t.tag in ("N", "PN", "ADJ", "V") and not t.known and not self._known(t.lemma)]
@@ -167,8 +176,11 @@ class Workspace:
             w = unk[0].lemma
             self.pending = w
             return Reply(f"i do not know the word {w} . what is it ?", kind="unknown_word", note=w)
-        parser = ClauseParser(self.lex, self.discourse)
+        parser = ClauseParser(self.lex, self.discourse, self._ents(), creating=False, prefer=prefer)
         q = parser.parse_question(toks)
+        if q is not None and parser.ambiguous:
+            return self._clarify(question, parser.ambiguous[0])
+        self.clarifying = None
         if q is None:
             if self.model is not None:
                 a = self.model.ask(question, abstain=True)
@@ -185,6 +197,48 @@ class Workspace:
             reply.fluency = self.fluency(reply.text)
         return reply
 
+    # ---- which one? (several instances of the same noun)
+    def _label(self, eid: str, among: List[str]) -> str:
+        """How to name one instance so it can be told apart from the others: tom's ball / the red ball / the second ball."""
+        e = self.mem.ents.items[eid]
+        owners = [self.mem.ents.items[x].owner for x in among]
+        if e.owner and owners.count(e.owner) == 1:
+            return f"{self._owner_name(e.owner)}'s {e.lemma}"
+        adjs = [f.obj for r, f in self.mem.facts_about(eid) if r == "attr" and not f.neg][:1] or list(e.adjs[:1])
+        same = [x for x in among if x != eid and (adjs and adjs[0] in
+                ([f.obj for r, f in self.mem.facts_about(x) if r == "attr"] + list(self.mem.ents.items[x].adjs)))]
+        if adjs and not same:
+            prefix = f"{self._owner_name(e.owner)}'s " if e.owner else "the "
+            return f"{prefix}{adjs[0]} {e.lemma}"
+        rank = sorted(among, key=lambda x: self.mem.ents.items[x].born).index(eid) + 1
+        return f"the {['first', 'second', 'third', 'fourth', 'fifth'][min(rank, 5) - 1]} {e.lemma}"
+
+    def _owner_name(self, owner: str) -> str:
+        return self._label(owner, [owner]) if is_instance(owner) and owner in self.mem.ents.items else owner
+
+    def _clarify(self, question: str, amb) -> Reply:
+        lemma, ids = amb
+        self.clarifying = (question, lemma, ids)
+        names = [self._label(i, ids) for i in ids]
+        return Reply(f"which {lemma} ? {' or '.join(names)} ?", kind="clarify", note=f"{len(ids)} {lemma}s", confidence=0.0)
+
+    def _answer_clarification(self, text: str) -> Optional[Reply]:
+        """The user replies to 'which ball ?' with 'tom's' / 'the red one' / 'the second': ask the question again."""
+        question, lemma, ids = self.clarifying
+        words = {t.text for t in tokenize_cased(text)}
+        ordinals = ["first", "second", "third", "fourth", "fifth"]
+        hits = []
+        for rank, i in enumerate(sorted(ids, key=lambda x: self.mem.ents.items[x].born)):
+            e = self.mem.ents.items[i]
+            keys = {e.owner, ordinals[min(rank, 4)]} | set(e.adjs) | \
+                {f.obj for r, f in self.mem.facts_about(i) if r == "attr" and not f.neg}
+            if keys & words:
+                hits.append(i)
+        if len(hits) != 1:
+            return None
+        self.clarifying = None
+        return self.ask(question, prefer={lemma: hits[0]})
+
     def _known(self, lemma: str) -> bool:
         return lemma in self.entities or lemma in self.mem.defs or bool(self.lex.senses(lemma)) or \
             lemma in self.lex.proper or (lemma, "isa") in {(s, r) for (s, r) in self.mem.slots}
@@ -197,6 +251,9 @@ class Workspace:
 
     # ================================================================== realisation (grammar rules)
     def _np(self, lemma: str, number: str = "sg", proper: bool = False) -> str:
+        if is_instance(lemma) and lemma in self.mem.ents.items:
+            same = [e.id for e in self.mem.ents.of(self.mem.ents.items[lemma].lemma)]
+            return self._label(lemma, same) if len(same) > 1 else "the " + self.mem.ents.items[lemma].lemma
         if proper or lemma in self.lex.proper or lemma in self.mem.proper:
             return lemma
         if number == "pl":
@@ -205,7 +262,17 @@ class Workspace:
             return lemma
         return "the " + lemma
 
+    def _inst_desc(self, eid: str) -> str:
+        """'a red ball': an instance described by what is known of it (colour first)."""
+        e = self.mem.ents.items[eid]
+        attrs = [f.obj for r, f in self.mem.facts_about(eid) if r == "attr" and not f.neg and f.strength > 0.15]
+        attrs.sort(key=lambda a: 1 if self.mem._color(a) else 0)       # a big red ball
+        words = attrs[:2] + [e.lemma]
+        return f"{a_an(words[0])} {' '.join(words)}"
+
     def _obj_np(self, lemma: str, number: str, qty: str = "") -> str:
+        if is_instance(lemma) and lemma in self.mem.ents.items:
+            return self._inst_desc(lemma)
         if number == "pl":
             return inflect_noun(lemma, "pl")
         if self.lex.kind(lemma) == "drink" or lemma in ("rice", "bread", "meat", "cheese", "sand"):
@@ -261,6 +328,8 @@ class Workspace:
             subs = [self._np(f.obj, n) for f, n in zip(ans.items[:2], nums)]
             plural = len(subs) > 1 or nums[0] == "pl"
             obj = self._obj_np(q.obj, q.obj_num)
+            if q.rel == "have" and q.obj_num == "sg" and self.mem.ents.of(q.obj):
+                obj = f"{a_an(q.obj)} {q.obj}"
             return Reply(f"{' and '.join(subs)} {self._verb(q.rel, 'pl' if plural else 'sg')} {obj} .", confidence=conf)
         if q.want == "qty":
             qty = top.qty
@@ -288,6 +357,10 @@ class Workspace:
         if rel == "can":
             return Reply(f"{hedge}{sub} can {top.obj} .", confidence=conf, inferred=ans.inferred, note=note)
         if rel == "have":
+            things = [f for f in ans.items if is_instance(f.obj)][:3]
+            if things and is_instance(top.obj):
+                parts = ' and '.join(self._inst_desc(f.obj) for f in things)
+                return Reply(f"{hedge}{sub} {'have' if pl else 'has'} {parts} .", confidence=conf)
             return Reply(f"{hedge}{sub} {'have' if pl else 'has'} {self._obj_np(top.obj, top.obj_num)} .", confidence=conf)
         # ordinary verb: the dog eats bones (list the strongest few)
         objs = [f for f in ans.items if f.obj][:3]
@@ -308,7 +381,10 @@ class Workspace:
         elif q.rel == "can":
             stmt = f"{sub} can {q.obj}"
         else:
-            stmt = f"{sub} {self._verb(q.rel, 'pl' if pl else 'sg')} {self._obj_np(q.obj, 'sg') if q.obj else ''}".strip()
+            obj = self._obj_np(q.obj, 'sg') if q.obj else ''
+            if q.rel == "have" and q.obj and self.mem.ents.of(q.obj):
+                obj = f"{a_an(q.obj)} {q.obj}"
+            stmt = f"{sub} {self._verb(q.rel, 'pl' if pl else 'sg')} {obj}".strip()
         if ans.verdict == "yes":
             return Reply(f"yes , {stmt} .", confidence=ans.confidence, inferred=ans.inferred,
                          note=f"inferred from {ans.via}" if ans.inferred else "")
@@ -320,6 +396,10 @@ class Workspace:
     # ================================================================== chat entry point
     def converse(self, text: str) -> Reply:
         t = text.strip()
+        if self.clarifying is not None and not t.endswith("?"):
+            r = self._answer_clarification(t)
+            if r is not None:
+                return r
         if t.endswith("?"):
             return self.ask(t)
         rep = self.read(t if t.endswith((".", "!")) else t + " .", told=True)
@@ -348,6 +428,11 @@ class Workspace:
                 out["opposites"] = s.antonyms[:4]
                 break
         out["known facts"] = [(r, f.obj, round(f.strength, 1)) for r, f in self.mem.facts_about(a.lemma)[:8]]
+        insts = self.mem.ents.of(a.lemma)
+        if insts:
+            ids = [e.id for e in insts]
+            out["instances"] = {self._label(i, ids): [(r, lemma_of(f.obj), round(f.strength, 1))
+                                                       for r, f in self.mem.facts_about(i)[:6]] for i in ids}
         return out
 
     # ================================================================== grammar checking
@@ -453,7 +538,7 @@ class Workspace:
             for iss in self._check_sentence(sent):
                 if iss.suggestion and iss.kind != "unknown":
                     words[iss.index] = Tok(iss.suggestion, False, words[iss.index].tag)
-            out.append(" ".join(t.text for t in words) + " " + (end[0] if end else "."))
+            out.append(" ".join(t.text for t in words).replace(" 's", "'s") + " " + (end[0] if end else "."))
         return " ".join(out)
 
     # ================================================================== persistence

@@ -70,8 +70,10 @@ def main() -> None:
                 for k, v in ws.describe(rest).items():
                     print(f"  {k}: {v}")
             elif cmd == "facts" and rest:
-                for r, f in ws.mem.facts_about(rest)[:20]:
-                    print(f"  {rest} {r} {f.qty + ' ' if f.qty else ''}{f.obj}{' (not)' if f.neg else ''}   strength {f.strength:.1f}{' told' if f.told else ''}")
+                ids = [rest] + [e.id for e in ws.mem.ents.of(rest)]          # the kind, then each instance of it
+                for who in ids:
+                    for r, f in ws.mem.facts_about(who)[:20]:
+                        print(f"  {who} {r} {f.qty + ' ' if f.qty else ''}{f.obj}{' (not)' if f.neg else ''}   strength {f.strength:.1f}{' told' if f.told else ''}")
             elif cmd == "check" and rest:
                 issues = ws.check(rest)
                 print("  no problems found" if not issues else "")
