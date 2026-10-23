@@ -15,6 +15,14 @@ cd hebbian_lm
 pip install -r requirements.txt          # numpy
 ```
 
+## 2a. Use the released model (no training)
+
+```bash
+python chat.py --workspace release/v1.0/workspace      # the trained workspace shipped in this repository (12 MB)
+```
+
+Check it first with `cd release/v1.0 && sha256sum -c SHA256SUMS`. See [RELEASE.md](RELEASE.md) for what it can and cannot do.
+
 ## 2. Build and talk (two commands)
 
 ```bash

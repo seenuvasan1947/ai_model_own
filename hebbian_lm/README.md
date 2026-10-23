@@ -1,5 +1,7 @@
 # Hebbian Semantic Workspace
 
+> **Release 1.0.0 — [RELEASE.md](RELEASE.md)** (trained model in `release/v1.0/`, run `python chat.py --workspace release/v1.0/workspace`).
+>
 > **This is v2 (branch `hebbian-v2`).** What changed from the working v1 and the new numbers are in **[V2.md](V2.md)**; v1 is unchanged on branch `hebbian-approach`.
 
 A language system that is **not a transformer** and learns without backpropagation. It reads text, looks up words it
