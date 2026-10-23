@@ -27,7 +27,7 @@ from typing import Dict, List, Optional, Tuple
 from .entities import EntityStore, is_instance, lemma_of
 from .lexicon import (AUX, BE_FORMS, FUNCTION_POS, HAVE_FORMS, NUMBER_WORDS, PL_DET, PRONOUNS, SG_DET, Analysis, Lexicon)
 
-CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]")
+CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]|[\"\u201c\u201d]")
 END = {".", "?", "!"}
 MALE = {"boy", "man", "king", "father", "brother", "he", "tom", "ben", "sam", "max", "jack"}
 FEMALE = {"girl", "woman", "queen", "mother", "sister", "she", "anna", "lily", "mia", "emma", "zoe"}
@@ -105,6 +105,9 @@ class Tok:
 
 # --------------------------------------------------------------------------- tagger
 FUNCTION_NAMES = set(FUNCTION_POS)
+PARTICLES = {"down", "up", "out", "off", "away", "back", "over", "around", "along", "forward", "together", "aside", "about"}
+INTENSIFIERS = {"very", "so", "too", "quite", "rather", "really", "just", "almost", "most", "more", "much", "not", "always", "never"}
+LINKING = {"feel", "look", "seem", "become", "grow", "get", "turn", "sound", "smell", "taste", "remain", "stay", "appear"}
 TAGS = ["POSS", "DET", "ADJ", "N", "PN", "V", "AUX", "PREP", "PRON", "CONJ", "WH", "NEG", "NUM", "QUANT", "ADV", "PUNCT"]
 _POS_TAG = {"n": "N", "v": "V", "a": "ADJ", "r": "ADV", "det": "DET", "pron": "PRON", "aux": "AUX", "prep": "PREP",
             "conj": "CONJ", "wh": "WH", "neg": "NEG", "num": "NUM", "quant": "QUANT"}
@@ -122,7 +125,7 @@ _T = {
           "CONJ": -0.3, "NEG": -0.5, "V": -3, "PN": -0.2, "QUANT": -0.5},
     "AUX": {"V": 0, "ADJ": 0, "DET": 0, "NEG": 0, "N": -0.5, "PRON": -0.2, "NUM": -0.3, "PREP": -0.2, "ADV": -0.2,
             "QUANT": -0.2, "AUX": -0.4, "PN": -0.2, "WH": -2},
-    "PREP": {"DET": 0, "N": 0, "PN": 0, "NUM": -0.3, "ADJ": -0.2, "PRON": -0.2, "QUANT": -0.3},
+    "PREP": {"V": -2.0, "AUX": -2.5, "DET": 0, "N": 0, "PN": 0, "NUM": -0.3, "ADJ": -0.2, "PRON": -0.2, "QUANT": -0.3},
     "NEG": {"V": 0, "ADJ": 0, "DET": -0.3, "N": -0.5, "AUX": -0.5, "ADV": -0.3, "PREP": -0.5},
     "CONJ": {"DET": -0.1, "N": -0.1, "PN": -0.1, "PRON": -0.1, "V": -0.3, "ADJ": -0.2, "ADV": -0.3, "NUM": -0.3, "AUX": -0.3},
     "WH": {"AUX": 0, "V": -0.3, "N": -0.2, "ADJ": -0.2, "QUANT": 0, "NUM": -0.2, "DET": -0.3, "PRON": -0.3},
@@ -134,10 +137,19 @@ _T = {
 }
 
 
-def _trans(prev: str, cur: str) -> float:
+# after these verbs "to" is a preposition ("went to school"); after others it marks an infinitive ("wanted to be")
+_TO_PREP_VERBS = {"go", "come", "walk", "run", "return", "move", "travel", "belong", "listen", "talk", "look", "turn", "get",
+                  "fly", "swim", "climb", "jump", "hurry", "give", "send", "bring", "take", "say", "speak", "write", "point",
+                  "reply", "refer", "lead", "stand", "sit", "creep", "rush", "step", "drive", "ride", "sail", "head", "show"}
+
+
+def _trans(prev: str, cur: str, infinitive: bool = False) -> float:
     if cur == "PUNCT":
         return -0.1
-    return _T.get(prev, {}).get(cur, -3.0)
+    t = _T.get(prev, {}).get(cur, -3.0)
+    if infinitive:                              # "to" + verb: "a word to say", "wanted to be"
+        t += 2.0 if cur in ("V", "AUX") else (-0.5 if cur == "N" else 0.0)
+    return t
 
 
 _NT = {"can't": ["can", "not"], "won't": ["will", "not"], "shan't": ["shall", "not"], "ain't": ["is", "not"]}
@@ -169,11 +181,18 @@ def tokenize_cased(text: str) -> List[Tok]:
     return out
 
 
+def _after_be(toks: List[Tok], i: int) -> bool:
+    j = i - 1
+    while j >= 0 and toks[j].text in {"just", "still", "always", "never", "now", "quickly", "slowly", "not", "also", "soon"}:
+        j -= 1
+    return j >= 0 and toks[j].text in BE_FORMS
+
+
 def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
     """Viterbi over each token's candidate readings; fills tag/lemma/feats on the tokens."""
     cands: List[List[Tuple[str, Analysis, float]]] = []
     for i, t in enumerate(toks):
-        if t.text in END or t.text in {",", ":", ";"}:
+        if t.text in END or t.text in {",", ":", ";", '"'}:
             cands.append([("PUNCT", Analysis(t.text, t.text, "punct", {}, [], True), 0.0)])
             continue
         if t.text == "'s":
@@ -191,6 +210,10 @@ def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
             cost = min(1.5, 0.35 * (analyses[0].score - a.score)) if rank else 0.0
             if not a.known:
                 cost = 0.9
+            if rank and analyses[0].pos in ("det", "pron") and analyses[0].score >= 10:
+                cost = max(cost, 3.0)            # "his", "her", "that" are determiners/pronouns, not rare nouns
+            if tag == "V" and a.feats.get("form") == "ing" and _after_be(toks, i):
+                cost -= 1.5                      # "was climbing": after a form of be, -ing is a verb
             opts.append((tag, a, cost))
         if analyses and not analyses[0].known:
             # unknown word: let the grammar decide whether it is a noun, adjective or verb
@@ -202,13 +225,22 @@ def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
                 opts = [("PN", a, 0.2)] + opts
             if a.pos == "v":
                 opts = [("V", a, 0.9), ("N", Analysis(t.text, t.text, "n", {"number": "sg"}, [], False), 1.0)]
-        # a capitalised word in mid-sentence is a name, not a verb or adjective
-        if t.cap and i > 0 and not t.text.isdigit() and t.text not in FUNCTION_NAMES:
+        # a capitalised word in mid-sentence is a name, not a verb or adjective; so is the first word of "Little Joe"
+        starts_name = (i == 0 and t.cap and i + 1 < len(toks) and toks[i + 1].cap and toks[i + 1].text.isalpha()
+                       and t.text not in FUNCTION_NAMES)
+        if (t.cap and i > 0 or starts_name) and not t.text.isdigit() and t.text not in FUNCTION_NAMES:
             first = analyses[0] if analyses else None
             nm = Analysis(t.text, t.text, "n", {"number": "sg"}, first.senses if first and first.pos == "n" else [], True)
             opts = [("PN", nm, 0.0)]
+        if t.text == "that" and i > 0:                  # "a crash that made ...", "knew that ...": a linking word
+            opts = opts + [("CONJ", Analysis("that", "that", "conj", {}, [], True), 0.4)]
         cands.append(opts)
     n = len(toks)
+    inf = [False] * n
+    for i in range(1, n):
+        if toks[i - 1].text == "to":
+            before = lex.analyze(toks[i - 2].text)[0] if i >= 2 and toks[i - 2].text.isalpha() else None
+            inf[i] = not (before is not None and before.pos == "v" and before.lemma in _TO_PREP_VERBS)
     best: List[Dict[int, Tuple[float, int]]] = []
     for i in range(n):
         layer: Dict[int, Tuple[float, int]] = {}
@@ -216,7 +248,7 @@ def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
             if i == 0:
                 layer[j] = (-cost + _trans("START", tag), -1)
             else:
-                bs, bk = max(((best[i - 1][k][0] + _trans(cands[i - 1][k][0], tag), k) for k in best[i - 1]),
+                bs, bk = max(((best[i - 1][k][0] + _trans(cands[i - 1][k][0], tag, inf[i]), k) for k in best[i - 1]),
                              key=lambda x: x[0])
                 layer[j] = (bs - cost, bk)
         best.append(layer)
@@ -490,6 +522,9 @@ class ClauseParser:
         be = False
         while j < n and toks[j].tag in ("AUX", "NEG", "ADV"):
             t = toks[j]
+            if t.tag == "ADV" and be and verb_tok is None and t.text not in INTENSIFIERS and self.lex.senses(t.lemma, "a") \
+                    and not any(x.tag == "V" for x in toks[j + 1:j + 2]):
+                break                                   # "was late": the adverb-looking word is the predicate adjective
             if t.tag == "NEG":
                 neg = True
             elif t.tag == "AUX":
@@ -524,10 +559,16 @@ class ClauseParser:
             out += self._copula(subj, rest, neg, tense)
         elif be and verb_tok is not None and verb_tok.feats.get("form") == "ing":
             out += self._verb_props(subj, verb_tok.lemma, rest, neg, tense="present")
+        elif be and verb_tok is not None and verb_tok.feats.get("form") in ("past", "pp") and verb_tok.tag == "V" \
+                and verb_tok.text not in HAVE_FORMS:
+            out += self._passive(subj, verb_tok, rest, neg)
         elif verb_tok is not None:
             lem = verb_tok.lemma
             if modal:
-                out.append(Prop(subj_head, "can", lem, neg=neg, subj_num=subj.number))
+                if modal in ("can", "could"):
+                    out.append(Prop(subj_head, "can", lem, neg=neg, subj_num=subj.number))
+                if modal not in ("can", "could") or any(t.tag != "PUNCT" for t in rest):
+                    out += self._verb_props(subj, lem, rest, neg, "future" if modal in ("will", "shall", "would") else tense)
             elif lem == "have" or verb_tok.text in HAVE_FORMS:
                 out += self._have(subj, rest, neg, tense)
             else:
@@ -536,10 +577,22 @@ class ClauseParser:
             out += [Prop(s.key, p.rel, p.obj, p.qty, p.neg, p.tense, s.number, p.obj_num) for p in out[:1]]
         return out
 
+    def _passive(self, subj: NP, verb: Tok, rest: List[Tok], neg: bool) -> List[Prop]:
+        """"the nut was eaten by the squirrel" -> (squirrel, eat, nut); "the statue was unveiled" -> (statue, attr, unveiled)."""
+        for i, t in enumerate(rest):
+            if t.text == "by":
+                agent, _ = self.read_np(rest, i + 1)
+                if agent is not None and not agent.pron:
+                    return [Prop(agent.key, verb.lemma, subj.key, "", neg, "past", agent.number, subj.number, agent.proper)]
+        return [Prop(subj.key, "attr", verb.text, neg=neg, tense="past", subj_num=subj.number)]
+
     def _copula(self, subj: NP, rest: List[Tok], neg: bool, tense: str) -> List[Prop]:
         sn = subj.number
         if rest and rest[0].tag == "V" and rest[0].feats.get("form") != "ing" and self.lex.senses(rest[0].lemma, "a"):
             rest[0].tag = "ADJ"             # "the sky is blue": after 'be' a word with an adjective reading is one
+        elif rest and rest[0].tag == "ADV" and rest[0].text not in INTENSIFIERS and self.lex.senses(rest[0].lemma, "a") \
+                and not (len(rest) > 1 and rest[1].tag == "ADJ"):
+            rest[0].tag = "ADJ"             # "Buster was late that morning"
         if subj.of and rest:          # "the opposite of big is small"
             np, _ = self.read_np(rest, 0)
             w = rest[-1].lemma
@@ -587,7 +640,13 @@ class ClauseParser:
         sn = subj.number
         i = 0
         obj: Optional[NP] = None
-        if lemma == "say" and rest:
+        while rest and rest[0].text in PARTICLES and rest[0].tag != "N":
+            rest = rest[1:]                       # "sat down", "stole up": the particle is not an object
+        if lemma in LINKING and rest and rest[0].tag in ("ADJ", "ADV", "V") and self.lex.senses(rest[0].lemma, "a"):
+            adj = [t for t in rest if t.tag in ("ADJ", "ADV", "V") and self.lex.senses(t.lemma, "a")]
+            return [Prop(subj.key, lemma, "", "", neg, tense, sn)] + \
+                [Prop(subj.key, "attr", adj[0].lemma, neg=neg, tense=tense, subj_num=sn)]
+        if lemma == "say" and rest and all(t.tag == "PUNCT" for t in rest[1:]):
             w = next((t for t in rest if t.tag in ("N", "PN", "ADJ", "ADV", "V")), None)
             if w is not None:
                 return [Prop(subj.key, "say", w.lemma if w.tag != "V" else w.text, neg=neg, tense=tense, subj_num=sn)]

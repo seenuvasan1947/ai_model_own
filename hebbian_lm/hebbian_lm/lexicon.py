@@ -69,6 +69,14 @@ for _w in NUMBER_WORDS:
     FUNCTION_POS[_w] = "num"
 for _w in ("many", "much", "few", "several", "all", "most"):
     FUNCTION_POS[_w] = "quant"
+for _w in ("else", "also", "too", "very", "quite", "rather", "just", "still", "always", "often", "soon", "again", "even",
+           "only", "already", "almost", "here", "indeed", "perhaps", "maybe", "ever", "however", "really", "sometimes",
+           "once", "twice", "away", "together", "somewhat", "anyway", "yet"):
+    FUNCTION_POS.setdefault(_w, "r")
+for _w in ("himself", "herself", "itself", "themselves", "myself", "yourself", "ourselves", "mine", "yours", "ours", "theirs",
+           "everybody", "everyone", "somebody", "someone", "nobody", "anybody", "anyone", "everything", "something",
+           "nothing", "anything"):
+    FUNCTION_POS.setdefault(_w, "pron")
 
 # --------------------------------------------------------------------------- morphology rules
 IRREGULAR_PLURALS = {"mice": "mouse", "men": "man", "women": "woman", "children": "child", "feet": "foot",
@@ -91,6 +99,38 @@ IRREGULAR_VERBS = {  # form -> (lemma, feature)
     "had": ("have", "past"), "did": ("do", "past"), "was": ("be", "past"), "were": ("be", "past"),
 }
 VOWELS = set("aeiou")
+_MORE_IRREGULAR = [   # (lemma, past, past participle)
+    ("steal", "stole", "stolen"), ("shake", "shook", "shaken"), ("break", "broke", "broken"), ("choose", "chose", "chosen"),
+    ("wear", "wore", "worn"), ("ride", "rode", "ridden"), ("rise", "rose", "risen"), ("hide", "hid", "hidden"),
+    ("speak", "spoke", "spoken"), ("forget", "forgot", "forgotten"), ("get", "got", "gotten"), ("put", "put", "put"),
+    ("let", "let", "let"), ("set", "set", "set"), ("cut", "cut", "cut"), ("hit", "hit", "hit"), ("shut", "shut", "shut"),
+    ("send", "sent", "sent"), ("spend", "spent", "spent"), ("build", "built", "built"), ("lend", "lent", "lent"),
+    ("bend", "bent", "bent"), ("lose", "lost", "lost"), ("meet", "met", "met"), ("pay", "paid", "paid"),
+    ("lay", "laid", "laid"), ("sell", "sold", "sold"), ("mean", "meant", "meant"), ("lead", "led", "led"),
+    ("fight", "fought", "fought"), ("seek", "sought", "sought"), ("slide", "slid", "slid"), ("stick", "stuck", "stuck"),
+    ("strike", "struck", "struck"), ("swing", "swung", "swung"), ("ring", "rang", "rung"), ("sink", "sank", "sunk"),
+    ("drive", "drove", "driven"), ("bite", "bit", "bitten"), ("blow", "blew", "blown"), ("draw", "drew", "drawn"),
+    ("throw", "threw", "thrown"), ("fly", "flew", "flown"), ("show", "showed", "shown"), ("hang", "hung", "hung"),
+    ("dig", "dug", "dug"), ("win", "won", "won"), ("wake", "woke", "woken"), ("tear", "tore", "torn"),
+    ("bear", "bore", "borne"), ("spring", "sprang", "sprung"), ("shoot", "shot", "shot"), ("sweep", "swept", "swept"),
+    ("creep", "crept", "crept"), ("weep", "wept", "wept"), ("deal", "dealt", "dealt"), ("dream", "dreamt", "dreamt"),
+    ("burn", "burnt", "burnt"), ("learn", "learnt", "learnt"), ("lie", "lay", "lain"), ("do", "did", "done"),
+    ("be", "was", "been"), ("have", "had", "had"), ("go", "went", "gone"), ("take", "took", "taken"), ("give", "gave", "given"),
+    ("begin", "began", "begun"), ("swim", "swam", "swum"), ("drink", "drank", "drunk"), ("sing", "sang", "sung"),
+    ("write", "wrote", "written"), ("grow", "grew", "grown"), ("know", "knew", "known"), ("see", "saw", "seen"),
+    ("fall", "fell", "fallen"), ("eat", "ate", "eaten"), ("come", "came", "come"), ("run", "ran", "run"),
+    ("become", "became", "become"), ("understand", "understood", "understood"), ("stand", "stood", "stood"),
+    ("find", "found", "found"), ("bind", "bound", "bound"), ("hold", "held", "held"), ("feed", "fed", "fed"),
+    ("leave", "left", "left"), ("feel", "felt", "felt"), ("keep", "kept", "kept"), ("sleep", "slept", "slept"),
+    ("catch", "caught", "caught"), ("teach", "taught", "taught"), ("bring", "brought", "brought"), ("buy", "bought", "bought"),
+    ("think", "thought", "thought"), ("say", "said", "said"), ("tell", "told", "told"), ("make", "made", "made"),
+    ("hear", "heard", "heard"), ("sit", "sat", "sat"), ("read", "read", "read"),
+]
+for _l, _p, _pp in _MORE_IRREGULAR:
+    if _p != _l:
+        IRREGULAR_VERBS.setdefault(_p, (_l, "past"))
+    if _pp not in (_p, _l):
+        IRREGULAR_VERBS.setdefault(_pp, (_l, "pp"))
 
 
 def _noun_candidates(w: str) -> List[Tuple[str, str]]:
@@ -481,6 +521,8 @@ class Lexicon:
             sc += 0.6
         if a.pos == "r":
             sc -= 0.3
+        if a.pos == "v" and token in IRREGULAR_VERBS and IRREGULAR_VERBS[token][0] == a.lemma:
+            sc += 3.0                          # "made", "stole", "said" are verb forms before they are anything else
         return sc
 
     @staticmethod

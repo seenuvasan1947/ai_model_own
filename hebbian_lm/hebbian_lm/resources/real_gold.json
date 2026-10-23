@@ -1,0 +1,647 @@
+{
+ "dev": [
+  {
+   "s": "Buster sat down and scratched his head.",
+   "gold": [
+    [
+     "buster",
+     "sit",
+     ""
+    ],
+    [
+     "buster",
+     "scratch",
+     "head"
+    ]
+   ]
+  },
+  {
+   "s": "Then there was a great crash which made everybody turn to look the other way.",
+   "gold": [
+    [
+     "crash",
+     "make",
+     "everybody"
+    ]
+   ]
+  },
+  {
+   "s": "He stole up to it very, very softly, so as not to frighten the fish.",
+   "gold": [
+    [
+     "he",
+     "steal",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "I'll go up there at the very first peep of day to-morrow.",
+   "gold": [
+    [
+     "i",
+     "go",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "Farmer Brown's boy scowled down at them more puzzled than ever.",
+   "gold": [
+    [
+     "boy",
+     "scowl",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "There wasn't any doubt that he was afraid, very much afraid.",
+   "gold": [
+    [
+     "he",
+     "be",
+     "afraid"
+    ]
+   ]
+  },
+  {
+   "s": "They began to say unkind things about him.",
+   "gold": [
+    [
+     "they",
+     "begin",
+     ""
+    ],
+    [
+     "they",
+     "say",
+     "thing"
+    ]
+   ]
+  },
+  {
+   "s": "It made him feel very queer.",
+   "gold": [
+    [
+     "it",
+     "make",
+     "him"
+    ]
+   ]
+  },
+  {
+   "s": "By and by he grinned.",
+   "gold": [
+    [
+     "he",
+     "grin",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "It was very exciting, the most exciting thing they could remember.",
+   "gold": [
+    [
+     "it",
+     "be",
+     "exciting"
+    ]
+   ]
+  },
+  {
+   "s": "Little Joe couldn't find a word to say.",
+   "gold": [
+    [
+     "little joe",
+     "find",
+     "word"
+    ]
+   ]
+  },
+  {
+   "s": "I don't understand it at all.",
+   "gold": [
+    [
+     "i",
+     "understand",
+     "it"
+    ]
+   ]
+  },
+  {
+   "s": "They were real berries, and all he had got to do was to help himself.",
+   "gold": [
+    [
+     "they",
+     "be",
+     "berry"
+    ]
+   ]
+  },
+  {
+   "s": "He always whistles when he feels light-hearted, and he always feels light-hearted when he goes fishing.",
+   "gold": [
+    [
+     "he",
+     "whistle",
+     ""
+    ],
+    [
+     "he",
+     "feel",
+     ""
+    ],
+    [
+     "he",
+     "go",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "They were Little Joe Otter and Buster Bear.",
+   "gold": [
+    [
+     "they",
+     "be",
+     "little joe otter"
+    ]
+   ]
+  },
+  {
+   "s": "You see, Buster walked very softly.",
+   "gold": [
+    [
+     "buster",
+     "walk",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "Reddy doubted because he didn't want to believe.",
+   "gold": [
+    [
+     "reddy",
+     "doubt",
+     ""
+    ],
+    [
+     "he",
+     "want",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "It was a bad beginning for a beautiful day and Little Joe knew it.",
+   "gold": [
+    [
+     "it",
+     "be",
+     "beginning"
+    ],
+    [
+     "little joe",
+     "know",
+     "it"
+    ]
+   ]
+  },
+  {
+   "s": "The worst of it was Buster knew that everybody knew that it was true.",
+   "gold": [
+    [
+     "buster",
+     "know",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "He was just climbing up the bank with the fat trout in his mouth.",
+   "gold": [
+    [
+     "he",
+     "climb",
+     "bank"
+    ]
+   ]
+  },
+  {
+   "s": "Buster was late that morning.",
+   "gold": [
+    [
+     "buster",
+     "be",
+     "late"
+    ]
+   ]
+  },
+  {
+   "s": "He growled and whined and squealed.",
+   "gold": [
+    [
+     "he",
+     "growl",
+     ""
+    ],
+    [
+     "he",
+     "whine",
+     ""
+    ],
+    [
+     "he",
+     "squeal",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "Then he jumped on the helpless pail.",
+   "gold": [
+    [
+     "he",
+     "jump",
+     "pail"
+    ]
+   ]
+  },
+  {
+   "s": "And he saw something else in the Old Pasture that made his smile still broader.",
+   "gold": [
+    [
+     "he",
+     "see",
+     "something"
+    ]
+   ]
+  },
+  {
+   "s": "The fish were so frightened that they wouldn't come back for a long, long time.",
+   "gold": [
+    [
+     "fish",
+     "be",
+     "frightened"
+    ],
+    [
+     "they",
+     "come",
+     ""
+    ]
+   ]
+  }
+ ],
+ "test": [
+  {
+   "s": "Pretty soon she had worked so hard that she had some money saved from her wages.",
+   "gold": [
+    [
+     "she",
+     "work",
+     ""
+    ],
+    [
+     "she",
+     "have",
+     "money"
+    ]
+   ]
+  },
+  {
+   "s": "He had cleverly touched the prince's worst trait, his pride.",
+   "gold": [
+    [
+     "he",
+     "touch",
+     "trait"
+    ]
+   ]
+  },
+  {
+   "s": "Men are a cruel breed.",
+   "gold": [
+    [
+     "man",
+     "be",
+     "breed"
+    ]
+   ]
+  },
+  {
+   "s": "Then he and his rulers did a wicked thing.",
+   "gold": [
+    [
+     "he",
+     "do",
+     "thing"
+    ],
+    [
+     "ruler",
+     "do",
+     "thing"
+    ]
+   ]
+  },
+  {
+   "s": "He knew not what to think.",
+   "gold": [
+    [
+     "he",
+     "know",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "The Little Fir Tree could not breathe, for joy and wonder.",
+   "gold": [
+    [
+     "little fir tree",
+     "breathe",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "The lazy man shouted, and beat him, but the beast went slowly backward.",
+   "gold": [
+    [
+     "man",
+     "shout",
+     ""
+    ],
+    [
+     "man",
+     "beat",
+     "him"
+    ],
+    [
+     "beast",
+     "go",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "Fairy Candide stood before him.",
+   "gold": [
+    [
+     "fairy candide",
+     "stand",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "My throat is parched for want of water.",
+   "gold": [
+    [
+     "throat",
+     "be",
+     "parched"
+    ]
+   ]
+  },
+  {
+   "s": "Then the great war came, the Civil War.",
+   "gold": [
+    [
+     "war",
+     "come",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "You shall wear the cap and bells, and make laughter for my court.",
+   "gold": [
+    [
+     "you",
+     "wear",
+     "cap"
+    ],
+    [
+     "you",
+     "make",
+     "laughter"
+    ]
+   ]
+  },
+  {
+   "s": "Then the little Gingerbread Boy ran faster than ever.",
+   "gold": [
+    [
+     "gingerbread boy",
+     "run",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "The fox went into it, and when the tailor had him down, he shut him in.",
+   "gold": [
+    [
+     "fox",
+     "go",
+     ""
+    ],
+    [
+     "tailor",
+     "have",
+     "him"
+    ],
+    [
+     "he",
+     "shut",
+     "him"
+    ]
+   ]
+  },
+  {
+   "s": "When he reached the palace his pet dog ran to meet him.",
+   "gold": [
+    [
+     "he",
+     "reach",
+     "palace"
+    ],
+    [
+     "dog",
+     "run",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "The Lord is my shepherd; I shall not want.",
+   "gold": [
+    [
+     "lord",
+     "be",
+     "shepherd"
+    ],
+    [
+     "i",
+     "want",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "He flew to her shoulder, caressed her hair with his beak, and cooed in her ear.",
+   "gold": [
+    [
+     "he",
+     "fly",
+     ""
+    ],
+    [
+     "he",
+     "caress",
+     "hair"
+    ],
+    [
+     "he",
+     "coo",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "Then the statue was unveiled.",
+   "gold": [
+    [
+     "statue",
+     "be",
+     "unveiled"
+    ]
+   ]
+  },
+  {
+   "s": "Alice replied eagerly, for she was always ready to talk about her pet.",
+   "gold": [
+    [
+     "alice",
+     "reply",
+     ""
+    ],
+    [
+     "she",
+     "be",
+     "ready"
+    ]
+   ]
+  },
+  {
+   "s": "There was nothing else to do, so Alice soon began talking again.",
+   "gold": [
+    [
+     "alice",
+     "begin",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "The King turned pale, and shut his note-book hastily.",
+   "gold": [
+    [
+     "king",
+     "turn",
+     ""
+    ],
+    [
+     "king",
+     "shut",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "And yesterday things went on just as usual.",
+   "gold": [
+    [
+     "thing",
+     "go",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "Now I growl when I'm pleased, and wag my tail when I'm angry.",
+   "gold": [
+    [
+     "i",
+     "growl",
+     ""
+    ],
+    [
+     "i",
+     "wag",
+     "tail"
+    ],
+    [
+     "i",
+     "be",
+     "pleased"
+    ],
+    [
+     "i",
+     "be",
+     "angry"
+    ]
+   ]
+  },
+  {
+   "s": "Alice went timidly up to the door, and knocked.",
+   "gold": [
+    [
+     "alice",
+     "go",
+     ""
+    ],
+    [
+     "alice",
+     "knock",
+     ""
+    ]
+   ]
+  },
+  {
+   "s": "So they couldn't get them out again.",
+   "gold": [
+    [
+     "they",
+     "get",
+     "them"
+    ]
+   ]
+  },
+  {
+   "s": "The Hatter shook his head mournfully.",
+   "gold": [
+    [
+     "hatter",
+     "shake",
+     "head"
+    ]
+   ]
+  },
+  {
+   "s": "The Hatter was the first to break the silence.",
+   "gold": [
+    [
+     "hatter",
+     "be",
+     "first"
+    ]
+   ]
+  }
+ ],
+ "note": "dev: Burgess 'Adventures of Buster Bear' (used while developing); test: Bryant stories + Alice (labelled before any v2 parser code was written, scored once at the end)"
+}

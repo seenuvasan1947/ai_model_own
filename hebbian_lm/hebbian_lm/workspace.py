@@ -26,6 +26,7 @@ from typing import Dict, List, Optional, Set
 
 from .comprehension import (END, NP, ClauseParser, Discourse, Prop, Query, Tok, number_word, tag_sentence, tokenize_cased)
 from .entities import is_instance, lemma_of
+from .reader import Reader
 from .lexicon import PL_DET, SG_DET, Lexicon, inflect_noun, inflect_verb
 from .semantic import SPATIAL, Answer, SemanticMemory
 
@@ -65,7 +66,7 @@ def a_an(word: str) -> str:
 
 class Workspace:
     def __init__(self, model=None, lexicon: Optional[Lexicon] = None, memory: Optional[SemanticMemory] = None,
-                 instances: bool = True) -> None:
+                 instances: bool = True, real_text: bool = True) -> None:
         self.lex = lexicon or Lexicon.default()
         self.model = model
         if model is not None and getattr(model, "lexicon", None) is None:
@@ -75,6 +76,8 @@ class Workspace:
         self.seen: Set[str] = set()                 # lemmas already processed (so each is looked up once)
         self.entities: Set[str] = set()             # every subject/object lemma stored so far
         self.pending: Optional[str] = None          # a word the user has been asked to explain
+        self.real_text = real_text                  # v2 reader: clauses, relatives, infinitives, dialogue, names
+        self.aliases: Dict[str, str] = {}           # "buster" -> "buster bear"
         self.instances = instances                  # separate entities for separate mentions ("a red ball", "tom's ball")
         self.clarifying: Optional[tuple] = None     # (question, lemma, candidate ids) after a "which ball ?" question
 
@@ -92,7 +95,10 @@ class Workspace:
                 continue
             tag_sentence(sent, self.lex)
             self._meet_words(sent, rep)
-            props = ClauseParser(self.lex, self.discourse, self._ents()).parse_declarative(sent)
+            if self.real_text:
+                props = Reader(self.lex, self.discourse, self._ents(), self.aliases).read(sent)
+            else:
+                props = ClauseParser(self.lex, self.discourse, self._ents()).parse_declarative(sent)
             for p in props:
                 self._definitional(p, rep)
                 self.mem.add(p, told=told)
@@ -100,7 +106,7 @@ class Workspace:
                 rep.props.append(p)
             rep.unknown_words = [u for u in rep.unknown_words if u not in rep.defined]
             if learn_lm and self.model is not None:
-                s = " ".join(t.text for t in sent if t.text not in END and t.tag != "POSS") + " ."
+                s = " ".join(t.text for t in sent if t.text not in END and t.text != '"' and t.tag != "POSS") + " ."
                 if told:
                     self.model.tell(s)
                 else:
@@ -446,7 +452,7 @@ class Workspace:
 
     def _check_sentence(self, toks: List[Tok]) -> List[Issue]:
         out: List[Issue] = []
-        words = [t for t in toks if t.text not in END]
+        words = [t for t in toks if t.text not in END and t.text != '"']
         for i, t in enumerate(words):
             nxt = words[i + 1] if i + 1 < len(words) else None
             if t.text in ("a", "an") and nxt is not None and nxt.tag in ("N", "ADJ", "PN"):
@@ -533,7 +539,7 @@ class Workspace:
         out: List[str] = []
         for sent in sents:
             tag_sentence(sent, self.lex)
-            words = [t for t in sent if t.text not in END]
+            words = [t for t in sent if t.text not in END and t.text != '"']
             end = [t.text for t in sent if t.text in END]
             for iss in self._check_sentence(sent):
                 if iss.suggestion and iss.kind != "unknown":
@@ -566,7 +572,7 @@ class Workspace:
         with open(os.path.join(directory, "lexicon_learned.json"), "w") as f:
             json.dump(self.lex.learned_entries(), f, indent=1)
         with open(os.path.join(directory, "workspace.json"), "w") as f:
-            json.dump(dict(seen=sorted(self.seen), entities=sorted(self.entities)), f)
+            json.dump(dict(seen=sorted(self.seen), entities=sorted(self.entities), aliases=self.aliases), f)
         if self.model is not None:
             self.model.save(os.path.join(directory, "language_model.pkl"))
 
@@ -582,6 +588,7 @@ class Workspace:
             with open(p) as f:
                 d = json.load(f)
             self.seen, self.entities = set(d["seen"]), set(d["entities"])
+            self.aliases = d.get("aliases", {})
         p = os.path.join(directory, "language_model.pkl")
         if os.path.exists(p) and self.model is not None:
             from .model import HebbianLM
