@@ -52,6 +52,8 @@ def main() -> None:
     ap.add_argument("--max-len", type=int, default=40)
     ap.add_argument("--test-frac", type=float, default=0.1)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--dictionary", choices=["none", "mini", "wordnet"], default="none",
+                    help="give the language layer a dictionary (wordnet needs python fetch_wordnet.py)")
     args = ap.parse_args()
 
     text = re.sub(r"\s+", " ", load_books(args.cache))
@@ -65,8 +67,10 @@ def main() -> None:
     ntok = sum(map(len, train))
     print(f"{len(train):,} training sentences, {ntok:,} tokens, {len(keep):,} word types; {len(test):,} test sentences")
 
+    from hebbian_lm.lexicon import Lexicon
+    lexicon = {"none": None, "mini": Lexicon(), "wordnet": Lexicon(wordnet=os.path.join(args.cache, "wordnet"))}[args.dictionary]
     m = HebbianLM(Config(seed=args.seed, consolidate_every=2000, smoothing="ad", topic_gain=0.0,
-                         class_mix=0.6))
+                         class_mix=0.6), lexicon=lexicon)
     import time
     t = time.time()
     m.read_lines(" ".join(s) for s in train)

@@ -1,150 +1,150 @@
-# Hebbian language learner
+# Hebbian Semantic Workspace
 
-A small language model that learns **only with local, Hebbian-family plasticity rules**: no backpropagation, no loss
-function, no GPU, nothing but NumPy. It starts empty, learns words, word categories and grammar from text, keeps
-learning from whatever you tell it afterwards, and answers questions from what it has learned (or says it doesn't know).
+A language system that is **not a transformer** and learns without backpropagation. It reads text, looks up words it
+has never met in a dictionary, turns sentences into stored facts, answers questions from those facts as grammatical
+sentences, says "I do not know" when it does not, and keeps learning from whatever you tell it.
 
-> Branch `hebbian-approach`. Everything lives in this folder. Research notes: [RESEARCH.md](RESEARCH.md).
-> How it works, rule by rule: [DESIGN.md](DESIGN.md).
+It combines four parts, each doing the job it is good at:
+
+```
+ text ──► vocabulary & grammar rule engine ──► comprehension ──► propositions ──► SEMANTIC MEMORY
+          (dictionary, morphology, tagger)     (who/what/where)   (subject, relation, value)   exact storage, Hebbian
+               │ unknown word?                                                                 strengthening, rivals,
+               │ look it up, learn it                                                          recency, "is a" inheritance
+               ▼                                                                                        │
+        HEBBIAN LANGUAGE LAYER  ◄──────────────── realisation (agreement, plurals, a/an) ◄────────────────┘ retrieval
+        grammar, word categories,
+        fluency; learns from everything
+```
+
+* **Vocabulary and grammar rule engine** (`lexicon.py`, `comprehension.py`): morphology rules (plurals, tenses,
+  irregulars), a part-of-speech tagger that settles ambiguous words from context, noun-phrase and verb-group
+  chunking, question patterns, pronoun resolution. A bundled dictionary works offline; optional WordNet gives ~150,000
+  words with definitions, kinds, "is a" chains and opposites.
+* **Semantic memory** (`semantic.py`): each fact is an explicit edge (subject, relation, value). Reading it again
+  strengthens it; values that cannot both be true compete (two colours, two homes); told corrections beat old beliefs;
+  if nothing is stored about a word, it inherits through "is a" links.
+* **Hebbian language layer** (`model.py`): learns grammar, word categories and word order with local Hebbian-family rules
+  only (no gradients). It gives every new word a starting category from the dictionary, scores fluency, and keeps
+  learning from what is read.
+* **Realisation**: answers are built with the morphology rules, so agreement, plurals and a/an are right by construction.
+
+> Branch `hebbian-approach`. **How to run and use it: [USAGE.md](USAGE.md).** Design: [DESIGN.md](DESIGN.md).
+> Literature notes: [RESEARCH.md](RESEARCH.md).
 
 ## Try it
 
 ```bash
-pip install -r requirements.txt        # numpy only
-python train.py                        # ~16 s on a laptop CPU; prints a full report, saves models/hebbian_lm.pkl
-python chat.py                         # talk to it; it keeps learning from what you say
-python -m unittest discover -s tests   # 23 tests, ~15 s
-python real_text.py                    # sanity check on real children's books (downloads ~4 MB once)
+pip install -r requirements.txt     # numpy
+python train.py                     # ~20 s; trains and prints a full report
+python chat.py                      # talk to it
+python -m unittest discover -s tests   # 47 tests
 ```
 
-## What it does (a real session, output of the trained model)
+## A real session (offline dictionary)
 
 ```
-you> what color is the sky ?            ai > the sky is blue .              <- taught during training
-you> how many legs does the bird have ? ai > the bird has two legs .
-you> what color is the sand ?           ai > i do not know .                <- never heard of "sand"
-you> the sand is brown .                ai > learned it (1 new word).       <- told once
-you> what color is the sand ?           ai > the sand is brown .
-you> how many legs does the spider have ?   ai > i do not know .
-you> the spider has eight legs .        ai > learned it (1 new word).
-you> how many legs does the spider have ?   ai > the spider has eight legs .
-you> the flib runs .  /  a flib sleeps .  /  the flib is big .       <- a made-up word, three sentences
-you> /say does the flib                 ai > does the flib eat eggs ?       <- uses it in a frame it never saw
-you> /say can the flib                  ai > can the flib run ?
-you> the sky is gray .                  ai > learned it (1 new word).       <- a correction
-you> what color is the sky ?            ai > the sky is gray .
+you> what color is the sky ?                        ai > the sky is blue .
+you> is a zebra an animal ?                         ai > yes , the zebra is an animal .          <- the dictionary knows zebra -> equine -> animal
+you> what is a zebra ?                              ai > a zebra is a kind of equine . zebra means : a striped horselike animal of Africa .
+you> the zebra is brown . it eats the grass .       ai > ok , learned it . ( looked up zebra, eat )    <- "it" = the zebra
+you> what does the zebra eat ?                      ai > the zebra eats the grass .
+you> what color is the sparrow ?                    ai > i do not know .                          <- never told: it does not guess
+you> a flib is a bird .                             ai > ok , learned it . ( learned the word flib )   <- a word no dictionary has
+you> is a flib an animal ?                          ai > yes , the flib is an animal .            <- flib -> bird -> animal
+you> what color is the glorp ?                      ai > i do not know the word glorp . what is it ?
+you> the sky is gray .                              ai > ok , learned it . ( looked up gray )
+you> is the sky blue ?                              ai > no , the sky is gray .                   <- the correction replaced the old belief
+you> what is seven plus eight ?                     ai > seven plus eight is fifteen .
+you> tom has a red ball .  /  what color is the ball ?   ai > the ball is red .
+/check the dogs runs .    ->  agreement: plural subject 'the dogs' needs 'run'
+/fix does the cat runs ?  ->  does the cat run ?          /fix a dogs run .  ->  a dog runs .
 ```
 
 ## Results
 
-Everything below is measured by `python train.py --ablations` (30,000 training sentences, seed 0) unless stated.
-The model lives in a **closed, synthetic child-English world** (121,046 grammatical sentences: singular/plural, a/an,
-pronouns, agreement, present/past/progressive, negation, questions, modals, adjectives, prepositions, numbers, plus 89
-facts). The grammar is exact, so "grammatical" is not a guess. 24,324 sentences, and every sentence built from a
-held-out (subject, verb) or (verb, object phrase) pair, **never appear in training**.
+Everything below is measured by `python train.py --ablations` (30,000 training sentences, seed 0, bundled dictionary) unless
+stated. The test world is a **closed, synthetic child-English world** with an exact grammar (121,046 grammatical
+sentences: singular/plural, a/an, pronouns, agreement, three tenses, negation, questions, modals, adjectives,
+prepositions, numbers) plus 89 facts. 24,324 sentences, and everything built from held-out (subject, verb) or
+(verb, object) pairs, were **never seen in training**.
+
+### New in the workspace
+
+| Test | Result |
+|---|---|
+| **A. Storage and retrieval.** 10 → 100 facts (colour, sound, home, legs, food) about animals the language layer never saw, told once, then every fact asked | **workspace 100% at 10, 30, 60 and 100 facts**; language layer alone 30% / 40% / 47% / 47% (told once or three times, with or without a dictionary). By relation at 100 facts, language layer alone: sound 100%, home 75%, legs 55%, colour 0%, food 0% (it has no practised "eats" relation, and colours of unseen animals clash with the random colours in its training sentences) |
+| **B. Words never met.** 10 dictionary words absent from training (zebra, sparrow, wolf …) | with the dictionary a new word lands in the right category **before any sentence: 10/10** (0/10 without). With the full WordNet the same idea works on 64% of a harder 42-word set (bundled dictionary 93%): WordNet's first-sense heuristics are noisier. "is a X an animal?" and "what is a X?" correct 10/10 right after one sentence |
+| **C. Pronouns across sentences.** "the zebra is brown . it eats the grass . the sparrow is small . it lives in the tree ." then 4 questions, 40 stories | 157/160 = **98.1%** |
+| **D. Reasoning through "is a".** 10 yes/no questions incl. a word defined only by the user and chains of two links | 10/10 |
+| **E. Grammar repair.** one agreement/number error per sentence | exact repair: agreement **98.5%** (406 sentences), number **100%** (77); false alarms on correct sentences 1/400 |
+
+How to read A honestly: the semantic memory is exact by construction, so 100% is expected; the point is the comparison with
+the language layer, which stores facts diffusely, needs practised relations and cannot cope with a relation it has not seen.
+The two layers do different jobs, which is why the system uses both.
+
+### The Hebbian language layer (unchanged jobs: grammar, categories, fluency, continual learning)
 
 | What | Result |
 |---|---|
-| Words learned | 314 (one unit each, created on first sight) |
-| Word categories it invented, with no labels | 46 units; agreement with true parts of speech NMI **0.86** (fine tags) / 0.71 (coarse) |
-| Grammar: is the correct sentence more probable than a version with one error? (800 pairs built from *unseen* combinations) | **98.6%** overall: agreement 97.7%, number 100%, word order 100%, subject-type 100%, verb-object fit 93.9% |
-| Free generation, 400 samples from nothing | 82.5% exact training sentences, **15.8% new grammatical sentences it made up**, 1.8% outside the world (often sensible extrapolation, e.g. "my doctors walk in the park") |
-| Facts taught during training, asked back (68 questions, whole answer sentence must match) | **95.6%** (colours 81%; legs/home/opposites/sounds 100%) |
-| Facts told **once** as a plain statement after training, then asked | **20/20** |
-| Facts it was never told (20 + 9 questions) | **29/29** answered "i do not know ." (with abstention on; 0 confident wrong answers) |
-| New made-up word, 3 sentences | lands in the animal category (100%); then used correctly in 4 sentence frames 90%; old skills unchanged (99.5% → 99.5%) |
-| Correcting an old fact | 1 statement flips the answer |
-| Arithmetic ("two plus three is five") | 85.7% on sums it saw: this is rote memory, not arithmetic |
+| Word categories it invented with no labels | 49 units; agreement with true parts of speech NMI **0.86** (fine tags) / 0.74 (coarse) |
+| Grammar: correct sentence more probable than a version with one error (800 pairs built from *unseen* combinations) | **99.0%**: agreement 98.7%, number 100%, word order 100%, subject-type 100%, verb-object fit 93.9% |
+| Free generation, 400 samples | 85.0% training sentences, **14.5% new grammatical sentences it made up**, 0.5% outside the world |
+| Facts taught during training, asked back (whole answer must match) | **95.6%**; facts told **once** as a plain statement afterwards: **20/20** |
+| "I do not know" (language layer) | never-told facts 20/20 and 9/9 refused, 0 confident wrong answers; false refusals of taught facts 1.5% |
+| A made-up word taught with 3 sentences | right category 100%; then used correctly in 4 sentence frames 87%; old skills 99.3% → 99.3% |
+| Correcting an old fact | 1 statement |
 
-### What each mechanism contributes (switched off one at a time, nothing retrained)
+What each mechanism of the language layer contributes (switched off one at a time):
 
-| | minimal pairs | selection | perplexity | ungrammatical output | taught facts | told-once facts |
+| | minimal pairs | selection | perplexity | ungrammatical | taught facts | told-once |
 |---|---|---|---|---|---|---|
-| full model | 0.986 | 0.939 | 18.0 | 1.0% | 0.956 | 1.00 |
-| no sentence-frame memory | 0.991 | 0.955 | 16.4 | **6.3%** | 0.838 | 1.00 |
-| no category grammar | 0.901 | 0.712 | **86.5** | 0.7% | 0.765 | 0.95 |
-| no topic memory | 0.964 | 0.652 | 14.4 | 0.3% | **0.485** | 0.80 |
-| no copy/pointer gate | 0.986 | 0.939 | 18.0 | 1.0% | **0.515** | **0.00** |
+| full | 0.990 | 0.939 | 18.5 | 0.3% | 0.956 | 1.00 |
+| no sentence-frame memory | 0.993 | 0.970 | 16.8 | **6.0%** | 0.897 | 1.00 |
+| no category grammar | 0.900 | 0.712 | **86.6** | 0.7% | 0.721 | 1.00 |
+| no topic memory | 0.975 | 0.773 | 15.0 | 1.0% | **0.485** | 0.80 |
+| no copy/pointer gate | 0.990 | 0.939 | 18.6 | 0.3% | **0.500** | **0.00** |
 | word n-grams only | 0.909 | 0.667 | 42.6 | 4.3% | 0.000 | 0.00 |
 
-The Hebbian-learned **categories** are what lets it handle word combinations it has never seen (perplexity 86 → 18).
-The **topic memory + copy gate** are what make facts work. The **sentence frame** mostly keeps generated sentences
-consistent (a sentence that began as a question ends as one); it does not help the discriminative scores.
+### Real English
 
-### Stability
+* **Perplexity** on three children's books from Project Gutenberg (72k training tokens, 6,467 unseen test tokens): word
+  n-grams 245 → with the Hebbian-learned categories **124** (with WordNet attached: 122). The categories it finds among real words are
+  recognisably parts of speech (`come go make get eat look take …` / `came went thought looked saw ran heard took …`).
+  Generation is locally fluent and globally incoherent (*"it was the first one that was ever made in america ."* but also
+  *"she was very pretty , and ever ever ."*). Run `python real_text.py`.
+* **Comprehension on real fiction is limited.** On 300 random short sentences of one Gutenberg book, the rule engine extracts
+  at least one proposition from **58%**, and by eye (not measured rigorously) roughly half of those are right. Contractions
+  and names are handled; dialogue, relative clauses, passives, idioms and long sentences are not. It is built for plain
+  declarative English, not novels.
 
-| training sentences | seed | train time | minimal pairs | perplexity | ungrammatical | taught facts | told-once |
-|---|---|---|---|---|---|---|---|
-| 5,000 | 0 | 3 s | 0.91 | 22.1 | 5.6% | 0.93 | 1.0 |
-| 15,000 | 0 | 8 s | 0.97 | 18.7 | 3.2% | 0.94 | 1.0 |
-| 30,000 | 0 / 1 / 2 | 16 s | 0.996 / 0.982 / 0.95 | 18.4 / 18.4 / 20.9 | 0.4% / 3.2% / 1.2% | 0.96 | 1.0 |
-| 100,000 | 0 | 51 s | 0.986 | 21.5 | 0% | 0.94 | 1.0 |
+## What did not work, and what is still weak
 
-Seeds change results by a few points; the verb-object "selection" score is the noisiest (0.56 to 1.0 across seeds).
-More data does not keep helping (perplexity on *held-out combinations* gets slightly worse: more confidence in the
-combinations it has seen).
-
-### Real English (not the synthetic world): `python real_text.py`
-
-Three children's books from Project Gutenberg (72k training tokens, 3,000-word vocabulary), 6,467 unseen test tokens:
-
-| | held-out perplexity |
-|---|---|
-| word n-grams only (same synapses, categories off) | 245.0 |
-| + Hebbian-learned category grammar | **124.1** |
-| + topic gate and frame memory (the synthetic-world settings) | 238.7 (worse) |
-
-The categories it finds among real words are recognisably parts of speech, from raw text and no labels, for example
-`come go make get eat look take help find keep catch sing hear give` / `came went thought looked saw ran heard took
-put asked stood felt found knew` / `little old green other next poor same city best whole tiny`. Free generation is
-locally fluent and globally incoherent. Fluent: *"it was the first one that was ever made in america ."*,
-*"he said ; this life is too quiet for me ."*, and a prompt of *"once upon a time"* continued as *"there was a wee
-little boy who slept in a tiny trundle bed near his mother's great bed"*. Not fluent: *"then he came lower , and then
-she wrote stories for the unk ."*, *"she was very pretty , and ever ever ."* (`unk` = a word outside the 3,000-word
-vocabulary). Settings for this run were picked on a validation split of the training books, not on the test tokens.
-
-## Things that did **not** work (kept in the record)
-
-* **A staged curriculum** ("memorise simple patterns first, then richer ones"). I expected it to help; at equal data
-  it made agreement worse (about 0.96-0.99 → 0.87-0.94). `python train.py --stages` is still there; the default is one mixed pass.
-* **Frame memory and topic gate on real text.** Tuned on the synthetic world, they roughly double perplexity on real
-  books (124 → 239). They are mechanisms for a small closed world.
-* **More data.** Nothing improved past ~30k sentences on the held-out-combination tests.
-* Several first versions of the question answering failed for instructive reasons (the question word "color" predicted
-  the *subject nouns* of colour questions; the protocol word "answer" boosted every answer word; an additive PMI score
-  saturated). DESIGN.md says what replaced them.
-
-## Honest limitations
-
-* **It is a statistical learner, not a reasoner.** Architecturally it is a class-based n-gram model whose classes,
-  sequence cells and associations are all learned by Hebbian rules, plus a topic/copy memory. It has no long-range
-  structure, no logic, no arithmetic (sums are memorised), and no understanding in any deep sense.
-* **The strong numbers are in a tiny closed world I designed.** On real text it learns useful categories and beats a plain
-  n-gram, but its generations are not coherent. Don't expect general English mastery from 72k tokens, or from this
-  architecture at all.
-* **Wrong relation, right subject.** "what color is the cow ?" can produce "the cow says moo ." because it has a
-  taught fact about cows (abstention cannot catch this).
-* **Counts, not replacement.** Told input is accumulated, so older evidence fades only by the belief-revision rule
-  (heterosynaptic depression in contradicted cells); it flips one fact in one shot, but I did not test long
-  chains of conflicting updates or many interacting facts.
-* **Scale.** Word-to-word synapses are dense matrices, so memory grows as vocabulary² (about 4,000 words is comfortable;
-  the real-text run uses 3,000). Pure Python/NumPy runs at roughly 10-11k tokens per second.
-* **Not all of it is "Hebbian".** The core synapses and category units are. The episodic sentence buffer, the
-  product-of-experts mixing, back-off smoothing, the pointer mixture and the abstention rule are engineering
-  (DESIGN.md has the exact split).
+* A **staged curriculum** (simple patterns first) made grammar slightly worse at equal data; the default is one mixed pass.
+* The language layer's **frame memory and topic gate**, tuned on the synthetic world, roughly double perplexity on real books.
+* **More data** than ~30k synthetic sentences stopped helping on held-out combinations.
+* In development the dictionary's *first-sense* guesses hurt: with the full WordNet, words like "legs", "eats" and "blue" had
+  odd readings until readings were ranked by usage frequency; WordNet remains noisier than the small curated dictionary.
+* **The workspace is a rule-based comprehension engine plus an exact graph; only the language layer is Hebbian
+  learning.** The semantic memory uses Hebbian-style strengthening and lateral inhibition on graph edges, not a neural net.
+* **Same noun = same entity.** "tom has a red ball . anna has a blue ball ." collapses to one ball; there are no instances.
+* **Wrong relation, right subject** is still possible in the language layer alone ("what color is the cow ?" → "the cow says moo .");
+  the workspace avoids it for patterns it parses, but it has nothing equivalent for questions it cannot parse (it then falls
+  back to the language layer).
+* Answers are one fixed sentence shape per relation (not paraphrased); there is no dialogue memory beyond pronoun resolution.
+* Memory of the language layer grows as vocabulary² (about 4,000 words is comfortable); pure Python/NumPy runs at roughly
+  10k tokens per second.
+* The fluency score is reported with each answer but not used to choose among alternatives.
 
 ## Files
 
 | | |
 |---|---|
-| `hebbian_lm/model.py` | the model and all learning rules |
-| `hebbian_lm/curriculum.py` | the synthetic world: exact grammar, facts, held-out splits, minimal pairs |
-| `hebbian_lm/evaluate.py` | every metric above (categories, minimal pairs, generation, facts, abstention, continual, ablations) |
-| `train.py`, `chat.py`, `real_text.py` | train + report, interactive chat, real-English check |
-| `tests/test_hebbian_lm.py` | 23 tests: tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, new words, save/load, determinism |
-| `RESEARCH.md`, `DESIGN.md` | literature notes; the design |
+| `hebbian_lm/model.py` | the Hebbian language layer |
+| `hebbian_lm/lexicon.py`, `resources/mini_lexicon.json` | dictionary backends, morphology rules, closed-class words |
+| `hebbian_lm/comprehension.py`, `semantic.py`, `workspace.py` | comprehension, semantic memory, the workspace |
+| `hebbian_lm/curriculum.py`, `evaluate.py`, `evaluate_workspace.py` | the synthetic world and every benchmark above |
+| `train.py`, `chat.py`, `real_text.py`, `fetch_wordnet.py` | train + report, chat, real-English check, optional WordNet download |
+| `tests/` | 47 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
 
-## No GitHub Actions
-
-Training takes about 16 s and the tests about 15 s on a plain CPU, so nothing needed a remote build and no separate
-build branch was created.
+No GitHub Actions or separate build branch was needed: training takes about 20 s and the tests about 25 s on a plain CPU.

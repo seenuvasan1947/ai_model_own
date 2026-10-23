@@ -104,3 +104,30 @@ for new items and a slower consolidation path for categories. That is the struct
    classes and a topic gate. It can generalise to new word combinations and keep
    learning; it will **not** reason, handle long-range dependencies, or match modern
    neural LMs. The evaluation in `README.md` measures what it actually does.
+
+## 6. Addendum: why a dictionary, a semantic memory and a rule engine (the "workspace")
+
+The language layer is good at grammar and word categories but stores facts only diffusely, and it can only ever
+know the words it has seen. Three classical ideas fill those gaps. As above, these notes come from search
+summaries, not full papers.
+
+* **A dictionary supplies meaning.** WordNet groups words into synonym sets, each with a gloss and links such as
+  hypernym ("is a kind of") and antonym; created by George Miller's group at Princeton and later directed by
+  Christiane Fellbaum ([WordNet](https://en.wikipedia.org/wiki/WordNet),
+  [Fellbaum, *WordNet: An Electronic Lexical Database*](https://pages.cs.wisc.edu/~lingfeng/bn_pages/wordnet-christine-fellbaum.html)).
+  It is used here through its plain-text files; it has known inconsistencies, so it is a resource, not ground truth.
+* **A semantic network with spreading activation stores and retrieves meaning.** Retrieval is activation of a
+  concept's representation, which spreads to related concepts, and residual activation makes recent items easier to
+  retrieve: Collins & Loftus, *A spreading activation theory of semantic processing*, Psychological Review 82(6),
+  1975, after Quillian's 1967 model ([overview](https://en.wikipedia.org/wiki/Spreading_activation)). The semantic
+  memory in this project is a small version: edges strengthened by repetition, rivals inhibited, recency, climbing
+  "is a" links when nothing is stored.
+* **Two memory systems with different speeds.** McClelland, McNaughton & O'Reilly (*Why there are complementary
+  learning systems in the hippocampus and neocortex*, Psychological Review 102(3), 1995) argue for a fast,
+  sparse, pattern-separated store for new episodes and a slow, overlapping system that gradually extracts structure
+  ([paper](https://stanford.edu/%7Ejlmcc/papers/McCMcNaughtonOReilly95.pdf)). In the workspace, the semantic memory
+  is the fast exact store and the Hebbian language layer is the slow statistical one.
+
+What is original here is only the particular combination and the engineering, not the ideas; the closest relatives
+are classical semantic-network and neuro-symbolic systems. Whether it generalises to open-ended English is exactly
+what the coverage numbers in README.md are meant to show honestly (it does not).

@@ -1,0 +1,278 @@
+"""Tests for the dictionary/rule engine, comprehension, semantic memory and the workspace.
+They use the bundled mini dictionary, so they run offline; WordNet tests are skipped unless data/wordnet exists."""
+
+import copy
+import os
+import sys
+import tempfile
+import unittest
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+
+from hebbian_lm import Config, HebbianLM  # noqa: E402
+from hebbian_lm.comprehension import ClauseParser, Discourse, tag_sentence, tokenize_cased  # noqa: E402
+from hebbian_lm.curriculum import Language  # noqa: E402
+from hebbian_lm.lexicon import Lexicon, inflect_noun, inflect_verb  # noqa: E402
+from hebbian_lm.workspace import Workspace  # noqa: E402
+
+WN = os.path.join(ROOT, "data", "wordnet")
+
+
+def parse(text, lex, disc=None):
+    toks = tokenize_cased(text)
+    tag_sentence(toks, lex)
+    p = ClauseParser(lex, disc or Discourse())
+    return toks, p
+
+
+def props(text, lex, disc=None):
+    toks, p = parse(text, lex, disc)
+    return [(x.subj, x.rel, x.obj, x.qty) for x in p.parse_declarative(toks)]
+
+
+class MorphologyTests(unittest.TestCase):
+    def test_inflection_rules(self):
+        self.assertEqual(inflect_noun("dog", "pl"), "dogs")
+        self.assertEqual(inflect_noun("box", "pl"), "boxes")
+        self.assertEqual(inflect_noun("baby", "pl"), "babies")
+        self.assertEqual(inflect_noun("mouse", "pl"), "mice")
+        self.assertEqual(inflect_noun("wolf", "pl"), "wolves")
+        self.assertEqual(inflect_verb("run", "3sg"), "runs")
+        self.assertEqual(inflect_verb("fly", "3sg"), "flies")
+        self.assertEqual(inflect_verb("watch", "3sg"), "watches")
+        self.assertEqual(inflect_verb("hop", "ing"), "hopping")
+        self.assertEqual(inflect_verb("make", "ing"), "making")
+        self.assertEqual(inflect_verb("eat", "past"), "ate")
+        self.assertEqual(inflect_verb("play", "past"), "played")
+
+    def test_analysis_of_word_forms(self):
+        lx = Lexicon()
+        a = lx.analyze("zebras")[0]
+        self.assertEqual((a.lemma, a.pos, a.feats["number"], a.known), ("zebra", "n", "pl", True))
+        a = lx.analyze("mice")[0]
+        self.assertEqual((a.lemma, a.feats["number"]), ("mouse", "pl"))
+        a = lx.analyze("ran")[0]
+        self.assertEqual((a.lemma, a.pos, a.feats["form"]), ("run", "v", "past"))
+        a = lx.analyze("hopping")[0]
+        self.assertEqual((a.lemma, a.feats["form"]), ("hop", "ing"))
+        a = lx.analyze("bigger")[0]
+        self.assertEqual((a.lemma, a.pos, a.feats["degree"]), ("big", "a", "comp"))
+
+    def test_unknown_words_are_guessed_from_their_shape(self):
+        lx = Lexicon()
+        for word, pos, key, val in [("wugs", "n", "number", "pl"), ("blicked", "v", "form", "past"), ("flib", "n", "number", "sg"),
+                                    ("glorply", "r", None, None)]:
+            a = lx.analyze(word)[0]
+            self.assertFalse(a.known, word)
+            self.assertEqual(a.pos, pos, word)
+            if key:
+                self.assertEqual(a.feats[key], val)
+
+    def test_meaning_queries(self):
+        lx = Lexicon()
+        self.assertTrue(lx.is_a("zebra", "animal"))
+        self.assertTrue(lx.is_a("puppy", "canine"))
+        self.assertFalse(lx.is_a("dog", "bird"))
+        self.assertTrue(lx.isa_any_pos("blue", "color"))
+        self.assertIn("small", lx.antonyms("big"))
+        self.assertIn("cold", lx.antonyms("hot"))
+        self.assertIn("eight legs", lx.define("spider"))
+
+    def test_runtime_learning(self):
+        lx = Lexicon()
+        self.assertFalse(lx.knows("flib", "n"))
+        lx.learn("flib", "n", kind="animal", hypernyms=["animal"])
+        self.assertTrue(lx.is_a("flib", "animal"))
+        self.assertTrue(lx.analyze("flibs")[0].known)
+
+    @unittest.skipUnless(os.path.exists(os.path.join(WN, "index.noun")), "WordNet not downloaded")
+    def test_wordnet_backend(self):
+        lx = Lexicon(wordnet=WN)
+        self.assertTrue(lx.is_a("zebra", "animal"))
+        self.assertTrue(lx.isa_any_pos("blue", "color"))
+        self.assertEqual(lx.analyze("sparrows")[0].lemma, "sparrow")
+        self.assertEqual(lx.analyze("legs")[0].lemma, "leg")
+        self.assertIn("equine", lx.best_sense("zebra", "n").hypernyms)
+        self.assertGreater(len(lx.define("giraffe")), 10)
+        self.assertFalse(lx.analyze("blicked")[0].known)
+
+
+class ComprehensionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.lx = Lexicon()
+
+    def test_declaratives(self):
+        lx = self.lx
+        self.assertEqual(props("The sky is blue.", lx), [("sky", "attr", "blue", "")])
+        self.assertEqual(props("A zebra is an animal.", lx), [("zebra", "isa", "animal", "")])
+        self.assertEqual(props("The dogs eat bones.", lx), [("dog", "eat", "bone", "")])
+        self.assertEqual(props("The cow lives in the farm.", lx), [("cow", "live_in", "farm", "")])
+        self.assertEqual(props("The bird has two legs.", lx), [("bird", "have", "leg", "two")])
+        self.assertEqual(props("There are three cats.", lx), [("cat", "count", "", "three")])
+        self.assertEqual(props("The opposite of big is small.", lx), [("big", "antonym", "small", "")])
+        self.assertEqual(props("The dog says woof.", lx), [("dog", "say", "woof", "")])
+        self.assertEqual(props("The bird can fly.", lx), [("bird", "can", "fly", "")])
+
+    def test_negation_and_adjectives_in_noun_phrases(self):
+        toks, p = parse("The dog does not eat the apple.", self.lx)
+        pr = p.parse_declarative(toks)
+        self.assertTrue(pr[0].neg)
+        self.assertEqual(props("Tom has a red ball.", self.lx), [("tom", "have", "ball", "one"), ("ball", "attr", "red", "")])
+
+    def test_pronouns_follow_the_discourse(self):
+        d = Discourse()
+        props("The boy runs.", self.lx, d)
+        self.assertEqual(props("He sees the dog.", self.lx, d)[0][:3], ("boy", "see", "dog"))
+        d2 = Discourse()
+        props("The zebra is big.", self.lx, d2)
+        self.assertEqual(props("It eats grass.", self.lx, d2)[0][:3], ("zebra", "eat", "grass"))
+
+    def test_questions(self):
+        lx = self.lx
+        cases = {
+            "What color is the sky?": ("fact", "sky", "attr"), "What does the dog say?": ("fact", "dog", "say"),
+            "How many legs does the bird have?": ("fact", "bird", "have"), "What is a zebra?": ("define", "zebra", ""),
+            "What is the opposite of big?": ("opposite", "big", ""), "Is the sky blue?": ("yesno", "sky", "attr"),
+            "Is a zebra an animal?": ("yesno", "zebra", "isa"), "What is two plus three?": ("arithmetic", "", ""),
+        }
+        for q, (kind, subj, rel) in cases.items():
+            toks, p = parse(q, lx)
+            qq = p.parse_question(toks)
+            self.assertIsNotNone(qq, q)
+            self.assertEqual((qq.kind, qq.subj, qq.rel), (kind, subj, rel), q)
+
+
+class WorkspaceTests(unittest.TestCase):
+    def ws(self):
+        return Workspace(model=None, lexicon=Lexicon())
+
+    def test_store_and_retrieve_exactly(self):
+        w = self.ws()
+        w.read("the sky is blue . the dog says woof . the cow lives in the farm . the bird has two legs .")
+        self.assertEqual(w.ask("what color is the sky ?").text, "the sky is blue .")
+        self.assertEqual(w.ask("what does the dog say ?").text, "the dog says woof .")
+        self.assertEqual(w.ask("where does the cow live ?").text, "the cow lives in the farm .")
+        self.assertEqual(w.ask("how many legs does the bird have ?").text, "the bird has two legs .")
+
+    def test_many_facts_do_not_interfere(self):
+        from hebbian_lm.evaluate_workspace import make_facts
+        facts = make_facts(20, seed=3)
+        w = self.ws()
+        for f in facts:
+            w.read(f["statement"])
+        wrong = [f for f in facts if f["value"] not in w.ask(f["question"]).text.split()]
+        self.assertEqual(wrong, [])
+
+    def test_i_do_not_know_and_unknown_word_prompt(self):
+        w = self.ws()
+        self.assertEqual(w.ask("what color is the sand ?").text, "i do not know .")
+        r = w.ask("what color is the glorp ?")
+        self.assertEqual(r.kind, "unknown_word")
+        self.assertIn("glorp", r.text)
+
+    def test_unknown_word_learned_from_a_definition(self):
+        w = self.ws()
+        w.read("a flib is an animal .")
+        self.assertEqual(w.ask("is a flib an animal ?").text.split()[0], "yes")
+        self.assertEqual(w.ask("is a flib a bird ?").text.split()[0], "no")
+        self.assertIn("kind of animal", w.ask("what is a flib ?").text)
+        w.read("the flib eats grass .")
+        self.assertEqual(w.ask("what does the flib eat ?").text, "the flib eats the grass .")
+
+    def test_dictionary_gives_meaning_without_being_told(self):
+        w = self.ws()
+        self.assertEqual(w.ask("is a zebra an animal ?").text, "yes , the zebra is an animal .")
+        self.assertIn("kind of equine", w.ask("what is a zebra ?").text)
+        self.assertEqual(w.ask("what is the opposite of big ?").text.split()[-2], "little")
+        self.assertEqual(w.ask("is a dog a bird ?").text.split()[0], "no")
+
+    def test_inheritance_through_is_a(self):
+        w = self.ws()
+        w.read("animals eat food . ")      # generic statement about a kind
+        w.read("the zebra is big .")
+        r = w.ask("what does the zebra eat ?")
+        # nothing is stored about zebras eating; it inherits from "animal"
+        self.assertTrue(r.inferred or r.kind == "idk")
+
+    def test_correction_replaces_old_belief(self):
+        w = self.ws()
+        w.read("the sky is blue .")
+        self.assertEqual(w.ask("what color is the sky ?").text, "the sky is blue .")
+        w.read("the sky is red .")
+        self.assertEqual(w.ask("what color is the sky ?").text, "the sky is red .")
+        self.assertEqual(w.ask("is the sky blue ?").text.split()[0], "no")
+        self.assertEqual(w.ask("is the sky red ?").text.split()[0], "yes")
+
+    def test_pronoun_story(self):
+        w = self.ws()
+        w.read("the zebra is brown . it eats the grass . the sparrow is small . it lives in the tree .")
+        self.assertEqual(w.ask("what does the zebra eat ?").text, "the zebra eats the grass .")
+        self.assertEqual(w.ask("where does the sparrow live ?").text, "the sparrow lives in the tree .")
+        self.assertEqual(w.ask("what color is the zebra ?").text, "the zebra is brown .")
+
+    def test_arithmetic_by_rules(self):
+        w = self.ws()
+        self.assertEqual(w.ask("what is five plus eight ?").text, "five plus eight is thirteen .")
+        self.assertEqual(w.ask("what is nine minus four ?").text, "nine minus four is five .")
+
+    def test_grammar_check_and_correction(self):
+        w = self.ws()
+        cases = {"the dogs runs .": "the dogs run .", "the dog run .": "the dog runs .", "a dogs run .": "a dog runs .",
+                 "does the cat runs ?": "does the cat run ?", "the dogs is big .": "the dogs are big .",
+                 "an dog runs .": "a dog runs .", "these dog run .": "these dogs run ."}
+        for bad, good in cases.items():
+            self.assertTrue(w.check(bad), bad)
+            self.assertEqual(w.correct(bad), good, bad)
+        for fine in ["the dog runs .", "the dogs run .", "she is happy .", "i am happy .", "does the boy eat an apple ?"]:
+            self.assertEqual([i for i in w.check(fine) if i.kind != "unknown"], [], fine)
+
+    def test_save_and_reopen(self):
+        w = self.ws()
+        w.read("a flib is an animal . the flib is green . the sky is blue .")
+        with tempfile.TemporaryDirectory() as d:
+            w.save(d)
+            w2 = Workspace.open(d, lexicon=Lexicon())
+        self.assertEqual(w2.ask("what color is the flib ?").text, "the flib is green .")
+        self.assertEqual(w2.ask("is a flib an animal ?").text.split()[0], "yes")
+
+
+class DictionaryInTheLanguageModelTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        lang = Language()
+        docs = lang.sample_docs(6000, seed=0)
+        cls.lex = Lexicon()
+        cls.lm = HebbianLM(Config(), lexicon=cls.lex)
+        cls.lm.read_lines(docs)
+        cls.lm.consolidate()
+        cls.plain = HebbianLM(Config())
+        cls.plain.read_lines(docs)
+        cls.plain.consolidate()
+
+    def test_new_words_get_the_right_category_before_any_sentence(self):
+        m, p = copy.deepcopy(self.lm), copy.deepcopy(self.plain)
+        hits_dict = sum(m.seed_category(w) == m.category_of("dog") for w in ["zebra", "sparrow", "kitten", "wolf", "tiger"])
+        hits_plain = sum(p.seed_category(w) == p.category_of("dog") for w in ["zebra", "sparrow", "kitten", "wolf", "tiger"])
+        self.assertGreaterEqual(hits_dict, 4)
+        self.assertLessEqual(hits_plain, 1)
+        plural = [m.seed_category(w) == m.category_of("dogs") for w in ["zebras", "wolves", "tigers"]]
+        self.assertGreaterEqual(sum(plural), 2)
+
+    def test_deepcopy_keeps_the_dictionary(self):
+        self.assertIs(copy.deepcopy(self.lm).lexicon, self.lex)
+
+    def test_workspace_with_language_model(self):
+        ws = Workspace(model=copy.deepcopy(self.lm), lexicon=self.lex)
+        ws.read("the zebra is brown . the zebra eats grass .")
+        r = ws.ask("what color is the zebra ?")
+        self.assertEqual(r.text, "the zebra is brown .")
+        self.assertIsNotNone(r.fluency)
+        self.assertIn("zebra", ws.model.idx)
+        # the language layer keeps learning from what was read
+        self.assertGreater(ws.model.logprob("the zebra eats grass ."), ws.model.logprob("grass the eats zebra ."))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -20,7 +20,10 @@ import time
 
 from hebbian_lm import Config, HebbianLM
 from hebbian_lm import evaluate as ev
+from hebbian_lm import evaluate_workspace as ew
 from hebbian_lm.curriculum import Language
+from hebbian_lm.lexicon import Lexicon
+from hebbian_lm.workspace import Workspace
 
 
 def progress_line(m: HebbianLM, lang: Language, pairs, label: str, t0: float) -> str:
@@ -36,7 +39,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--docs", type=int, default=30000, help="number of training sentences (default 30000)")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out", default="models/hebbian_lm.pkl")
+    ap.add_argument("--out", default="models/hebbian_lm.pkl", help="where to save the language model alone")
+    ap.add_argument("--workspace", default="models/workspace", help="where to save the full workspace (memory + dictionary + language model)")
+    ap.add_argument("--dictionary", choices=["mini", "wordnet", "none"], default="mini",
+                    help="vocabulary engine: bundled mini dictionary (offline), full WordNet (python fetch_wordnet.py), or none")
     ap.add_argument("--stages", action="store_true", help="staged curriculum instead of one mixed pass")
     ap.add_argument("--quick", action="store_true", help="tiny run for a smoke test")
     ap.add_argument("--no-eval", action="store_true", help="skip the final evaluation")
@@ -51,7 +57,14 @@ def main() -> None:
     print(f"world: {s['grammar_sentences']:,} grammatical sentences, {s['heldout']:,} of them never shown in "
           f"training; {s['facts_train']} facts to learn, {s['facts_held']} held out")
     pairs = lang.minimal_pairs(400, seed=1)
-    m = HebbianLM(Config(seed=args.seed))
+    if args.dictionary == "wordnet":
+        lexicon = Lexicon(wordnet=os.environ.get("WORDNET_DIR", "data/wordnet"))
+    elif args.dictionary == "mini":
+        lexicon = Lexicon()
+    else:
+        lexicon = None
+    print(f"dictionary: {args.dictionary}")
+    m = HebbianLM(Config(seed=args.seed), lexicon=lexicon)
     t0 = time.time()
     if not args.stages:
         m.read_lines(lang.sample_docs(args.docs, seed=args.seed))
@@ -71,6 +84,12 @@ def main() -> None:
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     m.save(args.out)
     print(f"saved to {args.out}")
+    ws = None
+    if lexicon is not None:
+        ws = Workspace(model=m, lexicon=lexicon)
+        n = ws.preload([f.statement for f in lang.facts_train if f.rel != "sum"], told=False)
+        ws.save(args.workspace)
+        print(f"workspace saved to {args.workspace}/ ({n} facts preloaded into semantic memory)")
     if args.no_eval:
         return
 
@@ -107,6 +126,28 @@ def main() -> None:
     c = ev.continual_report(m, lang, pairs)
     report["continual"] = c
     print(json.dumps({k: v for k, v in c.items()}, indent=2))
+    if ws is not None:
+        print("\n== the workspace: dictionary + comprehension + semantic memory (vs the language model alone) ==")
+        lm_plain = HebbianLM(Config(seed=args.seed))
+        lm_plain.read_lines(lang.sample_docs(args.docs, seed=args.seed))
+        lm_plain.consolidate()
+        mini = Lexicon()
+        rows = ew.benchmark_storage(lm_plain, m, mini)
+        print("  A. facts about animals the language model never saw, told once, then asked (right answers):")
+        print(f"     {'facts':>6} {'LM alone':>9} {'LM x3':>7} {'LM+dict x3':>11} {'workspace':>10}")
+        for r in rows:
+            print(f"     {r['facts']:>6} {r['lm_no_dict_x1']:>9} {r['lm_no_dict_x3']:>7} {r['lm_dict_x3']:>11} {r['workspace']:>10}")
+        report["workspace_storage"] = rows
+        b = ew.benchmark_unknown_words(m, lm_plain)
+        print("  B. words never met before:", *[f"{k}: {v}" for k, v in b.items()], sep="\n     ")
+        report["workspace_unknown_words"] = b
+        c = ew.benchmark_pronouns()
+        print(f"  C. pronouns across sentences: {c['correct']}/{c['questions']} answers right")
+        d = ew.benchmark_reasoning()
+        print(f"  D. reasoning through 'is a': {d['correct']}/{d['total']} right")
+        e = ew.benchmark_grammar_repair(lang)
+        print(f"  E. grammar repair (one error per sentence): {e}")
+        report["workspace_pronouns"], report["workspace_reasoning"], report["workspace_grammar"] = c, d["correct"], e
     if args.ablations:
         print("\n== what each mechanism contributes (switched off one at a time, nothing retrained) ==")
         rows = ev.ablation_report(m, lang, pairs_big, held)

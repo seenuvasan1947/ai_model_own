@@ -1,7 +1,14 @@
 # Design
 
+The system has two halves. **Part A** (this section onwards) is the Hebbian language layer: grammar, word categories,
+fluency, using only local learning rules. **Part B** (end of file) is the workspace built around it: a dictionary and
+grammar rule engine, comprehension, and an exact semantic memory. Part A alone stores facts only diffusely; Part B is
+what makes meaning, storage and retrieval reliable. (Background and sources: [RESEARCH.md](RESEARCH.md).)
+
+## Part A: the Hebbian language layer
+
 Goal: a model that learns basic English words and grammar, **keeps learning after "training" ends**, and answers
-from what it has learned, using only local, Hebbian-family learning. (Background and sources: [RESEARCH.md](RESEARCH.md).)
+from what it has learned, using only local, Hebbian-family learning.
 
 ## Principles
 
@@ -97,3 +104,69 @@ that was also a taught fact leaked into training (found by a unit test).
 | `surprise_ref`, `surprise_max` | 2, 4 | surprise-gain scale and ceiling |
 | `revise_decay` | 0.7 | share of contradicted synapses removed by a correction |
 | `min_support` | 2.5 | abstention threshold |
+
+
+---
+
+## Part B: the workspace (dictionary, comprehension, semantic memory)
+
+### Why a second architecture around the first
+
+Part A has three weaknesses that no amount of tuning fixed: it only knows words it has seen, it stores a fact as a
+smear of word statistics (so it needs a practised question form, cannot cope with a new relation, and blurs facts
+about similar things), and it cannot say what a sentence *means*. The workspace adds the missing pieces in the way
+cognitive science describes them: a lexicon, a semantic network read by spreading activation, and a fast exact store
+next to a slow statistical learner.
+
+```
+ sentence ─► tokenise (cased, contractions expanded) ─► tag (Viterbi over dictionary readings + grammar preferences)
+          ─► chunk (noun phrases, verb group, complement) ─► propositions ─► SemanticMemory.add
+ question ─► tag ─► question patterns ─► Query ─► SemanticMemory.query ─► Answer ─► realise (morphology rules) ─► sentence
+ new word ─► Lexicon.analyze (dictionary + morphology) ─► gloss/kind/hypernyms learned; language layer: seed_category
+```
+
+### Components
+
+| Part | What it does | Key decisions |
+|---|---|---|
+| `Morphology` rules (`lexicon.py`) | word form → (lemma, part of speech, number / tense) and back (`inflect_noun`, `inflect_verb`) | irregular tables + suffix rules; unknown words are guessed from their shape (`-ed` past verb, plural `-s`, `-ly` adverb) and flagged unknown |
+| `Lexicon` | senses with kind, gloss, hypernym chain, synonyms, antonyms | bundled JSON (~390 entries, hand-curated) and optional WordNet read lazily from its text files; readings ranked by usage frequency (WordNet's `tagsense_cnt`), an exact-spelling bonus, and a bonus for colours as adjectives; the bundled dictionary wins over WordNet |
+| meaning code in the language layer | hashed features (part of speech, number, kind, hypernyms) of a word added to its category-layer input | a word the dictionary cannot explain gets a **zero** code (an earlier version marked it "unknown" and that pushed new words away from their true category) |
+| Tagger (`comprehension.py`) | Viterbi over each token's readings with hand-written tag-transition preferences | resolves "blue" as adjective vs noun vs verb, "flies" noun vs verb; capitalised mid-sentence words are names |
+| Chunker | noun phrase (determiner, adjectives, head, number), verb group (aux, negation, tense), complement (adjective / noun / preposition phrase) | rules, not learned; handles the patterns listed in USAGE.md |
+| Pronoun resolution | `Discourse` keeps recent noun phrases; he/she/it/they pick the latest matching one (gender from a small word list, animacy from the dictionary) | |
+| `SemanticMemory` | facts `(subject, relation, value, quantity, negation)` with strength, count, time, told-flag | see below |
+| Realisation (`workspace.py`) | answer → sentence with verb agreement, plural forms and a/an from the morphology rules | one sentence shape per relation |
+| Grammar check / fix | rules over the tagged sentence: subject-verb agreement (be/do/have/verbs, inverted questions), determiner-noun number, a/an | the fix is the rule's suggestion; the language layer scores fluency but does not choose |
+
+### The semantic memory
+
+* **Hebbian strengthening**: an identical proposition read again gets `strength += 1`.
+* **Rivals** (`_conflict`): two colours, two sounds, two homes, two leg counts, two spatial positions, antonym
+  adjectives, and a fact with its negation cannot both hold. New evidence multiplies the rival's strength by
+  `1 - 0.25` when merely read and `1 - 0.8` when *told*; this is the lateral inhibition that makes a correction work.
+* **Recency and authority**: score = strength × (0.8 + 0.2·2^(-age/400)) × 1.15 if told.
+* **Retrieval is typed**: "what colour" accepts only colour words, "where" only places, "what does X say" only sounds, decided
+  by dictionary kinds. "Who" and "what does X eat" are reverse / multi-valued lookups.
+* **Inheritance**: if nothing is stored for `(subject, relation)`, activation climbs `is a` links (stored ones plus the
+  dictionary's hypernyms, up to five steps) and returns the ancestor's fact with confidence `0.6^depth`, flagged
+  `inferred` and hedged ("i think ...").
+* **Yes/no**: "yes" if stored (or inherited), "no" if a stronger rival or a negation is stored or if both words are known and
+  neither is an ancestor of the other, otherwise "i do not know".
+* **Dictionary learning at run time**: `a flib is a bird` where *flib* is not in the dictionary adds a learned entry (kind,
+  hypernyms) to the lexicon and places the word in the language layer's categories.
+
+### What is Hebbian here, and what is not
+
+Honestly: **the semantic memory is a symbolic graph with Hebbian-style weights**, the comprehension engine and the
+dictionary are rule systems, and only the language layer (Part A) is learned by local plasticity. The reason for the
+hybrid is measured, not aesthetic: the exact store retrieves 100% of 100 facts where the Hebbian language layer alone
+gets 47%; the Hebbian layer supplies what rules cannot (word categories discovered from text, a probability model of
+grammar, perplexity improvements on real text).
+
+### Evaluation design for the workspace
+
+`evaluate_workspace.py`: (A) storage at scale on animals absent from training, comparing four language-layer variants with
+the workspace; (B) words absent from training, with and without a dictionary; (C) pronoun stories; (D) reasoning through
+"is a" including a word defined only by the user; (E) grammar repair on the held-out minimal pairs with a check for false
+alarms. Real-English limits are measured separately (README.md).

@@ -51,6 +51,8 @@ class Config:
     form_dim: int = 64            # hashed character n-gram code (helps rare/new words)
     form_weight: float = 0.5
     window2_weight: float = 0.8   # weight of the distance-2 neighbours relative to distance-1
+    lex_dim: int = 64             # hashed "meaning code" from the dictionary (part of speech, kind, hypernyms)
+    lex_weight: float = 0.7       # weight of the meaning code in the category input (0 = ignore the dictionary)
     # --- competitive category units ---
     max_classes: int = 96
     vigilance: float = 0.3        # cosine below which a new category unit is recruited
@@ -127,8 +129,10 @@ class State:
 
 
 class HebbianLM:
-    def __init__(self, cfg: Optional[Config] = None) -> None:
+    def __init__(self, cfg: Optional[Config] = None, lexicon=None) -> None:
         self.cfg = cfg or Config()
+        self.lexicon = lexicon
+        self.unknown_log: List[str] = []     # words the dictionary could not explain when first met
         self.rng = np.random.default_rng(self.cfg.seed)
         self.words: List[str] = []
         self.idx: Dict[str, int] = {}
@@ -152,7 +156,7 @@ class HebbianLM:
         self.sent_count = 0
         self.token_count = 0
         R, F = self.cfg.index_dim, self.cfg.form_dim
-        self.dim = 4 * R + F
+        self.dim = 4 * R + F + self.cfg.lex_dim
         self.Wc = np.zeros((self.cfg.max_classes, self.dim), np.float32)
         self.nwin = np.zeros(self.cfg.max_classes)
         self.active = np.zeros(self.cfg.max_classes, bool)
@@ -178,6 +182,7 @@ class HebbianLM:
 
         grow("RV", (cap, R), np.float32)
         grow("FV", (cap, F), np.float32)
+        grow("LX", (cap, self.cfg.lex_dim), np.float32)
         grow("U", (cap, 4, R), np.float32)    # left1, right1, left2, right2 neighbour accumulators
         grow("S1", (cap, cap), np.float32)
         grow("C", (cap, cap), np.float32)
@@ -220,8 +225,45 @@ class HebbianLM:
         self.idx[word] = i
         self.RV[i] = self._make_index(word)
         self.FV[i] = self._make_form(word)
+        self._set_lex_code(i, word)
         self._dirty = True
         return i
+
+    def _set_lex_code(self, i: int, word: str) -> None:
+        """Meaning code: hashed symbolic features from the dictionary (zero if no dictionary is attached)."""
+        if self.lexicon is None or self.cfg.lex_weight <= 0 or word == BOS:
+            return
+        feats = self.lexicon.features(word)
+        if "unknown" in feats:
+            self.unknown_log.append(word)       # the dictionary cannot explain it: stay neutral, let context decide
+            self.LX[i] = 0
+            return
+        v = np.zeros(self.cfg.lex_dim, np.float32)
+        for f in feats:
+            h = zlib.crc32(("lex:" + f).encode())
+            v[h % self.cfg.lex_dim] += 1.0 if (h >> 16) & 1 else -1.0
+        n = np.linalg.norm(v)
+        self.LX[i] = v / n if n > 0 else v
+
+    def attach_lexicon(self, lexicon) -> None:
+        """Give the model a dictionary (also after the fact): recompute every word's meaning code."""
+        self.lexicon = lexicon
+        self.LX[:] = 0
+        for i, w in enumerate(self.words):
+            self._set_lex_code(i, w)
+        self._dirty = True
+
+    def seed_category(self, word: str) -> int:
+        """Place a (possibly brand-new) word in the most similar existing category using only what the
+        dictionary and its spelling say about it. Returns the category unit."""
+        i = self._get_id(word, create=True)
+        x = self._word_vec(i)
+        if x.any() and self.active.any():
+            sims = self.Wc @ x
+            sims[~self.active] = -2.0
+            self.cls[i] = int(np.argmax(sims))
+            self._dirty = True
+        return int(self.cls[i])
 
     # ------------------------------------------------------------------ reading / learning
     def new_state(self) -> State:
@@ -314,6 +356,8 @@ class HebbianLM:
                 # told input contradicts a confident association: weaken the words that could fill the
                 # same slot (same learned category) as the told word, for this cue
                 same = self.cls[:self.V] == self.cls[w]
+                if self.lexicon is not None and self.LX[w].any():     # words the dictionary says are of one kind (colours ...)
+                    same = same | (self.LX[:self.V] @ self.LX[w] > 0.9)
                 row = C[f, :self.V]
                 tot = float(row[same].sum())
                 if tot > 1.0 and row[same].max() / tot >= cfg.revise_confident and row[w] / tot < cfg.revise_novel:
@@ -418,6 +462,7 @@ class HebbianLM:
             n = float(np.linalg.norm(u))
             parts.append(bw[b] * ((u / n - self.means[b]) if n > 0 else np.zeros_like(u)))
         parts.append(self.cfg.form_weight * self.FV[i])
+        parts.append(self.cfg.lex_weight * self.LX[i])
         x = np.concatenate(parts)
         n = float(np.linalg.norm(x))
         return (x / n).astype(np.float32) if n > 0 else x.astype(np.float32)
@@ -898,14 +943,37 @@ class HebbianLM:
                     episodes=len(self.episodes),
                     word_synapses=int(np.count_nonzero(self.S1[:self.V, :self.V])))
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d["had_lexicon"] = d.get("lexicon") is not None
+        d["lexicon"] = None                      # dictionaries are re-attached on load, not pickled
+        return d
+
+    def __deepcopy__(self, memo):
+        """Copy the model but share its dictionary (a dictionary is a read-mostly resource, not a weight)."""
+        import copy
+        new = self.__class__.__new__(self.__class__)
+        memo[id(self)] = new
+        for k, v in self.__dict__.items():
+            new.__dict__[k] = v if k == "lexicon" else copy.deepcopy(v, memo)
+        return new
+
     def save(self, path: str) -> None:
         with open(path, "wb") as f:
             pickle.dump(self, f, protocol=4)
 
     @staticmethod
-    def load(path: str) -> "HebbianLM":
+    def load(path: str, lexicon="default") -> "HebbianLM":
+        """Load a model. A model that was trained with a dictionary gets ``Lexicon.default()`` back
+        unless you pass another one (or ``None``)."""
         with open(path, "rb") as f:
             m = pickle.load(f)
         m._dirty = True
         m._readout = None
+        if lexicon == "default":
+            if m.__dict__.get("had_lexicon"):
+                from .lexicon import Lexicon
+                m.lexicon = Lexicon.default()
+        else:
+            m.lexicon = lexicon
         return m

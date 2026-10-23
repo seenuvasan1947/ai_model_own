@@ -1,0 +1,641 @@
+"""Comprehension engine: turns a sentence into propositions, and a question into a query.
+
+This is the grammar rule set of the system. It uses the dictionary (``lexicon.py``) for parts of speech and word
+kinds, a small Viterbi tagger with hand-written transition preferences to resolve ambiguous words in context, a
+chunker for noun phrases and verb groups, and pattern rules for questions. It understands the plain declarative
+and question sentences of the child-English world (and a good deal of everyday English around them):
+
+    "the sky is blue"            -> (sky, attr, blue)
+    "a zebra is an animal"       -> (zebra, isa, animal)
+    "the dogs eat bones"         -> (dog, eat, bone)
+    "the cow lives in the farm"  -> (cow, live_in, farm)
+    "the bird has two legs"      -> (bird, have, leg, qty=two)
+    "there are three cats"       -> (cat, count, qty=three)
+    "the opposite of big is small" -> (big, antonym, small)
+    "he runs"  (after "the boy runs")  -> pronoun resolved to the boy
+
+Not handled (by design, it is a rule system, not a parser of arbitrary English): relative clauses, passives,
+subordination, quantifier scope, metaphor.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field, replace
+from typing import Dict, List, Optional, Tuple
+
+from .lexicon import (AUX, BE_FORMS, FUNCTION_POS, HAVE_FORMS, NUMBER_WORDS, PL_DET, PRONOUNS, SG_DET, Analysis, Lexicon)
+
+CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]")
+END = {".", "?", "!"}
+MALE = {"boy", "man", "king", "father", "brother", "he", "tom", "ben", "sam", "max", "jack"}
+FEMALE = {"girl", "woman", "queen", "mother", "sister", "she", "anna", "lily", "mia", "emma", "zoe"}
+
+
+# --------------------------------------------------------------------------- data classes
+@dataclass
+class NP:
+    head: str                       # lemma ("dog"), "" if unresolved
+    number: str = "sg"              # sg | pl
+    det: str = ""
+    adjs: List[str] = field(default_factory=list)
+    qty: str = ""                   # number word / quantifier
+    pron: str = ""                  # surface pronoun, if the NP was one
+    proper: bool = False
+    kind: str = ""
+    of: str = ""                    # "the opposite of X": X
+    text: str = ""
+
+    def copy(self, **kw) -> "NP":
+        return replace(self, **kw)
+
+
+@dataclass
+class Prop:
+    subj: str
+    rel: str
+    obj: str = ""
+    qty: str = ""
+    neg: bool = False
+    tense: str = "present"
+    subj_num: str = "sg"
+    obj_num: str = "sg"
+    subj_proper: bool = False
+
+    def key(self) -> Tuple[str, str, str, str, bool]:
+        return (self.subj, self.rel, self.obj, self.qty, self.neg)
+
+
+@dataclass
+class Query:
+    kind: str                       # fact | define | opposite | yesno | arithmetic | count | list
+    subj: str = ""
+    rel: str = ""
+    obj: str = ""
+    want: str = "obj"               # obj | subj | qty | yesno
+    answer_type: str = ""           # color | sound | place | ... (typing of the answer)
+    qty: str = ""
+    neg: bool = False
+    num: str = "sg"
+    obj_num: str = "sg"
+    subj_proper: bool = False
+    expr: Tuple[int, str, int] = (0, "", 0)
+    raw: str = ""
+
+
+@dataclass
+class Tok:
+    text: str
+    cap: bool
+    tag: str = ""
+    lemma: str = ""
+    feats: Dict[str, str] = field(default_factory=dict)
+    known: bool = True
+    analysis: Optional[Analysis] = None
+
+
+# --------------------------------------------------------------------------- tagger
+FUNCTION_NAMES = set(FUNCTION_POS)
+TAGS = ["DET", "ADJ", "N", "PN", "V", "AUX", "PREP", "PRON", "CONJ", "WH", "NEG", "NUM", "QUANT", "ADV", "PUNCT"]
+_POS_TAG = {"n": "N", "v": "V", "a": "ADJ", "r": "ADV", "det": "DET", "pron": "PRON", "aux": "AUX", "prep": "PREP",
+            "conj": "CONJ", "wh": "WH", "neg": "NEG", "num": "NUM", "quant": "QUANT"}
+
+_T = {
+    "START": {"DET": 0, "PRON": 0, "N": -0.1, "PN": 0, "WH": 0, "AUX": -0.1, "NUM": -0.3, "ADJ": -0.6, "V": -2,
+              "ADV": -1, "PREP": -1, "QUANT": -0.5},
+    "DET": {"ADJ": 0, "N": 0, "NUM": -0.4, "ADV": -1.2, "QUANT": -1},
+    "ADJ": {"N": 0, "ADJ": -0.3, "CONJ": -0.4, "PUNCT": -0.2, "PREP": -0.5, "ADV": -1, "NUM": -1},
+    "N": {"V": 0, "AUX": 0, "PREP": 0, "N": -1.0, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7,
+          "PRON": -1, "ADJ": -0.8, "NUM": -0.8},
+    "PN": {"V": 0, "AUX": 0, "PREP": 0, "N": -0.6, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7, "PN": -0.3},
+    "PRON": {"V": 0, "AUX": 0, "ADV": -0.3, "NEG": -1, "PUNCT": -0.3, "PREP": -0.5, "CONJ": -0.3, "DET": -1.0},
+    "V": {"DET": 0, "N": -0.3, "PREP": 0, "ADV": -0.2, "PRON": -0.2, "ADJ": -0.6, "NUM": -0.3, "PUNCT": 0,
+          "CONJ": -0.3, "NEG": -0.5, "V": -3, "PN": -0.2, "QUANT": -0.5},
+    "AUX": {"V": 0, "ADJ": 0, "DET": 0, "NEG": 0, "N": -0.5, "PRON": -0.2, "NUM": -0.3, "PREP": -0.2, "ADV": -0.2,
+            "QUANT": -0.2, "AUX": -0.4, "PN": -0.2, "WH": -2},
+    "PREP": {"DET": 0, "N": 0, "PN": 0, "NUM": -0.3, "ADJ": -0.2, "PRON": -0.2, "QUANT": -0.3},
+    "NEG": {"V": 0, "ADJ": 0, "DET": -0.3, "N": -0.5, "AUX": -0.5, "ADV": -0.3, "PREP": -0.5},
+    "CONJ": {"DET": -0.1, "N": -0.1, "PN": -0.1, "PRON": -0.1, "V": -0.3, "ADJ": -0.2, "ADV": -0.3, "NUM": -0.3, "AUX": -0.3},
+    "WH": {"AUX": 0, "V": -0.3, "N": -0.2, "ADJ": -0.2, "QUANT": 0, "NUM": -0.2, "DET": -0.3, "PRON": -0.3},
+    "NUM": {"N": 0, "ADJ": -0.2, "NUM": -0.2, "QUANT": -0.3, "PUNCT": -0.3, "V": -1, "PREP": -0.3, "AUX": -0.4, "CONJ": -0.3},
+    "QUANT": {"N": 0, "ADJ": -0.2, "PREP": -0.3, "NUM": -0.3, "AUX": -0.3, "V": -0.5},
+    "ADV": {"V": 0, "ADJ": 0, "ADV": -0.2, "PUNCT": 0, "DET": -0.3, "PREP": -0.3, "AUX": -0.3, "N": -0.8, "PRON": -0.3, "NEG": -0.3},
+    "PUNCT": {},
+}
+
+
+def _trans(prev: str, cur: str) -> float:
+    if cur == "PUNCT":
+        return -0.1
+    return _T.get(prev, {}).get(cur, -3.0)
+
+
+_NT = {"can't": ["can", "not"], "won't": ["will", "not"], "shan't": ["shall", "not"], "ain't": ["is", "not"]}
+_CLITIC = {"'ll": "will", "'re": "are", "'ve": "have", "'m": "am", "'d": "would"}
+_S_IS_AFTER = {"he", "she", "it", "that", "there", "what", "who", "where", "here", "how", "one"}
+
+
+def tokenize_cased(text: str) -> List[Tok]:
+    """Words and punctuation with capitalisation kept; contractions are expanded (didn't -> did not, he'll ->
+    he will, it's -> it is); a possessive 's is dropped."""
+    raw = CASED_TOKEN.findall(text)
+    out: List[Tok] = []
+    for k, w in enumerate(raw):
+        low = w.lower()
+        cap = w[:1].isupper()
+        if low in _NT:
+            out += [Tok(x, cap and i == 0) for i, x in enumerate(_NT[low])]
+        elif low.endswith("n't") and len(low) > 3:
+            out += [Tok(low[:-3], cap), Tok("not", False)]
+        elif "'" in low and low.split("'")[0] and "'" + low.split("'", 1)[1] in _CLITIC:
+            head, tail = low.split("'", 1)
+            out += [Tok(head, cap), Tok(_CLITIC["'" + tail], False)]
+        elif low.endswith("'s") and len(low) > 2:
+            head = low[:-2]
+            out.append(Tok(head, cap))
+            if head in _S_IS_AFTER:
+                out.append(Tok("is", False))
+        else:
+            out.append(Tok(low, cap))
+    return out
+
+
+def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
+    """Viterbi over each token's candidate readings; fills tag/lemma/feats on the tokens."""
+    cands: List[List[Tuple[str, Analysis, float]]] = []
+    for i, t in enumerate(toks):
+        if t.text in END or t.text in {",", ":", ";"}:
+            cands.append([("PUNCT", Analysis(t.text, t.text, "punct", {}, [], True), 0.0)])
+            continue
+        if t.text.isdigit():
+            cands.append([("NUM", Analysis(t.text, t.text, "num", {"value": t.text}, [], True), 0.0)])
+            continue
+        analyses = lex.analyze(t.text)
+        opts: List[Tuple[str, Analysis, float]] = []
+        for rank, a in enumerate(analyses):
+            tag = _POS_TAG.get(a.pos, "N")
+            if a.pos == "n" and (t.text in lex.proper or (t.cap and i > 0)):
+                tag = "PN"
+            cost = min(1.5, 0.35 * (analyses[0].score - a.score)) if rank else 0.0
+            if not a.known:
+                cost = 0.9
+            opts.append((tag, a, cost))
+        if analyses and not analyses[0].known:
+            # unknown word: let the grammar decide whether it is a noun, adjective or verb
+            a = analyses[0]
+            opts = [("N", a, 0.9), ("ADJ", Analysis(t.text, t.text, "a", {}, [], False), 1.2),
+                    ("V", Analysis(t.text, a.lemma if a.pos == "v" else t.text, "v",
+                                   a.feats if a.pos == "v" else {"form": "base"}, [], False), 1.3)]
+            if t.cap and i > 0:
+                opts = [("PN", a, 0.2)] + opts
+            if a.pos == "v":
+                opts = [("V", a, 0.9), ("N", Analysis(t.text, t.text, "n", {"number": "sg"}, [], False), 1.0)]
+        # a capitalised word in mid-sentence is a name, not a verb or adjective
+        if t.cap and i > 0 and not t.text.isdigit() and t.text not in FUNCTION_NAMES:
+            first = analyses[0] if analyses else None
+            nm = Analysis(t.text, t.text, "n", {"number": "sg"}, first.senses if first and first.pos == "n" else [], True)
+            opts = [("PN", nm, 0.0)]
+        cands.append(opts)
+    n = len(toks)
+    best: List[Dict[int, Tuple[float, int]]] = []
+    for i in range(n):
+        layer: Dict[int, Tuple[float, int]] = {}
+        for j, (tag, a, cost) in enumerate(cands[i]):
+            if i == 0:
+                layer[j] = (-cost + _trans("START", tag), -1)
+            else:
+                bs, bk = max(((best[i - 1][k][0] + _trans(cands[i - 1][k][0], tag), k) for k in best[i - 1]),
+                             key=lambda x: x[0])
+                layer[j] = (bs - cost, bk)
+        best.append(layer)
+    if n == 0:
+        return
+    j = max(best[-1], key=lambda k: best[-1][k][0])
+    for i in range(n - 1, -1, -1):
+        tag, a, _ = cands[i][j]
+        t = toks[i]
+        t.tag, t.analysis, t.lemma, t.feats, t.known = tag, a, a.lemma, dict(a.feats), a.known
+        j = best[i][j][1]
+
+
+# --------------------------------------------------------------------------- noun phrases and discourse
+def noun_number(head_tok: Tok, det: str, qty: str) -> str:
+    if qty and qty in NUMBER_WORDS and NUMBER_WORDS[qty] != 1:
+        return "pl"
+    if det in PL_DET or qty in ("many", "few", "several", "all", "most"):
+        return "pl"
+    if det in SG_DET:
+        return "sg"
+    return head_tok.feats.get("number", "sg")
+
+
+@dataclass
+class Discourse:
+    """Who was mentioned recently, for pronoun resolution."""
+    entities: List[NP] = field(default_factory=list)
+
+    def mention(self, np: NP) -> None:
+        if np.head and not np.pron:
+            self.entities = [e for e in self.entities if e.head != np.head]
+            self.entities.insert(0, np)
+            del self.entities[8:]
+
+    def resolve(self, pron: str, lex: Lexicon) -> Optional[NP]:
+        info = PRONOUNS.get(pron)
+        if info is None:
+            return None
+        num, kind, gender = info
+        for e in self.entities:
+            ek = e.kind or lex.kind(e.head)
+            if pron in ("he", "him"):
+                if e.head in MALE or (ek == "person" and e.head not in FEMALE):
+                    return e
+            elif pron == "she":
+                if e.head in FEMALE:
+                    return e
+            elif pron == "it":
+                if ek != "person" and e.number == "sg":
+                    return e
+            elif pron in ("they", "them"):
+                if e.number == "pl":
+                    return e
+        if pron in ("they", "them") and len(self.entities) >= 2:
+            return self.entities[0]
+        return None
+
+
+class ClauseParser:
+    """Reads tagged tokens into NPs, verb groups and complements."""
+
+    def __init__(self, lex: Lexicon, discourse: Optional[Discourse] = None) -> None:
+        self.lex = lex
+        self.discourse = discourse if discourse is not None else Discourse()
+
+    # ---- noun phrases
+    def read_np(self, toks: List[Tok], i: int) -> Tuple[Optional[NP], int]:
+        n = len(toks)
+        if i >= n:
+            return None, i
+        t = toks[i]
+        if t.tag == "PRON":
+            np = NP(head=t.text, pron=t.text, number=("pl" if PRONOUNS.get(t.text, ("sg",))[0] in ("pl",) else "sg"),
+                    text=t.text)
+            return np, i + 1
+        det, qty, adjs = "", "", []
+        j = i
+        while j < n and toks[j].tag in ("DET", "QUANT", "NUM"):
+            if toks[j].tag == "DET":
+                det = toks[j].text
+            else:
+                qty = toks[j].text
+            j += 1
+        while j < n and toks[j].tag == "ADJ" and j + 1 < n and toks[j + 1].tag in ("ADJ", "N", "PN", "NUM"):
+            adjs.append(toks[j].lemma)
+            j += 1
+        k = j
+        while k < n and toks[k].tag in ("N", "PN"):
+            k += 1
+        if k == j:
+            if j > i and toks[j - 1].tag == "NUM":     # "five" alone is a number, not a phrase
+                return None, i
+            return None, i
+        head = toks[k - 1]
+        proper = head.tag == "PN"
+        name = head.lemma
+        if proper:
+            m = k - 1
+            while m > j and toks[m - 1].tag == "PN":
+                m -= 1
+            name = " ".join(x.text for x in toks[m:k])
+        np = NP(head=name, number=noun_number(head, det, qty), det=det, adjs=adjs, qty=qty, proper=proper,
+                text=" ".join(x.text for x in toks[i:k]))
+        s = head.analysis.senses[0] if head.analysis and head.analysis.senses else None
+        np.kind = s.kind if s else ("person" if proper else "")
+        # "the opposite of big"
+        if head.lemma in ("opposite", "antonym") and k + 1 < n and toks[k].text == "of":
+            np.of = toks[k + 1].lemma
+            k += 2
+        return np, k
+
+    def resolve(self, np: Optional[NP]) -> Optional[NP]:
+        if np is None or not np.pron:
+            return np
+        if np.pron in ("i", "you", "we", "me", "us"):
+            return np
+        ante = self.discourse.resolve(np.pron, self.lex)
+        if ante is not None:
+            return ante.copy()
+        return np
+
+    # ---- clause -> propositions
+    def parse_declarative(self, toks: List[Tok]) -> List[Prop]:
+        props = self._parse_declarative(toks)
+        # adjectives inside noun phrases ("a red ball") are properties of the noun
+        seen = {(p.subj, p.rel, p.obj) for p in props}
+        i = 0
+        toks2 = [t for t in toks if t.tag != "PUNCT"]
+        while i < len(toks2):
+            if toks2[i].tag == "ADJ" and i + 1 < len(toks2) and toks2[i + 1].tag in ("N", "ADJ"):
+                j = i
+                while j < len(toks2) and toks2[j].tag == "ADJ":
+                    j += 1
+                if j < len(toks2) and toks2[j].tag == "N" and i > 0 and toks2[i - 1].tag in ("DET", "NUM", "QUANT", "PREP", "AUX", "V"):
+                    for k in range(i, j):
+                        key = (toks2[j].lemma, "attr", toks2[k].lemma)
+                        if key not in seen:
+                            seen.add(key)
+                            props.append(Prop(toks2[j].lemma, "attr", toks2[k].lemma,
+                                              subj_num=toks2[j].feats.get("number", "sg")))
+                i = j
+            i += 1
+        return props
+
+    def _parse_declarative(self, toks: List[Tok]) -> List[Prop]:
+        toks = [t for t in toks if t.tag != "PUNCT" or t.text == ","]
+        n = len(toks)
+        props: List[Prop] = []
+        if n == 0:
+            return props
+        # "there is/are (NUM) N"
+        if n >= 3 and toks[0].text == "there" and toks[1].text in ("is", "are"):
+            np, _ = self.read_np(toks, 2)
+            if np is not None:
+                self.discourse.mention(np)
+                qty = np.qty or ("one" if np.number == "sg" else "")
+                return [Prop(np.head, "count", "", qty, subj_num=np.number)]
+            return props
+        # "the opposite of X is Y"
+        subj, i = self.read_np(toks, 0)
+        if subj is None:
+            return props
+        # coordination: "the boy and the girl"
+        subjects = [subj]
+        while i + 1 < n and toks[i].text == "and":
+            s2, j = self.read_np(toks, i + 1)
+            if s2 is None:
+                break
+            subjects.append(s2)
+            i = j
+        subj = self.resolve(subj)
+        subjects[0] = subj
+        if len(subjects) > 1:
+            subj = subj.copy(number="pl")
+        # verb group
+        neg, tense, modal = False, "present", ""
+        j = i
+        verb_tok: Optional[Tok] = None
+        be = False
+        while j < n and toks[j].tag in ("AUX", "NEG", "ADV"):
+            t = toks[j]
+            if t.tag == "NEG":
+                neg = True
+            elif t.tag == "AUX":
+                if t.text in BE_FORMS:
+                    be = True
+                    if t.text in ("was", "were"):
+                        tense = "past"
+                elif t.text in ("do", "does", "did"):
+                    if t.text == "did":
+                        tense = "past"
+                elif t.text in HAVE_FORMS:
+                    verb_tok = t
+                    if t.text == "had":
+                        tense = "past"
+                else:
+                    modal = t.text
+            j += 1
+            if verb_tok is not None:
+                break
+        if verb_tok is None and j < n and toks[j].tag == "V":
+            verb_tok = toks[j]
+            j += 1
+            if verb_tok.feats.get("form") == "past" or verb_tok.text in ("ran", "ate", "saw"):
+                tense = "past" if not (be and verb_tok.feats.get("form") == "ing") else tense
+        rest = toks[j:]
+        subj_head = subj.head
+        for sub in subjects:
+            self.discourse.mention(sub)
+        out: List[Prop] = []
+        # ---- copula
+        if be and verb_tok is None:
+            out += self._copula(subj, rest, neg, tense)
+        elif be and verb_tok is not None and verb_tok.feats.get("form") == "ing":
+            out += self._verb_props(subj, verb_tok.lemma, rest, neg, tense="present")
+        elif verb_tok is not None:
+            lem = verb_tok.lemma
+            if modal:
+                out.append(Prop(subj_head, "can", lem, neg=neg, subj_num=subj.number))
+            elif lem == "have" or verb_tok.text in HAVE_FORMS:
+                out += self._have(subj, rest, neg, tense)
+            else:
+                out += self._verb_props(subj, lem, rest, neg, tense)
+        for s in subjects[1:]:
+            out += [Prop(s.head, p.rel, p.obj, p.qty, p.neg, p.tense, s.number, p.obj_num) for p in out[:1]]
+        return out
+
+    def _copula(self, subj: NP, rest: List[Tok], neg: bool, tense: str) -> List[Prop]:
+        sn = subj.number
+        if rest and rest[0].tag == "V" and rest[0].feats.get("form") != "ing" and self.lex.senses(rest[0].lemma, "a"):
+            rest[0].tag = "ADJ"             # "the sky is blue": after 'be' a word with an adjective reading is one
+        if subj.of and rest:          # "the opposite of big is small"
+            np, _ = self.read_np(rest, 0)
+            w = rest[-1].lemma
+            if np is not None:
+                w = np.head
+            elif rest[-1].tag in ("ADJ", "N", "ADV"):
+                w = rest[-1].lemma
+            return [Prop(subj.of, "antonym", w, neg=neg)]
+        if not rest:
+            return []
+        # adjective(s)
+        if rest[0].tag == "ADJ" or (rest[0].tag == "ADV" and len(rest) > 1 and rest[1].tag == "ADJ"):
+            adj = next(t for t in rest if t.tag == "ADJ")
+            return [Prop(subj.head, "attr", adj.lemma, neg=neg, tense=tense, subj_num=sn)]
+        if rest[0].tag == "PREP":
+            np, _ = self.read_np(rest, 1)
+            if np is not None:
+                return [Prop(subj.head, rest[0].text, np.head, neg=neg, tense=tense, subj_num=sn)]
+            return []
+        np, k = self.read_np(rest, 0)
+        if np is not None:
+            self.discourse.mention(np)
+            # noun complement: "X is a Y" = isa; "X is (the) Y" with a colour/number is an attribute
+            if np.det in ("a", "an") or np.number == "pl" or not np.det:
+                s = self.lex.best_sense(np.head, "n")
+                if s is not None and (s.kind == "color" or "color" in s.ancestors):
+                    return [Prop(subj.head, "attr", np.head, neg=neg, tense=tense, subj_num=sn)]
+                return [Prop(subj.head, "isa", np.head, neg=neg, tense=tense, subj_num=sn, obj_num=np.number)]
+            return [Prop(subj.head, "isa", np.head, neg=neg, tense=tense, subj_num=sn, obj_num=np.number)]
+        # bare number/adverb complement
+        if rest[0].tag == "NUM":
+            return [Prop(subj.head, "equals", rest[0].text, neg=neg)]
+        return []
+
+    def _have(self, subj: NP, rest: List[Tok], neg: bool, tense: str) -> List[Prop]:
+        np, _ = self.read_np(rest, 0)
+        if np is None:
+            return []
+        return [Prop(subj.head, "have", np.head, np.qty or ("one" if np.number == "sg" else ""), neg, tense,
+                     subj.number, np.number)]
+
+    def _verb_props(self, subj: NP, lemma: str, rest: List[Tok], neg: bool, tense: str) -> List[Prop]:
+        out: List[Prop] = []
+        sn = subj.number
+        i = 0
+        obj: Optional[NP] = None
+        if lemma == "say" and rest:
+            w = next((t for t in rest if t.tag in ("N", "PN", "ADJ", "ADV", "V")), None)
+            if w is not None:
+                return [Prop(subj.head, "say", w.lemma if w.tag != "V" else w.text, neg=neg, tense=tense, subj_num=sn)]
+        if rest and rest[0].tag != "PREP":
+            obj, i = self.read_np(rest, 0)
+            obj = self.resolve(obj)
+            if obj is not None:
+                self.discourse.mention(obj)
+                objs = [obj]
+                while i + 1 < len(rest) and rest[i].text == "and":
+                    o2, j = self.read_np(rest, i + 1)
+                    if o2 is None:
+                        break
+                    objs.append(o2)
+                    i = j
+                for o in objs:
+                    out.append(Prop(subj.head, lemma, o.head, o.qty, neg, tense, sn, o.number, subj.proper))
+        # prepositional adjuncts: "lives in the farm", "walks to the park"
+        while i < len(rest):
+            if rest[i].tag == "PREP":
+                np, k = self.read_np(rest, i + 1)
+                if np is not None:
+                    out.append(Prop(subj.head, f"{lemma}_{rest[i].text}", np.head, "", neg, tense, sn, np.number))
+                    i = k
+                    continue
+            i += 1
+        if not out:
+            out.append(Prop(subj.head, lemma, "", "", neg, tense, sn))
+        return out
+
+    # ---- questions
+    def parse_question(self, toks: List[Tok]) -> Optional[Query]:
+        toks = [t for t in toks if t.tag != "PUNCT"]
+        n = len(toks)
+        if n == 0:
+            return None
+        raw = " ".join(t.text for t in toks)
+        w0 = toks[0].text
+        # arithmetic
+        nums = [t for t in toks if t.text in NUMBER_WORDS or t.text.isdigit()]
+        ops = {"plus": "+", "minus": "-", "times": "*"}
+        op = next((ops[t.text] for t in toks if t.text in ops), "")
+        if op and len(nums) >= 2:
+            val = lambda t: NUMBER_WORDS[t.text] if t.text in NUMBER_WORDS else int(t.text)
+            return Query("arithmetic", expr=(val(nums[0]), op, val(nums[1])), raw=raw)
+        if w0 == "how" and n > 2 and toks[1].text == "many":
+            np, k = self.read_np(toks, 2)
+            if np is None:
+                return None
+            rest = toks[k:]
+            if rest and rest[0].text in ("does", "do", "did"):
+                sub, k2 = self.read_np(rest, 1)
+                sub = self.resolve(sub)
+                if sub is not None and len(rest) > k2 and rest[k2].lemma in ("have",):
+                    return Query("fact", subj=sub.head, rel="have", obj=np.head, want="qty", num=sub.number,
+                                 subj_proper=sub.proper, raw=raw)
+                if sub is not None and len(rest) > k2:
+                    return Query("fact", subj=sub.head, rel=rest[k2].lemma, obj=np.head, want="qty", raw=raw)
+            if rest and rest[0].text in ("are", "is") and len(rest) > 1 and rest[1].text == "there":
+                return Query("count", subj=np.head, want="qty", raw=raw)
+            return None
+        if w0 in ("what", "which") and n >= 3 and toks[1].text in ("color", "colour"):
+            sub, _ = self.read_np(toks, 3 if toks[2].text in BE_FORMS else 2)
+            sub = self.resolve(sub)
+            if sub is not None and toks[2].text in set(BE_FORMS) | {"does", "do"}:
+                return Query("fact", subj=sub.head, rel="attr", want="obj", answer_type="color", num=sub.number,
+                             subj_proper=sub.proper, raw=raw)
+            return None
+        if w0 == "what" and n >= 3 and toks[1].text in BE_FORMS:
+            np, k = self.read_np(toks, 2)
+            if np is not None and np.of:
+                return Query("opposite", subj=np.of, raw=raw)
+            if np is not None:
+                return Query("define", subj=np.head, num=np.number, raw=raw)
+            return None
+        if w0 == "what" and n >= 3 and toks[1].text in ("does", "do", "did"):
+            sub, k = self.read_np(toks, 2)
+            sub = self.resolve(sub)
+            if sub is None or k >= n:
+                return None
+            v = toks[k]
+            if v.lemma == "mean":
+                return Query("define", subj=sub.head, raw=raw)
+            at = "sound" if v.lemma == "say" else ""
+            return Query("fact", subj=sub.head, rel=v.lemma, want="obj", answer_type=at, num=sub.number,
+                         subj_proper=sub.proper, raw=raw)
+        if w0 == "who" and n >= 3:
+            v = toks[1]
+            if v.text in BE_FORMS:
+                np, _ = self.read_np(toks, 2)
+                if np is not None:
+                    return Query("define", subj=np.head, raw=raw)
+                return None
+            np, _ = self.read_np(toks, 2)
+            if np is not None:
+                return Query("fact", rel=v.lemma, obj=np.head, want="subj", answer_type="person_or_animal",
+                             obj_num=np.number, raw=raw)
+            return None
+        if w0 == "where" and n >= 3:
+            if toks[1].text in BE_FORMS:
+                np, _ = self.read_np(toks, 2)
+                np = self.resolve(np)
+                if np is not None:
+                    return Query("fact", subj=np.head, rel="@loc", want="obj", answer_type="place", num=np.number,
+                                 subj_proper=np.proper, raw=raw)
+            if toks[1].text in ("does", "do", "did"):
+                sub, k = self.read_np(toks, 2)
+                sub = self.resolve(sub)
+                if sub is not None and k < n:
+                    return Query("fact", subj=sub.head, rel=toks[k].lemma + "_@", want="obj", answer_type="place",
+                                 num=sub.number, subj_proper=sub.proper, raw=raw)
+            return None
+        # yes/no questions: "is the dog big", "is a zebra an animal", "does the dog eat bones", "can the bird fly"
+        if toks[0].tag == "AUX":
+            a = toks[0].text
+            sub, k = self.read_np(toks, 1)
+            sub = self.resolve(sub)
+            if sub is None:
+                return None
+            rest = toks[k:]
+            if a in BE_FORMS:
+                props = self._copula(sub, rest, False, "present") if rest else []
+                if props:
+                    p = props[0]
+                    return Query("yesno", subj=p.subj, rel=p.rel, obj=p.obj, num=sub.number, subj_proper=sub.proper, raw=raw)
+                return None
+            if a in AUX and a not in ("do", "does", "did") and rest:
+                return Query("yesno", subj=sub.head, rel="can", obj=rest[0].lemma, raw=raw)
+            if a in ("do", "does", "did") and rest and rest[0].tag == "V":
+                props = self._verb_props(sub, rest[0].lemma, rest[1:], False, "present")
+                if props:
+                    p = props[0]
+                    return Query("yesno", subj=p.subj, rel=p.rel, obj=p.obj, qty=p.qty, num=sub.number, raw=raw)
+            return None
+        return None
+
+
+def evaluate_arithmetic(expr: Tuple[int, str, int]) -> Optional[int]:
+    a, op, b = expr
+    return {"+": a + b, "-": a - b, "*": a * b}.get(op)
+
+
+NUM_NAMES = {v: k for k, v in NUMBER_WORDS.items() if v <= 20}
+NUM_NAMES.update({30: "thirty", 40: "forty", 50: "fifty", 60: "sixty", 70: "seventy", 80: "eighty", 90: "ninety",
+                  100: "hundred"})
+
+
+def number_word(n: int) -> str:
+    if n in NUM_NAMES:
+        return NUM_NAMES[n]
+    if n < 0:
+        return "minus " + number_word(-n)
+    if 20 < n < 100:
+        return NUM_NAMES[n // 10 * 10] + " " + NUM_NAMES[n % 10]
+    return str(n)

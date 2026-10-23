@@ -1,0 +1,4578 @@
+{
+"entries": [
+{
+"lemma": "thing",
+"pos": "n",
+"kind": "abstract",
+"gloss": "anything that exists",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "organism",
+"pos": "n",
+"kind": "",
+"gloss": "a living thing",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "animal",
+"pos": "n",
+"kind": "animal",
+"gloss": "a living creature that moves and eats",
+"hypernyms": [
+"organism"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "plant",
+"pos": "n",
+"kind": "plant",
+"gloss": "a living thing that grows in the ground",
+"hypernyms": [
+"organism"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "person",
+"pos": "n",
+"kind": "person",
+"gloss": "a human being",
+"hypernyms": [
+"organism"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "mammal",
+"pos": "n",
+"kind": "",
+"gloss": "an animal that feeds its young milk",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bird",
+"pos": "n",
+"kind": "",
+"gloss": "an animal with feathers and wings",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "insect",
+"pos": "n",
+"kind": "",
+"gloss": "a small animal with six legs",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "reptile",
+"pos": "n",
+"kind": "",
+"gloss": "a cold-blooded animal with scales",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "amphibian",
+"pos": "n",
+"kind": "",
+"gloss": "an animal that lives in water and on land",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fish",
+"pos": "n",
+"kind": "",
+"gloss": "an animal that lives and breathes in water",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "arachnid",
+"pos": "n",
+"kind": "",
+"gloss": "an animal with eight legs",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "canine",
+"pos": "n",
+"kind": "",
+"gloss": "a doglike mammal",
+"hypernyms": [
+"mammal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "feline",
+"pos": "n",
+"kind": "",
+"gloss": "a catlike mammal",
+"hypernyms": [
+"mammal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "equine",
+"pos": "n",
+"kind": "",
+"gloss": "a horselike mammal",
+"hypernyms": [
+"mammal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bovine",
+"pos": "n",
+"kind": "",
+"gloss": "a cowlike mammal",
+"hypernyms": [
+"mammal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rodent",
+"pos": "n",
+"kind": "",
+"gloss": "a small gnawing mammal",
+"hypernyms": [
+"mammal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "primate",
+"pos": "n",
+"kind": "",
+"gloss": "a monkey, ape or human",
+"hypernyms": [
+"mammal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "food",
+"pos": "n",
+"kind": "food",
+"gloss": "something people or animals eat",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fruit",
+"pos": "n",
+"kind": "",
+"gloss": "sweet food that grows on a plant",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "vegetable",
+"pos": "n",
+"kind": "",
+"gloss": "a plant eaten as food",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "drink",
+"pos": "n",
+"kind": "drink",
+"gloss": "a liquid you drink",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "object",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can touch",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "furniture",
+"pos": "n",
+"kind": "",
+"gloss": "things like tables and chairs in a room",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "container",
+"pos": "n",
+"kind": "",
+"gloss": "something that holds things",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "toy",
+"pos": "n",
+"kind": "",
+"gloss": "a thing to play with",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "place",
+"pos": "n",
+"kind": "place",
+"gloss": "a location",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "building",
+"pos": "n",
+"kind": "",
+"gloss": "a place with walls and a roof",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "color",
+"pos": "n",
+"kind": "abstract",
+"gloss": "what you see when light is red, blue, green and so on",
+"hypernyms": [
+"property"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "property",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a quality of a thing",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sound",
+"pos": "n",
+"kind": "abstract",
+"gloss": "what you hear",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "body part",
+"pos": "n",
+"kind": "",
+"gloss": "a part of a body",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "time",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a period or moment",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "substance",
+"pos": "n",
+"kind": "",
+"gloss": "a kind of matter",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "weather",
+"pos": "n",
+"kind": "",
+"gloss": "conditions of the air outside",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "dog",
+"pos": "n",
+"kind": "animal",
+"gloss": "a domestic animal that barks",
+"hypernyms": [
+"canine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cat",
+"pos": "n",
+"kind": "animal",
+"gloss": "a small furry animal that purrs",
+"hypernyms": [
+"feline",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bird",
+"pos": "n",
+"kind": "animal",
+"gloss": "an animal with feathers that can usually fly",
+"hypernyms": [
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cow",
+"pos": "n",
+"kind": "animal",
+"gloss": "a farm animal that gives milk",
+"hypernyms": [
+"bovine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "horse",
+"pos": "n",
+"kind": "animal",
+"gloss": "a large animal people ride",
+"hypernyms": [
+"equine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "duck",
+"pos": "n",
+"kind": "animal",
+"gloss": "a bird that swims",
+"hypernyms": [
+"bird",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pig",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "frog",
+"pos": "n",
+"kind": "animal",
+"gloss": "a small animal that hops and lives near water",
+"hypernyms": [
+"amphibian",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rabbit",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lion",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of feline",
+"hypernyms": [
+"feline",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bear",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "monkey",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of primate",
+"hypernyms": [
+"primate",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "mouse",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of rodent",
+"hypernyms": [
+"rodent",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "elephant",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "owl",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of bird",
+"hypernyms": [
+"bird",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "zebra",
+"pos": "n",
+"kind": "animal",
+"gloss": "a striped horselike animal of Africa",
+"hypernyms": [
+"equine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sparrow",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of bird",
+"hypernyms": [
+"bird",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "kitten",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of feline",
+"hypernyms": [
+"feline",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "puppy",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of canine",
+"hypernyms": [
+"canine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "spider",
+"pos": "n",
+"kind": "animal",
+"gloss": "a small animal with eight legs that spins webs",
+"hypernyms": [
+"arachnid",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ant",
+"pos": "n",
+"kind": "animal",
+"gloss": "a tiny insect that lives in colonies",
+"hypernyms": [
+"insect",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bee",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of insect",
+"hypernyms": [
+"insect",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "snake",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of reptile",
+"hypernyms": [
+"reptile",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wolf",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of canine",
+"hypernyms": [
+"canine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tiger",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of feline",
+"hypernyms": [
+"feline",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "giraffe",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sheep",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "goat",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fox",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of canine",
+"hypernyms": [
+"canine",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "squirrel",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of rodent",
+"hypernyms": [
+"rodent",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "turtle",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of reptile",
+"hypernyms": [
+"reptile",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "chicken",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of bird",
+"hypernyms": [
+"bird",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "eagle",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of bird",
+"hypernyms": [
+"bird",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "dolphin",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "whale",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of mammal",
+"hypernyms": [
+"mammal",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "shark",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of fish",
+"hypernyms": [
+"fish",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "butterfly",
+"pos": "n",
+"kind": "animal",
+"gloss": "a kind of insect",
+"hypernyms": [
+"insect",
+"animal"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "boy",
+"pos": "n",
+"kind": "person",
+"gloss": "a young male person",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "girl",
+"pos": "n",
+"kind": "person",
+"gloss": "a young female person",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "man",
+"pos": "n",
+"kind": "person",
+"gloss": "an adult male person",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "woman",
+"pos": "n",
+"kind": "person",
+"gloss": "an adult female person",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "child",
+"pos": "n",
+"kind": "person",
+"gloss": "a young person",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "teacher",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who teaches",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "baby",
+"pos": "n",
+"kind": "person",
+"gloss": "a very young child",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "friend",
+"pos": "n",
+"kind": "person",
+"gloss": "a person you like",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "doctor",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who treats sick people",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "farmer",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who grows crops or keeps animals",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "king",
+"pos": "n",
+"kind": "person",
+"gloss": "a male ruler",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "queen",
+"pos": "n",
+"kind": "person",
+"gloss": "a female ruler",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "mother",
+"pos": "n",
+"kind": "person",
+"gloss": "a female parent",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "father",
+"pos": "n",
+"kind": "person",
+"gloss": "a male parent",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "brother",
+"pos": "n",
+"kind": "person",
+"gloss": "a male sibling",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sister",
+"pos": "n",
+"kind": "person",
+"gloss": "a female sibling",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tom",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "anna",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "ben",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "lily",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "sam",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "mia",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "max",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "emma",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "jack",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "zoe",
+"pos": "n",
+"kind": "person",
+"gloss": "a first name",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": [],
+"proper": true
+},
+{
+"lemma": "apple",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "banana",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pear",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "peach",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lemon",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "strawberry",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cherry",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "orange",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "grape",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "plum",
+"pos": "n",
+"kind": "food",
+"gloss": "a kind of fruit",
+"hypernyms": [
+"fruit",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "carrot",
+"pos": "n",
+"kind": "food",
+"gloss": "a vegetable",
+"hypernyms": [
+"vegetable",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tomato",
+"pos": "n",
+"kind": "food",
+"gloss": "a vegetable",
+"hypernyms": [
+"vegetable",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "corn",
+"pos": "n",
+"kind": "food",
+"gloss": "a vegetable",
+"hypernyms": [
+"vegetable",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "potato",
+"pos": "n",
+"kind": "food",
+"gloss": "a vegetable",
+"hypernyms": [
+"vegetable",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "onion",
+"pos": "n",
+"kind": "food",
+"gloss": "a vegetable",
+"hypernyms": [
+"vegetable",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pea",
+"pos": "n",
+"kind": "food",
+"gloss": "a vegetable",
+"hypernyms": [
+"vegetable",
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cake",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cookie",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "egg",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sandwich",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bread",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rice",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "soup",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "chocolate",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cheese",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "meat",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pizza",
+"pos": "n",
+"kind": "food",
+"gloss": "something to eat",
+"hypernyms": [
+"food"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "milk",
+"pos": "n",
+"kind": "drink",
+"gloss": "something to drink",
+"hypernyms": [
+"drink"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "water",
+"pos": "n",
+"kind": "drink",
+"gloss": "something to drink",
+"hypernyms": [
+"drink"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "juice",
+"pos": "n",
+"kind": "drink",
+"gloss": "something to drink",
+"hypernyms": [
+"drink"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tea",
+"pos": "n",
+"kind": "drink",
+"gloss": "something to drink",
+"hypernyms": [
+"drink"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "coffee",
+"pos": "n",
+"kind": "drink",
+"gloss": "something to drink",
+"hypernyms": [
+"drink"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ball",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "book",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "car",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "door",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hat",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pen",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bag",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"container",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "box",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"container",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cup",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"container",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "kite",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bike",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "boat",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "clock",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lamp",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bottle",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"container",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "key",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing you can hold or use",
+"hypernyms": [
+"object",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "toy",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing to play with",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "table",
+"pos": "n",
+"kind": "object",
+"gloss": "a piece of furniture",
+"hypernyms": [
+"furniture",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "chair",
+"pos": "n",
+"kind": "object",
+"gloss": "a piece of furniture",
+"hypernyms": [
+"furniture",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bed",
+"pos": "n",
+"kind": "object",
+"gloss": "a piece of furniture",
+"hypernyms": [
+"furniture",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "desk",
+"pos": "n",
+"kind": "object",
+"gloss": "a piece of furniture",
+"hypernyms": [
+"furniture",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sofa",
+"pos": "n",
+"kind": "object",
+"gloss": "a piece of furniture",
+"hypernyms": [
+"furniture",
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "park",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "garden",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "farm",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "school",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "house",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "room",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "shop",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pond",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "nest",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "forest",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "jungle",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "river",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "kitchen",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "zoo",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "street",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "city",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "village",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "beach",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "library",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "field",
+"pos": "n",
+"kind": "place",
+"gloss": "a place",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tree",
+"pos": "n",
+"kind": "plant",
+"gloss": "a tall plant with a trunk",
+"hypernyms": [
+"plant"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "grass",
+"pos": "n",
+"kind": "plant",
+"gloss": "a part of a plant or a plant",
+"hypernyms": [
+"plant"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rose",
+"pos": "n",
+"kind": "plant",
+"gloss": "a part of a plant or a plant",
+"hypernyms": [
+"plant"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "flower",
+"pos": "n",
+"kind": "plant",
+"gloss": "a part of a plant or a plant",
+"hypernyms": [
+"plant"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "leaf",
+"pos": "n",
+"kind": "plant",
+"gloss": "a part of a plant or a plant",
+"hypernyms": [
+"plant"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "seed",
+"pos": "n",
+"kind": "plant",
+"gloss": "a part of a plant or a plant",
+"hypernyms": [
+"plant"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sky",
+"pos": "n",
+"kind": "natural",
+"gloss": "the space above the earth",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sun",
+"pos": "n",
+"kind": "natural",
+"gloss": "the star that gives us light",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "snow",
+"pos": "n",
+"kind": "natural",
+"gloss": "frozen rain that falls in flakes",
+"hypernyms": [
+"weather"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "coal",
+"pos": "n",
+"kind": "substance",
+"gloss": "a black rock that burns",
+"hypernyms": [
+"substance"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sea",
+"pos": "n",
+"kind": "natural",
+"gloss": "a large body of salt water",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ocean",
+"pos": "n",
+"kind": "natural",
+"gloss": "a very large sea",
+"hypernyms": [
+"sea",
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cloud",
+"pos": "n",
+"kind": "natural",
+"gloss": "white or grey mass in the sky",
+"hypernyms": [
+"weather"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sand",
+"pos": "n",
+"kind": "substance",
+"gloss": "tiny grains of rock on a beach",
+"hypernyms": [
+"substance"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "blood",
+"pos": "n",
+"kind": "body",
+"gloss": "the red liquid in the body",
+"hypernyms": [
+"substance"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "night",
+"pos": "n",
+"kind": "time",
+"gloss": "the dark part of the day",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "day",
+"pos": "n",
+"kind": "time",
+"gloss": "the time when it is light",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rain",
+"pos": "n",
+"kind": "natural",
+"gloss": "water falling from clouds",
+"hypernyms": [
+"weather"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "moon",
+"pos": "n",
+"kind": "natural",
+"gloss": "the body that goes around the earth",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "star",
+"pos": "n",
+"kind": "natural",
+"gloss": "a point of light in the night sky",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "leg",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "arm",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wing",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tail",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "eye",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ear",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "nose",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "mouth",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hand",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "foot",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "head",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "paw",
+"pos": "n",
+"kind": "body",
+"gloss": "a part of the body",
+"hypernyms": [
+"body part"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "red",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour red",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "red",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour red",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "blue",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour blue",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "blue",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour blue",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "green",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour green",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "green",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour green",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "yellow",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour yellow",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "yellow",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour yellow",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "black",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour black",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "black",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour black",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "white",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour white",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "white",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour white",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "brown",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour brown",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "brown",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour brown",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pink",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour pink",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pink",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour pink",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "gray",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour gray",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "gray",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour gray",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "grey",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour grey",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "grey",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour grey",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "orange",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour orange",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "orange",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour orange",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "purple",
+"pos": "a",
+"kind": "color",
+"gloss": "the colour purple",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "purple",
+"pos": "n",
+"kind": "color",
+"gloss": "the colour purple",
+"hypernyms": [
+"color"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "woof",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "meow",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "moo",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "quack",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "oink",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "roar",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "neigh",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ribbit",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hoot",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tweet",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "squeak",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "growl",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "trumpet",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bark",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "purr",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "buzz",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hiss",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "baa",
+"pos": "n",
+"kind": "sound",
+"gloss": "an animal sound",
+"hypernyms": [
+"sound"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "angry",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality angry",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bad",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality bad",
+"hypernyms": [],
+"antonyms": [
+"good"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "big",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality big",
+"hypernyms": [],
+"antonyms": [
+"little",
+"small"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "brave",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality brave",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "busy",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality busy",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "clean",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality clean",
+"hypernyms": [],
+"antonyms": [
+"dirty"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "closed",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality closed",
+"hypernyms": [],
+"antonyms": [
+"open"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cold",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality cold",
+"hypernyms": [],
+"antonyms": [
+"hot"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cute",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality cute",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "dirty",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality dirty",
+"hypernyms": [],
+"antonyms": [
+"clean"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "down",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality down",
+"hypernyms": [],
+"antonyms": [
+"up"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "dry",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality dry",
+"hypernyms": [],
+"antonyms": [
+"wet"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "early",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality early",
+"hypernyms": [],
+"antonyms": [
+"late"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "empty",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality empty",
+"hypernyms": [],
+"antonyms": [
+"full"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fast",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality fast",
+"hypernyms": [],
+"antonyms": [
+"slow"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "full",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality full",
+"hypernyms": [],
+"antonyms": [
+"empty",
+"hungry"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "funny",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality funny",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "gentle",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality gentle",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "good",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality good",
+"hypernyms": [],
+"antonyms": [
+"bad"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "happy",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality happy",
+"hypernyms": [],
+"antonyms": [
+"sad"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hard",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality hard",
+"hypernyms": [],
+"antonyms": [
+"soft"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "heavy",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality heavy",
+"hypernyms": [],
+"antonyms": [
+"light"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hot",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality hot",
+"hypernyms": [],
+"antonyms": [
+"cold"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hungry",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality hungry",
+"hypernyms": [],
+"antonyms": [
+"full"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "in",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality in",
+"hypernyms": [],
+"antonyms": [
+"out"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "kind",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality kind",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "late",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality late",
+"hypernyms": [],
+"antonyms": [
+"early"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lazy",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality lazy",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "light",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality light",
+"hypernyms": [],
+"antonyms": [
+"heavy"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "little",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality little",
+"hypernyms": [],
+"antonyms": [
+"big"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "long",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality long",
+"hypernyms": [],
+"antonyms": [
+"short"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "loud",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality loud",
+"hypernyms": [],
+"antonyms": [
+"quiet"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "new",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality new",
+"hypernyms": [],
+"antonyms": [
+"old"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "old",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality old",
+"hypernyms": [],
+"antonyms": [
+"new",
+"young"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "open",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality open",
+"hypernyms": [],
+"antonyms": [
+"closed"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "out",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality out",
+"hypernyms": [],
+"antonyms": [
+"in"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "poor",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality poor",
+"hypernyms": [],
+"antonyms": [
+"rich"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "quick",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality quick",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "quiet",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality quiet",
+"hypernyms": [],
+"antonyms": [
+"loud"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rich",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality rich",
+"hypernyms": [],
+"antonyms": [
+"poor"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sad",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality sad",
+"hypernyms": [],
+"antonyms": [
+"happy"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "short",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality short",
+"hypernyms": [],
+"antonyms": [
+"long",
+"tall"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "shy",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality shy",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "slow",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality slow",
+"hypernyms": [],
+"antonyms": [
+"fast"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "small",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality small",
+"hypernyms": [],
+"antonyms": [
+"big"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "smart",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality smart",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "soft",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality soft",
+"hypernyms": [],
+"antonyms": [
+"hard"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sour",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality sour",
+"hypernyms": [],
+"antonyms": [
+"sweet"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "strong",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality strong",
+"hypernyms": [],
+"antonyms": [
+"weak"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sweet",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality sweet",
+"hypernyms": [],
+"antonyms": [
+"sour"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tall",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality tall",
+"hypernyms": [],
+"antonyms": [
+"short"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "tired",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality tired",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "up",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality up",
+"hypernyms": [],
+"antonyms": [
+"down"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "weak",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality weak",
+"hypernyms": [],
+"antonyms": [
+"strong"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wet",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality wet",
+"hypernyms": [],
+"antonyms": [
+"dry"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wild",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality wild",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "young",
+"pos": "a",
+"kind": "",
+"gloss": "having the quality young",
+"hypernyms": [],
+"antonyms": [
+"old"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "day",
+"pos": "n",
+"kind": "time",
+"gloss": "the time when it is light",
+"hypernyms": [
+"time"
+],
+"antonyms": [
+"night"
+],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "run",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move fast on foot",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sleep",
+"pos": "v",
+"kind": "verb",
+"gloss": "to rest with the eyes closed",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "jump",
+"pos": "v",
+"kind": "verb",
+"gloss": "to push off the ground into the air",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "walk",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move on foot",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "play",
+"pos": "v",
+"kind": "verb",
+"gloss": "to do something for fun",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sit",
+"pos": "v",
+"kind": "verb",
+"gloss": "to rest on a seat",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fly",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move through the air",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "swim",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move through water",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hop",
+"pos": "v",
+"kind": "verb",
+"gloss": "to jump on one leg or with small jumps",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "talk",
+"pos": "v",
+"kind": "verb",
+"gloss": "to speak",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "laugh",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make a happy sound",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "smile",
+"pos": "v",
+"kind": "verb",
+"gloss": "to show happiness with the mouth",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "work",
+"pos": "v",
+"kind": "verb",
+"gloss": "to do a job",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "eat",
+"pos": "v",
+"kind": "verb",
+"gloss": "to take food into the body",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "drink",
+"pos": "v",
+"kind": "verb",
+"gloss": "to take liquid into the body",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "read",
+"pos": "v",
+"kind": "verb",
+"gloss": "to look at words and understand them",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "see",
+"pos": "v",
+"kind": "verb",
+"gloss": "to notice with the eyes",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "like",
+"pos": "v",
+"kind": "verb",
+"gloss": "to enjoy",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "love",
+"pos": "v",
+"kind": "verb",
+"gloss": "to like very much",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "open",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move a door or lid so it is not shut",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "carry",
+"pos": "v",
+"kind": "verb",
+"gloss": "to hold and move something",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "throw",
+"pos": "v",
+"kind": "verb",
+"gloss": "to send through the air",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "kick",
+"pos": "v",
+"kind": "verb",
+"gloss": "to hit with the foot",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "help",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make easier for someone",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "feed",
+"pos": "v",
+"kind": "verb",
+"gloss": "to give food to",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "live",
+"pos": "v",
+"kind": "verb",
+"gloss": "to have a home somewhere",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "say",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make a sound or words",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "have",
+"pos": "v",
+"kind": "verb",
+"gloss": "to own or hold",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "chase",
+"pos": "v",
+"kind": "verb",
+"gloss": "to run after",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "catch",
+"pos": "v",
+"kind": "verb",
+"gloss": "to take hold of something moving",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bite",
+"pos": "v",
+"kind": "verb",
+"gloss": "to cut with the teeth",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "find",
+"pos": "v",
+"kind": "verb",
+"gloss": "to discover",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hold",
+"pos": "v",
+"kind": "verb",
+"gloss": "to keep in the hands",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "give",
+"pos": "v",
+"kind": "verb",
+"gloss": "to hand over",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "take",
+"pos": "v",
+"kind": "verb",
+"gloss": "to get hold of",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "make",
+"pos": "v",
+"kind": "verb",
+"gloss": "to build or create",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "build",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put parts together",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "paint",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put colour on",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "write",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put words on paper",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sing",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make music with the voice",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "dance",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move to music",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cook",
+"pos": "v",
+"kind": "verb",
+"gloss": "to prepare food with heat",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "buy",
+"pos": "v",
+"kind": "verb",
+"gloss": "to pay for",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "watch",
+"pos": "v",
+"kind": "verb",
+"gloss": "to look at for a time",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ride",
+"pos": "v",
+"kind": "verb",
+"gloss": "to sit on and travel",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "push",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move away with force",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pull",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move towards you",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "climb",
+"pos": "v",
+"kind": "verb",
+"gloss": "to go up",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "drive",
+"pos": "v",
+"kind": "verb",
+"gloss": "to control a car",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "go",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move from a place",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "come",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move towards a place",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "want",
+"pos": "v",
+"kind": "verb",
+"gloss": "to wish for",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "know",
+"pos": "v",
+"kind": "verb",
+"gloss": "to have in the mind",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "think",
+"pos": "v",
+"kind": "verb",
+"gloss": "to use the mind",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wash",
+"pos": "v",
+"kind": "verb",
+"gloss": "to clean with water",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bark",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make a dog sound",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "quickly",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "slowly",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "happily",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "loudly",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "quietly",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "always",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "never",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "often",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "very",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "too",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "again",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "here",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "there",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "now",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "today",
+"pos": "r",
+"kind": "",
+"gloss": "an adverb",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "opposite",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a word with the contrary meaning",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "antonym",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a word that means the opposite",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "synonym",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a word that means the same",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "meaning",
+"pos": "n",
+"kind": "abstract",
+"gloss": "what a word stands for",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "word",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a unit of language",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "kind",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a type or sort of thing",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "number",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a count or amount",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "name",
+"pos": "n",
+"kind": "abstract",
+"gloss": "what something is called",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "size",
+"pos": "n",
+"kind": "abstract",
+"gloss": "how big something is",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "shape",
+"pos": "n",
+"kind": "abstract",
+"gloss": "the outline of a thing",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "answer",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a reply to a question",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "question",
+"pos": "n",
+"kind": "abstract",
+"gloss": "a sentence that asks something",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "mean",
+"pos": "v",
+"kind": "verb",
+"gloss": "to stand for",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+}
+]
+}
