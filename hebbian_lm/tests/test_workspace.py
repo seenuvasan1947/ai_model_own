@@ -486,6 +486,41 @@ class MemoryAndNotesTests(unittest.TestCase):
         self.assertEqual(len(ws.notes), 1)
         self.assertEqual(next(iter(ws.notes.notes.values())).recalls, 1)
 
+    def test_notes_are_selective_not_a_transcript(self):
+        ws = self.ws()
+        ws.read("the zebra is brown . the lion lives in the zoo .")
+        before = len(ws.notes)
+        ws.read("the zebra is brown . the lion lives in the zoo . the zebra is brown . the lion lives in the zoo .")
+        self.assertEqual(len(ws.notes), before)                    # nothing new, nothing new noted
+        self.assertEqual(ws.notes.notes[1].recalls, 2)             # but it was strengthened by the repeats
+
+    def test_long_text_keeps_only_a_share_and_long_sentences_become_gists(self):
+        ws = self.ws()
+        animals = ["zebra", "sparrow", "kitten", "puppy", "wolf", "tiger", "giraffe", "goat", "fox", "snake", "turtle", "eagle",
+                   "squirrel", "chicken", "dolphin", "whale"]
+        ws.read(" ".join(f"the {a} says moo ." for a in animals))
+        self.assertLessEqual(len(ws.notes), 7)
+        ws2 = self.ws()
+        long_sentence = "the zebra that lived near the old river with the sparrow and the wolf was brown and ate the grass every morning before anyone woke ."
+        ws2.read(long_sentence)
+        text = next(iter(ws2.notes.notes.values())).text
+        self.assertLess(len(text), len(long_sentence))
+        self.assertIn("zebra", text)
+
+    def test_attention_decides_what_is_worth_noting(self):
+        ws = self.ws()
+        ws.read("the zebra is brown .")
+        ws.ask("where does the zebra live ?")
+        animals = ["sparrow", "kitten", "puppy", "wolf", "tiger", "giraffe", "goat", "fox", "snake", "turtle", "eagle", "squirrel",
+                   "chicken", "dolphin", "whale", "shark"]
+        ws.read("the zebra lives in the farm . " + " ".join(f"the {a} says moo ." for a in animals))
+        self.assertTrue(any(n.text.startswith("the zebra lives") for n in ws.notes.notes.values()))
+
+    def test_flagged_sentences_are_always_noted(self):
+        ws = self.ws()
+        ws.read("the cat is black . the cat is black . remember : the key is under the mat .")
+        self.assertTrue(any("key" in n.words for n in ws.notes.notes.values()))
+
     def test_notes_and_clock_survive_save_and_load(self):
         ws = self.ws()
         ws.read("the zebra is brown .")

@@ -92,8 +92,11 @@ Not understood (it says so): relative clauses, passives, "if/because", questions
 
 ## 3b. Notes, forgetting, real text (v2)
 
-* Every sentence you tell it is also **written down as a note**. `/note text` takes a note on purpose; `/notes cue` searches;
-  `/forget 3` throws note 3 away.
+* It keeps **notes, not a transcript**: only the points worth keeping are written down (new facts, names, numbers, definitions,
+  what recurs in the text, what you asked about before, anything you flag with "remember ..." or "important ..."). Restating
+  something it already noted only strengthens the note; in a long paragraph about 40% of the new sentences are kept, and a long
+  sentence is stored as a short gist or its key terms. `/note text` takes a note on purpose (kept word for word);
+  `/notes cue` searches; `/forget 3` throws note 3 away.
 * **Time and forgetting.** Each chat turn lets one time unit pass (`--time-per-turn`, 0 = never); `/sleep 500` lets 500 pass.
   A fresh fact has a half-life of about 120 units (240 if you *told* it); reading it again or using it to answer makes the
   half-life longer, so what you use stays and what you don't fades and is finally dropped.
@@ -154,7 +157,7 @@ python train.py --report report.json   # write all numbers as JSON
 ## 6. Check it works
 
 ```bash
-python -m unittest discover -s tests   # 78 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
+python -m unittest discover -s tests   # 82 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
 python real_text.py                    # the same language layer on real children's books (downloads ~4 MB once)
 python real_text.py --dictionary wordnet
 ```

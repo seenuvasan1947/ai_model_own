@@ -28,7 +28,7 @@ from typing import Dict, List, Optional, Set
 
 from .comprehension import (END, NP, ClauseParser, Discourse, Prop, Query, Tok, number_word, tag_sentence, tokenize_cased)
 from .entities import is_instance, lemma_of
-from .notes import Note, NoteKeeper
+from .notes import CUES, Note, NoteKeeper
 from .reader import Reader, clean_text
 from .lexicon import PL_DET, PRONOUNS, SG_DET, Lexicon, inflect_noun, inflect_verb
 from .semantic import NON_ACTIONS, SPATIAL, Answer, SemanticMemory
@@ -100,10 +100,8 @@ class Workspace:
         """Read statements: look up unknown words, understand each sentence, store what it says."""
         rep = ReadReport()
         text = clean_text(text)
-        if take_notes if take_notes is not None else self.take_notes:
-            for raw in re.split(r"(?<=[.!?])\s+", text.strip()):
-                if raw and not raw.rstrip().endswith("?"):
-                    self.notes.add(raw, "told" if told else "read")
+        noting = take_notes if take_notes is not None else self.take_notes
+        items = []                                   # (tokens, propositions, number of propositions that were new)
         for sent in self._sentences(text):
             end = sent[-1].text if sent and sent[-1].text in END else "."
             if end == "?":
@@ -116,19 +114,106 @@ class Workspace:
                 props = Reader(self.lex, self.discourse, self._ents(), self.aliases).read(sent)
             else:
                 props = ClauseParser(self.lex, self.discourse, self._ents()).parse_declarative(sent)
+            fresh = 0
             for p in props:
                 self._definitional(p, rep)
+                fresh += self._is_new(p)
                 self.mem.add(p, told=told)
                 self.entities.update(lemma_of(x) for x in (p.subj, p.obj) if x)
                 rep.props.append(p)
             rep.unknown_words = [u for u in rep.unknown_words if u not in rep.defined]
+            items.append((sent, props, fresh))
             if learn_lm and self.model is not None:
                 s = " ".join(t.text for t in sent if t.text not in END and t.text != '"' and t.tag != "POSS") + " ."
                 if told:
                     self.model.tell(s)
                 else:
                     self.model.read(s, learn=True)
+        if noting and items:
+            self._take_notes(items, told)
         return rep
+
+    # ---- notes: only what is worth keeping
+    def _is_new(self, p: Prop) -> bool:
+        grp = self.mem.slots.get((p.subj, self.mem._slot_rel(p.rel)), {})
+        f = grp.get((p.obj, p.qty, p.neg))
+        return f is None or f.strength < 0.3
+
+    def _prop_text(self, p: Prop) -> str:
+        pl = p.subj_num == "pl"
+        sub = self._np(p.subj, "pl" if pl else "sg", p.subj_proper)
+        past = p.tense == "past"
+        be = ("were" if pl else "was") if past else ("are" if pl else "is")
+        obj = self._obj_np(p.obj, p.obj_num) if p.obj else ""
+        if p.rel == "attr":
+            return f"{sub} {be}{' not' if p.neg else ''} {p.obj}"
+        if p.rel == "isa":
+            return f"{sub} {be}{' not' if p.neg else ''} {a_an(p.obj)} {p.obj}"
+        if p.rel == "can":
+            return f"{sub} {'cannot' if p.neg else 'can'} {p.obj}"
+        if p.rel in ("count", "equals", "antonym"):
+            return ""
+        verb, _, prep = p.rel.partition("_")
+        if p.rel == "have":
+            v = "had" if past else ("have" if pl else "has")
+        else:
+            v = inflect_verb(verb, "past" if past else ("base" if pl else "3sg"))
+        if p.neg:
+            v = f"{'did' if past else ('do' if pl else 'does')} not {verb}"
+        tail = f"{prep} {obj}" if prep and prep != "@" else obj
+        return f"{sub} {v} {tail}".strip()
+
+    def _gist(self, props: List[Prop], limit: int = 3) -> str:
+        """The few strongest propositions of a long sentence, as short sentences the reader can read again."""
+        seen, out = set(), []
+        usable = [p for p in props if p.subj not in ("i", "you", "we", "me", "us") and p.rel != "have"]
+        for p in sorted(usable or props, key=lambda p: (p.subj in PRONOUNS, not p.obj, p.rel in ("attr",), p.rel.count("_"))):
+            t = self._prop_text(p)
+            if t and t not in seen:
+                seen.add(t)
+                out.append(t)
+        return " . ".join(out[:limit]) + " ." if out else ""
+
+    def _take_notes(self, items, told: bool) -> None:
+        """Decide what is worth writing down. A short sentence is kept as it is; a long one as a gist of its main points plus
+        its key terms. Sentences that add nothing new, or that are filler, are not noted at all."""
+        nk = self.notes
+        entries = []
+        doc: Dict[str, int] = {}
+        for sent, props, fresh in items:
+            toks = [t for t in sent if t.text not in END and t.text != '"' and t.tag != "POSS"]
+            words = nk.content(" ".join(t.text for t in toks))
+            for w in set(words):
+                doc[w] = doc.get(w, 0) + 1
+            entries.append((toks, props, fresh, words))
+        scored, cand, always = [], {}, set()
+        for i, (toks, props, fresh, words) in enumerate(entries):
+            if not words:
+                continue
+            surface = " ".join(t.text for t in toks) + " ."
+            old = nk.find(surface)
+            if old is not None:
+                nk._strengthen(old)                                  # said again: strengthened, not written twice
+                continue
+            cue = any(t.text in CUES for t in toks) and (told or len(toks) <= 12)
+            score, keys = nk.importance(words, doc, len(props), cue, sum(t.tag == "PN" for t in toks),
+                                        any(t.tag == "NUM" or t.text.isdigit() for t in toks),
+                                        any(p.rel == "isa" for p in props), any(p.neg for p in props))
+            if props:
+                score += 0.6 if fresh else -0.5                     # a new fact matters, a known one does not
+            cand[i] = (surface, props, keys, score, len(toks))
+            scored.append((score, i))
+            if cue:
+                always.add(i)
+        for i in nk.select(scored, always):
+            surface, props, keys, score, n_tok = cand[i]
+            if n_tok <= 12:
+                text = surface
+            else:                                    # long: a gist of the main points, or just the key terms
+                text = self._gist(props) or ("key terms : " + " , ".join(keys) + " .")
+            nk.add(text, "told" if told else "read", importance=score, keys=keys)
+        for toks, props, fresh, words in entries:
+            nk.read_words(words)
 
     def _ents(self):
         return self.mem.ents if self.instances else None
@@ -206,6 +291,7 @@ class Workspace:
     # ================================================================== questions
     def ask(self, question: str, prefer: Optional[Dict[str, str]] = None) -> Reply:
         """Answer from memory; if the memory has faded or has nothing, look in the notes; then (if on) put it in own words."""
+        self.notes.attend(self.notes.anchors(question))              # asking about it marks it as worth attention
         reply, q, ans = self._ask_core(question, prefer)
         if reply.kind == "answer" and ans is not None and not reply.note.startswith("answered by"):
             self.mem.rehearse(ans.items[:1])                       # using a fact keeps it
@@ -288,7 +374,7 @@ class Workspace:
 
     def note(self, text: str) -> Optional[Note]:
         """Take a note on purpose: it is kept word for word and also read, so it is understood as well as written down."""
-        n = self.notes.add(text, "note")
+        n = self.notes.add(text, "note", importance=3.0)
         self.read(text, told=True, learn_lm=True, take_notes=False)
         return n
 

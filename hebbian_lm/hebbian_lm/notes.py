@@ -12,6 +12,13 @@ the *content words* it contains with Hebbian word->note links:
 * **Forgetting, slowly**: notes fade far more slowly than facts (they are written down) but they do fade: every note has
   a half-life that grows with every recall, and a note that is never used is eventually dropped.
 
+* **Selective**: a note keeper that wrote everything down would be a transcript. ``importance`` scores each sentence and
+  ``select`` keeps only the points worth keeping: words never met before, words that keep coming back in the text (the
+  topic), words you have *asked about* before (attention), names, numbers, definitions, corrections and anything you flag
+  ("remember ...", "important ..."). Repeats of what is already noted are not noted again (they strengthen the old note);
+  in a long text only a small share of the sentences is kept; and a long sentence is kept as a short *gist* plus its key
+  terms, not word for word. More important notes fade more slowly.
+
 Notes are stored in the order they were taken, so the oldest can be reviewed or forgotten explicitly.
 """
 
@@ -34,6 +41,9 @@ FRAME = {"color", "colour", "sound", "kind", "thing", "place", "name", "way", "n
          "tell", "say", "know", "remember", "note", "much", "many"}       # words that name the question, not its subject
 
 
+CUES = {"remember", "important", "note", "never", "always", "must", "forget", "urgent", "key"}
+
+
 @dataclass
 class Note:
     id: int
@@ -45,6 +55,8 @@ class Note:
     source: str = "read"
     recalls: int = 0
     strength: float = 1.0
+    keys: List[str] = field(default_factory=list)      # the important terms of the note
+    importance: float = 1.0
 
 
 class NoteKeeper:
@@ -56,6 +68,10 @@ class NoteKeeper:
         self.clock = 0.0
         self._next = 1
         self._lemma: Dict[str, str] = {}
+        self.seen: Dict[str, int] = {}                     # how often each content word has been read (novelty)
+        self.attention: Dict[str, float] = {}              # what has been asked about (what to attend to)
+        self.threshold = 0.9                               # importance needed to be noted
+        self.share = 0.4                                   # in a long text (more than 12 new sentences) only this share is kept
 
     # ------------------------------------------------------------------ words
     def lemma(self, w: str) -> str:
@@ -87,25 +103,72 @@ class NoteKeeper:
         return math.log(1.0 + (n + 1.0) / (df + 1.0))
 
     # ------------------------------------------------------------------ writing
-    def add(self, text: str, source: str = "read") -> Optional[Note]:
+    def find(self, text: str) -> Optional[Note]:
+        key = " ".join(sorted(self.content(text)))
+        for n in self.notes.values():
+            if " ".join(sorted(n.words)) == key:
+                return n
+        return None
+
+    def add(self, text: str, source: str = "read", importance: float = 1.0, keys: Optional[List[str]] = None) -> Optional[Note]:
         text = " ".join(text.split())
         words = self.content(text)
         if not words:
             return None
-        key = " ".join(sorted(words))
-        for n in self.notes.values():                         # the same note again strengthens it
-            if " ".join(sorted(n.words)) == key:
-                self._strengthen(n)
-                if source == "told":
-                    n.source = "told"
-                return n
-        n = Note(self._next, text, words, self.clock, self.clock, self.base_stab * (2.0 if source in ("told", "note") else 1.0),
-                 source)
+        old = self.find(text)
+        if old is not None:                                   # the same note again strengthens it
+            self._strengthen(old)
+            if source in ("told", "note"):
+                old.source = source
+            return old
+        if keys:
+            words = words + [k for k in keys if k not in words]      # key terms are searchable even if the gist dropped them
+        keys = [w for w in (keys if keys is not None else words) if w in words]
+        life = 0.5 + min(1.5, max(0.0, importance) / 2.0)     # important notes fade more slowly
+        n = Note(self._next, text, words, self.clock, self.clock,
+                 self.base_stab * life * (2.0 if source in ("told", "note") else 1.0), source, keys=keys, importance=importance)
         self._next += 1
         self.notes[n.id] = n
         for w in words:
-            self.links.setdefault(w, {})[n.id] = 1.0
+            self.links.setdefault(w, {})[n.id] = 1.0 if w in keys else 0.4
         return n
+
+    # ------------------------------------------------------------------ what is worth noting
+    def importance(self, words: List[str], doc_count: Dict[str, int], n_props: int, told_cue: bool = False,
+                   names: int = 0, numbers: bool = False, definition: bool = False, negation: bool = False) -> Tuple[float, List[str]]:
+        """How much a sentence deserves a place in the notes, and which of its words are the key terms.
+        Per word: novelty (1 for a word never read, falling as it is read again) times topicality (words that recur in this
+        text), plus attention (words asked about before)."""
+        wt: Dict[str, float] = {}
+        for w in words:
+            nov = 1.0 / (1.0 + self.seen.get(w, 0))
+            c = doc_count.get(w, 1)
+            top = 1.0 + 0.4 * min(3, c - 1) if c <= 6 else 0.6      # a recurring character is the topic; a phrase repeated everywhere is boilerplate
+            wt[w] = nov * top + 1.2 * min(2.0, self.attention.get(w, 0.0))
+        ranked = sorted(words, key=lambda w: -wt[w])
+        best = [wt[w] for w in ranked[:3]]
+        score = sum(best) / max(1, len(best)) if best else 0.0
+        score += 0.5 * (n_props > 0) - 0.4 * (n_props == 0)
+        score += 2.0 * told_cue + 0.2 * min(2, names) + 0.2 * numbers + 0.3 * definition + 0.2 * negation
+        return score, ranked[:5]
+
+    def select(self, scored: List[Tuple[float, int]], always: Set[int]) -> List[int]:
+        """Indices to keep: everything flagged, else the best-scoring ones above the threshold, a limited share in a long text."""
+        ok = [(s, i) for s, i in scored if s >= self.threshold and i not in always]
+        ok.sort(key=lambda x: -x[0])
+        n = len(scored)
+        cap = len(ok) if n <= 12 else max(5, math.ceil(self.share * n))
+        keep = sorted({i for _, i in ok[:cap]} | set(always))
+        return keep
+
+    def read_words(self, words: List[str]) -> None:
+        for w in set(words):
+            self.seen[w] = self.seen.get(w, 0) + 1
+
+    def attend(self, words: List[str]) -> None:
+        """Asking about something marks it as worth attention: later sentences with these words are more likely to be noted."""
+        for w in words:
+            self.attention[w] = min(3.0, self.attention.get(w, 0.0) + 0.5)
 
     def _strengthen(self, n: Note, amount: float = 0.3) -> None:
         n.last = self.clock
@@ -130,6 +193,10 @@ class NoteKeeper:
     def advance(self, units: float, drop_below: float = 0.02) -> int:
         """Time passes; notes that were never used and have faded away are dropped. Returns how many."""
         self.clock += units
+        for w in list(self.attention):                        # attention fades too
+            self.attention[w] *= 0.5 ** (units / (self.base_stab / 2))
+            if self.attention[w] < 0.05:
+                del self.attention[w]
         dead = [i for i, n in self.notes.items() if self.retention(n) < drop_below]
         for i in dead:
             self.forget(i)
@@ -186,6 +253,7 @@ class NoteKeeper:
     def recalled(self, note: Note, cue: str) -> None:
         """A note answered a question: strengthen it, and link the question's own words to it (learning from use)."""
         self._strengthen(note)
+        self.attend(note.keys)
         for w in self.content(cue):
             self.links.setdefault(w, {})
             self.links[w][note.id] = self.links[w].get(note.id, 0.0) + 0.3
@@ -195,14 +263,18 @@ class NoteKeeper:
     # ------------------------------------------------------------------ persistence
     def to_dict(self) -> dict:
         return dict(clock=self.clock, next=self._next,
+                    seen=self.seen, attention=self.attention,
                     notes=[dict(id=n.id, text=n.text, words=n.words, born=n.born, last=n.last, stab=n.stab, source=n.source,
-                                recalls=n.recalls, strength=n.strength) for n in self.notes.values()],
+                                recalls=n.recalls, strength=n.strength, keys=n.keys, importance=n.importance)
+                           for n in self.notes.values()],
                     links={w: {str(i): a for i, a in d.items()} for w, d in self.links.items()})
 
     def from_dict(self, d: dict) -> None:
         self.clock, self._next = d.get("clock", 0.0), d.get("next", 1)
         self.notes = {x["id"]: Note(x["id"], x["text"], x["words"], x["born"], x["last"], x["stab"], x["source"],
-                                    x["recalls"], x["strength"]) for x in d.get("notes", [])}
+                                    x["recalls"], x["strength"], x.get("keys", x["words"]), x.get("importance", 1.0))
+                      for x in d.get("notes", [])}
+        self.seen, self.attention = d.get("seen", {}), d.get("attention", {})
         self.links = {w: {int(i): a for i, a in dd.items()} for w, dd in d.get("links", {}).items()}
 
     def __len__(self) -> int:

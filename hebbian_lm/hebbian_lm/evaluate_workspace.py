@@ -251,3 +251,62 @@ def benchmark_real_qa(path: str = "") -> dict:
                 ok += o in ws.ask(f"what did {s} {v} ?").text.replace(".", " ").split()
         out[split] = dict(questions=n, correct=ok, accuracy=round(ok / max(1, n), 3))
     return out
+
+
+def benchmark_selective_notes(trials: int = 30, seed: int = 0) -> dict:
+    """I. Are notes selective? Synthetic paragraphs (so the right answer is known by construction).
+
+    * ``compression``: 10 facts are known, then a paragraph of 50 sentences is read: 10 new facts and 40 restatements of
+      the known ones. Reported: share of the 50 sentences noted, share of the new facts that were noted, share of the
+      notes that are new facts.
+    * ``attention``: 20 equally new sentences, room for 40% of them; one is about something the user had asked
+      about earlier. How often does that one make it into the notes (a third would be chance)?
+    * ``flagged``: "remember : the key is under the mat ." inside repetitive filler is always noted.
+    * ``recovered``: after the facts have been forgotten, the share of questions answered from the notes."""
+    rng = random.Random(seed)
+    kept = noted_new = new_total = new_in_notes = 0
+    attn = flag = rec = rec_n = 0
+    for _ in range(trials):
+        pool = rng.sample(OOV_ANIMALS, 20)
+        facts = [(a, rng.choice(COLORS)) for a in pool]
+        stmts = [f"the {a} is {c} ." for a, c in facts]
+        ws = Workspace(model=None, lexicon=Lexicon())
+        ws.read(" ".join(stmts[:10]))
+        known = set(n.text for n in ws.notes.notes.values())
+        para = stmts[10:] + [rng.choice(stmts[:10]) for _ in range(40)]
+        rng.shuffle(para)
+        for st in stmts[10:]:                                    # a new fact is told before its (few) repeats
+            para.remove(st)
+            para.insert(rng.randint(0, 10), st)
+        ws.read(" ".join(para))
+        added = [n.text for n in ws.notes.notes.values() if n.text not in known]
+        kept += len(added)
+        new_total += 10
+        new_in_notes += sum(st in added for st in stmts[10:])
+        noted_new += sum(t in stmts[10:] for t in added)
+        # attention
+        ws3 = Workspace(model=None, lexicon=Lexicon())
+        cands = rng.sample(OOV_ANIMALS, 20)
+        ws3.read(f"the {cands[0]} is {rng.choice(COLORS)} .")
+        ws3.ask(f"where does the {cands[0]} live ?")
+        ws3.ask(f"what does the {cands[0]} eat ?")
+        bundle = [f"the {cands[0]} lives in the {rng.choice(PLACES)} ."] + [f"the {c} says {rng.choice(SOUNDS)} ." for c in cands[1:]]
+        ws3.read(" ".join(bundle))
+        attn += any(n.text.startswith(f"the {cands[0]} lives") for n in ws3.notes.notes.values())
+        # flagged
+        ws4 = Workspace(model=None, lexicon=Lexicon())
+        ws4.read(" ".join(["the cat is black ."] * 3 + ["the dog is big ."] * 3))
+        ws4.read("remember : the key is under the mat . the cat is black . the dog is big . the cat is black .")
+        flag += any("key" in n.words and "mat" in n.words for n in ws4.notes.notes.values())
+        # recovered from the notes after forgetting
+        ws5 = Workspace(model=None, lexicon=Lexicon())
+        ws5.read(" ".join(stmts[:10]))
+        ws5.sleep(5000, replay=False)
+        for a, c in facts[:10]:
+            rec_n += 1
+            rec += _hit(ws5.ask(f"what color is the {a} ?").text, c)
+    return dict(
+        sentences_read=50 * trials, notes_added=kept, share_of_sentences_noted=round(kept / (50 * trials), 3),
+        new_facts_noted=round(new_in_notes / new_total, 3), notes_that_are_new_facts=round(noted_new / max(1, kept), 3),
+        attended_topic_noted=round(attn / trials, 3), chance=0.4, flagged_noted=round(flag / trials, 3),
+        recovered_after_forgetting=round(rec / rec_n, 3))

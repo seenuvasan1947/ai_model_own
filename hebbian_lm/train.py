@@ -158,6 +158,11 @@ def main() -> None:
         for r in g:
             print(f"     {r['time']:>6} {r['plain']:>8} {r['rehearsed']:>10} {r['notes']:>11} {r['false_answers']:>6}")
         report["workspace_forgetting"] = g
+        i_res = ew.benchmark_selective_notes()
+        print("  I. selective notes (50-sentence paragraphs: 10 new facts + 40 restatements; synthetic):")
+        for k, v in i_res.items():
+            print(f"     {k:28} {v}")
+        report["workspace_selective_notes"] = i_res
         from hebbian_lm import evaluate_real as er
         v1x, v2x = er.extractors(mini)
         rv1, rv2 = er.report(v1x), er.report(v2x)

@@ -40,7 +40,7 @@ It combines four parts, each doing the job it is good at:
 pip install -r requirements.txt     # numpy
 python train.py                     # ~20 s; trains and prints a full report
 python chat.py                      # talk to it
-python -m unittest discover -s tests   # 78 tests
+python -m unittest discover -s tests   # 82 tests
 ```
 
 ## A real session (offline dictionary)
@@ -159,6 +159,6 @@ What each mechanism of the language layer contributes (switched off one at a tim
 | `train.py`, `chat.py`, `real_text.py`, `fetch_wordnet.py` | train + report, chat, real-English check, optional WordNet download |
 | `hebbian_lm/entities.py` | the instance registry (`ball#1`, owner, qualifiers) |
 | `hebbian_lm/reader.py`, `notes.py`, `evaluate_real.py` | v2: clause reader for real text, note keeper, real-text evaluation |
-| `tests/` | 78 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
+| `tests/` | 82 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
 
 No GitHub Actions or separate build branch was needed: training takes about 20 s and the tests about 25 s on a plain CPU.
