@@ -9,8 +9,8 @@ appear in the reply. ``idk_ok`` marks a question the passage does not answer (``
 
 ``sepoy`` was used while building (development). ``fire`` was written before the story work and looked at as an aggregate, then
 used to fix general mechanisms, so it is development too. ``titanic`` was written before the later fixes but its failures were then inspected, so it is development too. ``apollo`` was the held-out check: it was run once (9/16, against 8/16 for the code before this stage) and then also used to fix general
-problems, so it is development too. ``wright`` was written before those fixes and run once first (9/15 against 5/15), then also used for fixes. ``everest`` was written
-last and run once: it is the only clean held-out result.
+problems, so it is development too. ``wright`` was written before those fixes and run once first (9/15 against 5/15), then also used for fixes. ``everest`` was written next and run once (7/14 against 5/14), then used for fixes. ``curie`` was written last, before the Everest fixes, and
+is run once at the end: it is the clean held-out result.
 """
 
 from __future__ import annotations
@@ -181,7 +181,30 @@ EVEREST = dict(
         ("what happened in 1953 ?", [["climb"], ["reach"]]),
         ("what happened after the climb ?", [["elizabeth"], ["knighthood"]]),
     ])
-STORIES = [SEPOY, FIRE, TITANIC, APOLLO, WRIGHT, EVEREST]
+CURIE = dict(
+    name="curie",
+    text=("Marie Curie was born in Warsaw in 1867. She moved to Paris in 1891 to study physics. There she met Pierre Curie, and they married in 1895. "
+          "Together they discovered two new elements, polonium and radium. In 1903 Marie Curie won the Nobel Prize in Physics with her husband. "
+          "After Pierre died in a street accident in 1906, she continued their work. She won a second Nobel Prize, in Chemistry, in 1911. "
+          "Marie Curie died in 1934."),
+    questions=[
+        ("where was Marie Curie born ?", [["warsaw"]]),
+        ("when was Marie Curie born ?", [["1867"]]),
+        ("where did Marie move in 1891 ?", [["paris"]]),
+        ("why did Marie move to Paris ?", [["physics"], ["study"]]),
+        ("who did Marie meet in Paris ?", [["pierre"]]),
+        ("when did they marry ?", [["1895"]]),
+        ("what did they discover ?", [["polonium"], ["radium"], ["element"]]),
+        ("how many elements did they discover ?", [["two"]]),
+        ("what did Marie Curie win in 1903 ?", [["nobel"]]),
+        ("when did Pierre die ?", [["1906"]]),
+        ("where did Pierre die ?", [["street"], ["accident"]]),
+        ("what happened in 1911 ?", [["nobel"], ["second"]]),
+        ("what happened after Pierre died ?", [["continue"], ["work"]]),
+        ("when did Marie Curie die ?", [["1934"]]),
+        ("did Marie Curie win two Nobel Prizes ?", [["yes"]]),
+    ])
+STORIES = [SEPOY, FIRE, TITANIC, APOLLO, WRIGHT, EVEREST, CURIE]
 
 
 def judge(reply_text: str, kind: str, spec) -> str:
@@ -219,6 +242,7 @@ KEY_FACTS = {
     "fire": [["began", "1666"], ["bakery"], ["oven"], ["wind", "spread"], ["four", "days"], ["13000"], ["87"], ["pepys", "diary"],
              ["charles"], ["wren"], ["six"]],
     "titanic": [["ship"], ["southampton"], ["smith"], ["iceberg"], ["three", "hours"], ["carpathia"], ["safety"], ["lifeboat"], ["1500"]],
+    "curie": [["born", "warsaw"], ["paris"], ["pierre"], ["1895"], ["radium"], ["1903"], ["1906"], ["1934"]],
     "everest": [["highest", "mountain"], ["nepal"], ["hillary", "tenzing"], ["29 may"], ["hunt"], ["oxygen"], ["elizabeth"]],
     "wright": [["brother"], ["airplane"], ["1903"], ["kitty"], ["twelve"], ["wilbur", "59"], ["glider"], ["flyer"], ["engine"], ["museum"]],
     "apollo": [["first", "moon"], ["florida"], ["armstrong"], ["saturn"], ["tranquility"], ["collins", "orbit"], ["rock"], ["pacific"], ["600"]],

@@ -699,6 +699,9 @@ class EventAndMeaningTests(unittest.TestCase):
         self.assertGreaterEqual(res["fire"]["right"], 14)
         self.assertGreaterEqual(res["titanic"]["right"], 12)
         self.assertGreaterEqual(res["apollo"]["right"], 9)
+        self.assertGreaterEqual(res["wright"]["right"], 11)
+        self.assertGreaterEqual(res["everest"]["right"], 9)
+        self.assertGreaterEqual(res["curie"]["right"], 4)
         rr = es.retell_report(lambda: Workspace(model=None, lexicon=lex, style="varied", take_notes=False, seed=1), es.STORIES[:3])
         for name, r in rr.items():
             self.assertEqual(r["invented_sentences"], 0)

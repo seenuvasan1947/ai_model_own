@@ -178,7 +178,11 @@ class Reader:
                 if _pred(toks[k:]):
                     return {tp[0]: f"{prep} {tp[1]}"}, toks[k:]
             else:
-                np, k = self.parser.read_np(toks, 1)
+                self.parser._break_name = True
+                try:
+                    np, k = self.parser.read_np(toks, 1)
+                finally:
+                    self.parser._break_name = False
                 if np is not None and prep in ("after", "before", "during", "until", "since"):
                     j = k + 1 if k < len(toks) and toks[k].text == "," else k
                     if j < len(toks) and _pred(toks[j:]):

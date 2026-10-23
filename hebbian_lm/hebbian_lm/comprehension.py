@@ -33,8 +33,14 @@ CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]|[\"\u201c\u201d
 _SYMBOL = {"+": ["plus"], "-": ["minus"], "*": ["times"], "\u00d7": ["times"], "/": ["divided", "by"], "\u00f7": ["divided", "by"],
            "=": ["equals"]}
 END = {".", "?", "!"}
-MALE = {"boy", "man", "king", "father", "brother", "he", "tom", "ben", "sam", "max", "jack"}
-FEMALE = {"girl", "woman", "queen", "mother", "sister", "she", "anna", "lily", "mia", "emma", "zoe"}
+MALE = {"boy", "man", "king", "father", "brother", "he", "tom", "ben", "sam", "max", "jack", "john", "james", "william", "george", "henry",
+        "charles", "edward", "edmund", "thomas", "peter", "paul", "pierre", "david", "robert", "richard", "michael", "neil", "buzz", "samuel",
+        "christopher", "albert", "isaac", "charles", "louis", "napoleon", "mohandas", "mahatma", "jawaharlal", "orville", "wilbur", "tenzing",
+        "mangal", "bahadur", "govind", "hari", "ram", "krishna", "arjun", "wolfgang", "ludwig", "leonardo", "galileo", "joe", "buster", "billy",
+        "mr", "sir", "lord", "prince", "emperor", "captain", "colonel", "general"}
+FEMALE = {"girl", "woman", "queen", "mother", "sister", "she", "anna", "lily", "mia", "emma", "zoe", "marie", "mary", "elizabeth", "victoria", "jane",
+          "anne", "catherine", "margaret", "florence", "rani", "indira", "sarah", "maria", "alice", "eve", "helen", "rosa", "ada", "amelia", "joan",
+          "mrs", "miss", "lady", "princess", "empress", "lakshmibai"}
 
 
 # --------------------------------------------------------------------------- data classes
@@ -117,6 +123,10 @@ class Tok:
 # --------------------------------------------------------------------------- tagger
 FUNCTION_NAMES = set(FUNCTION_POS)
 MONTH_WORDS = {"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+DITRANSITIVE = {"give", "send", "show", "tell", "teach", "offer", "bring", "buy", "hand", "pay", "lend", "award", "grant", "pass", "throw", "sell"}
+TITLES = {"king", "queen", "prince", "princess", "captain", "colonel", "general", "doctor", "dr", "mr", "mrs", "miss", "professor", "sir", "lord",
+          "lady", "mount", "lake", "river", "saint", "st", "fort", "uncle", "aunt", "father", "mother", "farmer", "fairy", "old", "little", "major",
+          "sergeant", "admiral", "emperor", "empress", "pope", "president", "senator", "judge", "mayor", "baron", "count", "duke", "earl"}
 FACTITIVE = {"make", "call", "name", "elect", "choose", "appoint", "crown", "declare", "consider"}
 PARTICLES = {"down", "up", "out", "off", "away", "back", "over", "around", "along", "forward", "together", "aside"}
 INTENSIFIERS = {"very", "so", "too", "quite", "rather", "really", "just", "almost", "most", "more", "much", "not", "always", "never"}
@@ -130,7 +140,7 @@ _T = {
               "ADV": -1, "PREP": -1, "QUANT": -0.5},
     "DET": {"ADJ": 0, "N": 0, "NUM": -0.4, "ADV": -1.2, "QUANT": -1},
     "ADJ": {"N": 0, "ADJ": -0.3, "CONJ": -0.4, "PUNCT": -0.2, "PREP": -0.5, "ADV": -1, "NUM": -1},
-    "N": {"WH": 0, "POSS": -0.1, "V": 0, "AUX": 0, "PREP": 0, "N": -1.0, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7,
+    "N": {"PN": -0.8, "WH": 0, "POSS": -0.1, "V": 0, "AUX": 0, "PREP": 0, "N": -1.0, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7,
           "PRON": -1, "ADJ": -0.8, "NUM": -0.8},
     "PN": {"WH": 0, "POSS": 0, "V": 0, "AUX": 0, "PREP": 0, "N": -0.25, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7, "PN": -0.3},
     "PRON": {"V": 0, "AUX": 0, "ADV": -0.3, "NEG": -1, "PUNCT": -0.3, "PREP": -0.5, "CONJ": -0.3, "DET": -1.0},
@@ -320,11 +330,12 @@ class Discourse:
                 continue
             seen.add(e.key)
             ek = e.kind or lex.kind(e.head)
+            first = e.head.split()[0] if e.head else ""
             if pron in ("he", "him"):
-                if e.number == "sg" and (e.head in MALE or ((ek == "person" or e.proper) and e.head not in FEMALE)):
+                if e.number == "sg" and (e.head in MALE or first in MALE or ((ek == "person" or e.proper) and e.head not in FEMALE and first not in FEMALE)):
                     return e
-            elif pron == "she":
-                if e.number == "sg" and e.head in FEMALE:
+            elif pron in ("she", "her"):
+                if e.number == "sg" and (e.head in FEMALE or first in FEMALE):
                     return e
             elif pron == "it":
                 named_thing = e.proper and lex.kind(e.head.split(" of ")[0].split()[-1]) not in ("person", "animal") and \
@@ -334,8 +345,21 @@ class Discourse:
             elif pron in ("they", "them"):
                 if e.number == "pl":
                     return e
-        if pron in ("they", "them") and len(self.entities) >= 2:
-            return self.entities[0]
+        if pron in ("they", "them"):
+            people = []
+            for e in self.subjects + self.entities:        # "she met Pierre, and they married": the last two people, together
+                if e.number == "sg" and (e.proper or (e.kind or lex.kind(e.head)) == "person") and e.key not in [x.key for x in people]:
+                    people.append(e)
+                if len(people) == 2:
+                    break
+            if len(people) == 2:
+                return NP(head=" and ".join(x.head for x in reversed(people)), number="pl", proper=True, kind="person")
+            if len(self.entities) >= 2:
+                return self.entities[0]
+        if pron == "she":
+            for e in self.subjects + self.entities:        # a woman whose name is not on the list: the last named person who is not known to be a man
+                if e.number == "sg" and e.proper and e.head not in MALE and e.head.split()[0] not in MALE:
+                    return e
         return None
 
 
@@ -355,6 +379,7 @@ class ClauseParser:
         self._log: Dict[int, NP] = {}
         self._extra: List[Prop] = []
         self._tail_ok = False
+        self._break_name = False                    # in an opening phrase, "the climb Queen Elizabeth gave" starts a new subject at the name
 
     # ---- noun phrases
     _POSS_DET = {"his": "he", "her": "she", "its": "it", "their": "they"}
@@ -460,8 +485,14 @@ class ClauseParser:
             j += 1
         k = j
         while k < n and toks[k].tag in ("N", "PN"):
+            if self._break_name and toks[k].tag == "PN" and k > j and toks[k - 1].tag == "N" and toks[k - 1].text not in TITLES:
+                m = k
+                while m < n and toks[m].tag == "PN":
+                    m += 1
+                if m < n and toks[m].tag in ("V", "AUX"):
+                    break                                   # "after the climb Queen Elizabeth gave ...": a new subject starts here
             k += 1
-        if self._tail_ok and k > j and toks[k - 1].tag == "N" and k < n and toks[k].tag in ("ADJ", "V") and \
+        if (self._tail_ok or (k < n and toks[k].text.endswith("s"))) and k > j and toks[k - 1].tag == "N" and k < n and toks[k].tag in ("ADJ", "V") and \
                 self.lex.senses(toks[k].lemma, "n") and (k + 1 >= n or toks[k + 1].tag in ("CONJ", "PUNCT", "PREP")):
             k += 1                                  # "greased with cow fat": a noun compound after a preposition
         if k == j:
@@ -568,13 +599,14 @@ class ClauseParser:
             if ap is not None and ap.proper and not subj.proper and k < n and toks[k].text == ",":
                 apposition, i = ap, k + 1
         # coordination: "the boy and the girl"
+        i = self._skip_origin(toks, i)
         subjects = [subj]
         while i + 1 < n and toks[i].text in ("and", ","):
             s2, j = self.read_np(toks, i + 1)
             if s2 is None or (toks[i].text == "," and not (s2.proper and subj.proper)):
                 break
             subjects.append(s2)
-            i = j
+            i = self._skip_origin(toks, j)
         subj = self.resolve(subj)
         subjects[0] = subj
         if apposition is not None:                                   # the clause is about the named person; "the baker" is a description of him
@@ -584,6 +616,8 @@ class ClauseParser:
         subj_qty = subj.qty if subj.qty and (subj.qty.isdigit() or subj.qty in NUMWORDS) else ""
         if len(subjects) > 1:
             subj = subj.copy(number="pl")
+            group = NP(head=" and ".join(x.head for x in subjects), number="pl", proper=all(x.proper for x in subjects), kind="person")
+            self.discourse.mention(group, subject=True)              # "they" later means all of them
         # verb group
         neg, tense, modal = False, "present", ""
         j = i
@@ -673,6 +707,15 @@ class ClauseParser:
             return self.read_np(rest, i)
         finally:
             self._tail_ok = False
+
+    def _skip_origin(self, toks: List[Tok], i: int) -> int:
+        """"Edmund Hillary from New Zealand and Tenzing Norgay from Nepal climbed ...": a prepositional phrase inside the subject."""
+        n = len(toks)
+        if i + 1 < n and toks[i].tag == "PREP" and toks[i].text in ("from", "of", "in", "at", "with") and toks[i].text != "of":
+            np, k = self.read_np(toks, i + 1)
+            if np is not None and k < n and (toks[k].text in ("and", ",") or toks[k].tag in ("V", "AUX")):
+                return k
+        return i
 
     def _roles(self, rest: List[Tok], i: int = 0) -> Dict[str, str]:
         """The roles of the prepositional phrases in rest[i:]: {'where': 'in meerut', 'when': 'on 10 may 1857', ...}."""
@@ -800,6 +843,11 @@ class ClauseParser:
                     if inner is not None:
                         obj = obj.copy(head=f"{obj.head} of {inner.head}", ref="", text=f"{obj.text} of {inner.text}")
                         i = k2
+                recipient: Optional[NP] = None
+                if lemma in DITRANSITIVE and i < len(rest) and rest[i].tag in ("DET", "N", "NUM", "ADJ", "PN") and rest[i].text not in ("and",):
+                    theme, i2 = self.read_np(rest, i)                  # "gave Hillary a knighthood": Hillary is the receiver
+                    if theme is not None and i2 > i:
+                        recipient, obj, i = obj, theme, i2
                 self._introduce(obj, subj, owned=False)
                 self.discourse.mention(obj)
                 objs = [obj]
@@ -812,6 +860,8 @@ class ClauseParser:
                 for o in objs:
                     out.append(Prop(subj.key, lemma, o.key, o.qty, neg, tense, sn, o.number, subj.proper, obj_proper=o.proper,
                                     obj_the=o.proper and o.det == "the"))
+                    if recipient is not None:
+                        out[-1].adj["to"] = f"to {recipient.text}"
                 if lemma in FACTITIVE and len(objs) == 1:                 # "made Bahadur their leader": he is the leader
                     comp, k3 = self.read_np(rest, i)
                     if comp is not None and not comp.pron and comp.head and comp.head != objs[0].head:
@@ -1060,7 +1110,7 @@ class ClauseParser:
             if sub is not None:
                 return Query("fact", subj=sub.key, rel=toks[j].lemma, want="obj", answer_type="", num=sub.number,
                              subj_proper=sub.proper, raw=raw)
-        if w0 == "who" and n >= 5 and toks[1].tag == "V" and toks[2].tag == "PREP" and toks[2].text != "to":
+        if w0 == "who" and n >= 5 and toks[1].tag == "V" and toks[2].tag == "PREP" and (toks[2].text != "to" or toks[3].tag in ("DET", "N", "PN")):
             np, _ = self.read_np(toks, 3)                                                  # who wrote about the fire ?
             if np is not None:
                 return Query("fact", rel=f"{toks[1].lemma}_{toks[2].text}", obj=np.head, want="subj", answer_type="person_or_animal",
@@ -1073,6 +1123,10 @@ class ClauseParser:
                     return Query("define", subj=np.head, raw=raw)
                 return None
             np, k = self.read_np(toks, 2)
+            if np is not None and v.lemma in DITRANSITIVE and k < n:                     # "who gave Hillary a knighthood ?"
+                theme, k2 = self.read_np(toks, k)
+                if theme is not None and k2 > k:
+                    np, k = theme, k2
             if np is not None and k + 1 < n and toks[k].text == "of":                    # "who took control of India ?"
                 inner, _ = self.read_np(toks, k + 1)
                 if inner is not None:
