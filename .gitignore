@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# hebbian_lm: trained models and downloaded corpora (regenerate with train.py / real_text.py)
+hebbian_lm/models/
+hebbian_lm/data/
