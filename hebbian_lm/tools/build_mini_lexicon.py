@@ -140,6 +140,56 @@ for w, g in [("opposite", "a word with the contrary meaning"), ("antonym", "a wo
              ("question", "a sentence that asks something")]:
     add(w, "n", "abstract", g, ["thing"])
 add("mean", "v", "verb", "to stand for")
+# ---- words for reading short factual passages (events, history, travel)
+for w, k, g, h in [
+    ("soldier", "person", "a person who serves in an army", ["person"]), ("army", "group", "a large organised group of soldiers", ["thing"]),
+    ("officer", "person", "a person with authority in an army or a company", ["person"]), ("leader", "person", "a person who leads others", ["person"]),
+    ("rebel", "person", "a person who fights against the rulers", ["person"]), ("rebellion", "event", "a fight against the rulers", ["thing"]),
+    ("mutiny", "event", "a rebellion by soldiers", ["thing"]), ("king", "person", "a man who rules a country", ["person"]),
+    ("queen", "person", "a woman who rules a country", ["person"]), ("crown", "object", "a ring worn by a king or queen; the ruling power", ["object"]),
+    ("company", "group", "a business; a group of people working together", ["thing"]), ("captain", "person", "the person in charge of a ship", ["person"]),
+    ("baker", "person", "a person who makes bread", ["person"]), ("bakery", "building", "a place where bread is made", ["building"]),
+    ("inventor", "person", "a person who makes new things", ["person"]), ("astronaut", "person", "a person who travels in space", ["person"]),
+    ("brother", "person", "a boy or man with the same parents", ["person"]), ("survivor", "person", "a person who lives through a disaster", ["person"]),
+    ("fire", "event", "burning that gives off heat and light", ["thing"]), ("flame", "thing", "the glowing part of a fire", ["thing"]),
+    ("wind", "weather", "air that moves", ["weather"]), ("ocean", "place", "a very large sea", ["place"]), ("sea", "place", "a large body of salt water", ["place"]),
+    ("island", "place", "land with water all around", ["place"]), ("city", "place", "a large town", ["place"]), ("country", "place", "a land with its own people", ["place"]),
+    ("museum", "building", "a place where old and important things are shown", ["building"]), ("church", "building", "a building for prayer", ["building"]),
+    ("cathedral", "building", "a large important church", ["building"]), ("diary", "object", "a book in which you write each day", ["object"]),
+    ("house", "building", "a building to live in", ["building"]), ("ship", "object", "a large boat", ["object"]), ("iceberg", "object", "a huge piece of floating ice", ["object"]),
+    ("disaster", "event", "a very bad event", ["thing"]), ("war", "event", "a fight between countries", ["thing"]), ("battle", "event", "a fight between armies", ["thing"]),
+    ("voyage", "event", "a long journey by sea", ["thing"]), ("flight", "event", "a journey through the air", ["thing"]), ("airplane", "object", "a machine that flies", ["object"]),
+    ("machine", "object", "a thing with parts that does work", ["object"]), ("engine", "object", "a machine that makes things move", ["object"]),
+    ("rocket", "object", "a vehicle that flies into space", ["object"]), ("spacecraft", "object", "a vehicle that travels in space", ["object"]),
+    ("moon", "place", "the large round object that circles the earth", ["place"]), ("earth", "place", "the planet we live on", ["place"]),
+    ("rock", "object", "a piece of stone", ["object"]), ("photograph", "object", "a picture made with a camera", ["object"]), ("television", "object", "a screen that shows programmes", ["object"]),
+    ("surface", "thing", "the outside or top of something", ["thing"]), ("glider", "object", "a plane without an engine", ["object"]),
+    ("lifeboat", "object", "a small boat for saving people from a ship", ["object"]), ("cartridge", "object", "a case holding a bullet and powder", ["object"]),
+    ("rifle", "object", "a long gun", ["object"]), ("fat", "substance", "an oily substance from animals", ["substance"]), ("sand", "substance", "tiny grains of rock", ["substance"]),
+    ("dune", "place", "a hill of sand", ["place"]), ("rumour", "thing", "a story that may not be true", ["thing"]), ("control", "abstract", "power over something", ["thing"]),
+    ("diary", "object", "a book in which you write each day", ["object"]), ("people", "person", "men, women and children", ["person"]),
+    ("hour", "time", "sixty minutes", ["time"]), ("minute", "time", "sixty seconds", ["time"]), ("second", "time", "a very short time", ["time"]),
+    ("day", "time", "twenty-four hours", ["time"]), ("week", "time", "seven days", ["time"]), ("month", "time", "about thirty days", ["time"]),
+    ("year", "time", "twelve months", ["time"]), ("night", "time", "the dark part of the day", ["time"]), ("morning", "time", "the early part of the day", ["time"]),
+]:
+    add(w, "n", k, g, h)
+for w, g in [("start", "to begin"), ("begin", "to start"), ("end", "to finish"), ("finish", "to come to an end"), ("burn", "to be on fire"),
+             ("attack", "to hurt or fight someone"), ("march", "to walk with steady steps"), ("lead", "to go in front and guide"), ("take", "to get hold of"),
+             ("write", "to put words on paper"), ("design", "to plan how something will look"), ("order", "to tell someone to do something"),
+             ("pull", "to draw towards you"), ("stop", "to end or prevent"), ("spread", "to reach over a wider area"), ("destroy", "to ruin completely"),
+             ("rescue", "to save from danger"), ("command", "to be in charge of"), ("hit", "to strike"), ("sink", "to go down under water"),
+             ("die", "to stop living"), ("leave", "to go away from"), ("carry", "to hold and move"), ("land", "to come down to the ground"),
+             ("launch", "to send off"), ("fly", "to move through the air"), ("stay", "to remain"), ("collect", "to gather"), ("watch", "to look at"),
+             ("return", "to come or go back"), ("refuse", "to say no to"), ("serve", "to work for"), ("rule", "to be in charge of a country"),
+             ("forget", "to fail to remember"), ("call", "to give a name to"), ("make", "to build or create"), ("build", "to make by putting parts together"),
+             ("test", "to try something to see how it works"), ("work", "to do a job"), ("become", "to begin to be"), ("cover", "to go over a distance"),
+             ("last", "to continue for a time"), ("display", "to put on show"), ("use", "to do something with a thing for a purpose"), ("find", "to come across"),
+             ("grease", "to put oil or fat on"), ("happen", "to take place"), ("cause", "to make something happen"), ("say", "to speak words"), ("step", "to put down a foot"), ("fall", "to drop down"), ("die", "to stop living")]:
+    add(w, "v", "verb", g)
+for w, g in [("angry", "feeling cross"), ("strong", "having great force"), ("wooden", "made of wood"), ("large", "big"), ("first", "coming before all others"),
+             ("new", "not old"), ("old", "not new"), ("safe", "not in danger"), ("successful", "having done well"), ("same", "not different"),
+             ("lunar", "of the moon"), ("small", "little"), ("great", "very big or important"), ("british", "of Britain"), ("indian", "of India")]:
+    add(w, "a", "adjective", g)
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, "w", encoding="utf-8") as f:
     json.dump({"entries": E}, f, indent=0, ensure_ascii=False)

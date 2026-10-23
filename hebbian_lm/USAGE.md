@@ -111,6 +111,18 @@ you> which is bigger , 7 or 12 ?       is 12 more than 7 ?
 ```
 Each answer shows in `[ ]` whether it was `counted` (with the number of steps) or `recalled`. Details and limits: [V3.md](V3.md).
 
+## 3a'. Meaning, grammar and retelling (v3)
+
+```
+you> Orville and Wilbur Wright were two brothers from Ohio. On 17 December 1903 Orville made the first flight at Kitty Hawk. ...   # paste a paragraph
+you> where did Orville make the first flight ?     when ?   how long did Wilbur fly ?   what happened in 1903 ?   why were the soldiers angry ?
+you> tell me about the fire        /retell        /rephrase The dog chased the cat.
+you> what is a spoon used for ?    what is a bridge made of ?    what does a car have ?
+you> what is the plural of mouse ?   what is the past tense of go ?   what kind of word is run ?
+```
+Answers to event questions are whole sentences built from the stored fact (subject, verb, object and every place / time / instrument it was told with).
+Use WordNet (`python fetch_wordnet.py`) for real text; the bundled dictionary is small. Limits and measurements: [V3.md](V3.md).
+
 ## 3b. Notes, forgetting, real text (v2)
 
 * It keeps **notes, not a transcript**: only the points worth keeping are written down (new facts, names, numbers, definitions,
@@ -178,7 +190,7 @@ python train.py --report report.json   # write all numbers as JSON
 ## 6. Check it works
 
 ```bash
-python -m unittest discover -s tests   # 90 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
+python -m unittest discover -s tests   # 99 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
 python real_text.py                    # the same language layer on real children's books (downloads ~4 MB once)
 python real_text.py --dictionary wordnet
 ```

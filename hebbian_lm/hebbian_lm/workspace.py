@@ -29,6 +29,8 @@ from typing import Dict, List, Optional, Set
 from .comprehension import (END, NP, ClauseParser, Discourse, Prop, Query, Tok, number_word, tag_sentence, tokenize_cased)
 from .entities import is_instance, lemma_of
 from .notes import CUES, Note, NoteKeeper
+from .grammar import degree, parse_grammar_question, variants, word_classes
+from .meanings import CoreMeanings, parse_knowledge_question
 from .numbers import WORD_VALUE, CannotCount, NumberSense, parse_number, to_words
 from .reader import Reader, clean_text
 from .lexicon import PL_DET, PRONOUNS, SG_DET, Lexicon, inflect_noun, inflect_verb
@@ -84,6 +86,7 @@ class Workspace:
         self.seen: Set[str] = set()                 # lemmas already processed (so each is looked up once)
         self.entities: Set[str] = set()             # every subject/object lemma stored so far
         self.pending: Optional[str] = None          # a word the user has been asked to explain
+        self.core = CoreMeanings()                  # what common things are for / made of / made up of / found in
         self.numbers = NumberSense()                # counting and arithmetic, learned (see numbers.py)
         self.notes = NoteKeeper(self.lex)           # sentences kept word for word, indexed by content words
         self.take_notes = take_notes                # write down every sentence that is read
@@ -92,6 +95,7 @@ class Workspace:
         self.turn_time = 0.0                        # time units that pass with every chat turn (0 = time stands still)
         self.real_text = real_text                  # v2 reader: clauses, relatives, infinitives, dialogue, names
         self.aliases: Dict[str, str] = {}           # "buster" -> "buster bear"
+        self.def_alias: Dict[str, str] = {}         # "mutiny" -> "sepoy mutiny": "the mutiny" refers back to a named thing
         self.instances = instances                  # separate entities for separate mentions ("a red ball", "tom's ball")
         self.clarifying: Optional[tuple] = None     # (question, lemma, candidate ids) after a "which ball ?" question
 
@@ -117,7 +121,7 @@ class Workspace:
             self._mark_names(sent)
             self._meet_words(sent, rep)
             if self.real_text:
-                props = Reader(self.lex, self.discourse, self._ents(), self.aliases).read(sent)
+                props = Reader(self.lex, self.discourse, self._ents(), self.aliases, self.def_alias).read(sent)
             else:
                 props = ClauseParser(self.lex, self.discourse, self._ents()).parse_declarative(sent)
             fresh = 0
@@ -372,6 +376,162 @@ class Workspace:
             return Reply(self._cannot(e), kind="idk", note="cannot count that")
         return Reply("i do not know .", kind="idk")
 
+    # ---- explicit knowledge: what things are for, made of ...; grammar forms
+    def _meaning_reply(self, rel: str, noun: str) -> Reply:
+        sub = self._np(noun, "sg")
+        a_noun = f"{a_an(noun)} {noun}"
+        told = []
+        if rel == "parts":
+            told = [f.obj for (s, r), g in self.mem.slots.items() if s == noun and r == "have" for f in g.values() if not f.neg and f.strength > 0.15]
+        else:
+            told = [f.obj for f in self.mem._collect(noun, [rel], "")]
+        src = "from what i was told"
+        if not told:
+            core = self.core.get(noun, rel)
+            told = list(core) if isinstance(core, list) else ([core] if core else [])
+            src = "from my core vocabulary"
+        if not told:
+            return Reply("i do not know .", kind="idk")
+        if rel == "used_for":
+            return Reply(f"{a_noun} is used for {told[0]} .", confidence=1.0, note=src)
+        if rel == "made_of":
+            return Reply(f"{a_noun} is made of {told[0]} .", confidence=1.0, note=src)
+        if rel == "found_in":
+            return Reply(f"{a_noun} is found in the {told[0]} ." if " " not in told[0] else f"{a_noun} is found in {told[0]} .", confidence=1.0, note=src)
+        parts = [self._parts_np(x) for x in told[:5]]
+        joined = parts[0] if len(parts) == 1 else " , ".join(parts[:-1]) + " and " + parts[-1]
+        return Reply(f"{a_noun} has {joined} .", confidence=1.0, note=src)
+
+    @staticmethod
+    def _parts_np(x: str) -> str:
+        return x if x.endswith("s") and x not in ("glass", "grass") else f"{a_an(x)} {x}"
+
+    def _grammar_reply(self, kind: str, form: str, word: str) -> Reply:
+        a = self.lex.analyze(word)[0]
+        if kind == "plural":
+            return Reply(f"the plural of {a.lemma} is {inflect_noun(a.lemma, 'pl')} .", confidence=1.0, note="from the morphology rules")
+        if kind == "singular":
+            return Reply(f"the singular of {word} is {a.lemma} .", confidence=1.0, note="from the morphology rules")
+        if kind == "form":
+            name = {"past": "past tense", "pp": "past participle", "ing": "present participle", "3sg": "third person singular"}[form]
+            return Reply(f"the {name} of {a.lemma} is {inflect_verb(a.lemma, form)} .", confidence=1.0, note="from the morphology rules")
+        if kind == "degree":
+            return Reply(f"the {form} of {a.lemma} is {degree(a.lemma, form)} .", confidence=1.0, note="from the morphology rules")
+        classes = word_classes(self.lex, word)
+        if kind == "class":
+            if not classes:
+                return Reply("i do not know .", kind="idk")
+            return Reply(f"{word} can be {' or '.join(a_an(c) + ' ' + c for c in classes)} .", confidence=1.0, note="from the dictionary")
+        yes = form in classes
+        return Reply(f"{'yes' if yes else 'no'} , {word} {'is' if yes else 'is not'} {a_an(form)} {form} ." +
+                     ("" if yes or not classes else f" it is {' or '.join(a_an(c) + ' ' + c for c in classes)} ."), confidence=1.0)
+
+    # ---- retelling: from stored meaning to new sentences
+    def _retell_topic(self, w: List[str]) -> Optional[str]:
+        txt = " ".join(w)
+        for lead in ("tell me about", "what do you know about", "tell me more about", "summarise", "summarize", "retell", "tell me the story of",
+                     "tell me the story", "what happened in the story", "tell me everything about"):
+            if txt == lead or txt.startswith(lead + " "):
+                rest = [x for x in txt[len(lead):].split() if x not in ("the", "a", "an")]
+                return " ".join(rest)
+        return None
+
+    _SPEECH_VERBS = {"say", "tell", "ask", "reply", "answer", "shout", "whisper", "cry", "mutter", "call"}
+
+    def retell(self, topic: str = "", limit: int = 8) -> str:
+        """Tell what is known in new sentences built from the stored facts: in the order it happened, with a pronoun for a subject
+        that was just named, and (in the varied style) some sentences turned into the passive. Only stored facts are used."""
+        topic_l = self.def_alias.get(topic, topic)
+        topic_l = self.aliases.get(topic_l, topic_l)
+        facts = []
+        for (s, r), grp in self.mem.slots.items():
+            if r in ("count", "antonym", "equals", "can", "used_for", "made_of", "found_in", "have"):
+                continue
+            for f in grp.values():
+                if f.neg or f.strength <= 0.15 or not f.subj or f.adj.get("mod"):
+                    continue
+                if topic_l and not (self.mem.same_name(topic_l, f.subj) or topic_l in f.obj.split() or topic_l in " ".join(f.adj.values()).split()):
+                    continue
+                verb = f.rel.split("_")[0]
+                if f.rel not in ("attr", "isa") and not self.lex.senses(verb, "v"):
+                    continue                                     # "pig fat" read as a verb: not an event
+                if verb in self._SPEECH_VERBS and not f.obj:
+                    continue
+                if not f.obj and not f.adj and f.rel not in ("attr", "isa"):
+                    continue                                     # a bare "the rumours said": nothing to tell
+                facts.append(f)
+        keep = [f for f in facts if not ("_" in f.rel and not f.adj and any(
+            g is not f and g.subj == f.subj and g.rel.split("_")[0] == f.rel.split("_")[0] and g.adj for g in facts))
+                and not any(g is not f and g.subj == f.subj and g.adj.get("inf", "").split(" ")[0] == f.rel.split("_")[0] for g in facts)]
+
+        def year(f):
+            ys = [int(x) for x in re.findall(r"\b(1[0-9]{3}|20[0-9]{2})\b", f.adj.get("when", ""))]
+            return ys[0] if ys else None
+        dated = [f for f in keep if year(f)]
+        # facts without a date keep their reading order; dated ones are placed by year, undated ones stay near their neighbours
+        ordered, seen = [], set()
+        for f in sorted(keep, key=lambda f: f.t):
+            sig = (f.subj, f.rel.split("_")[0], lemma_of(f.obj))
+            if sig not in seen:
+                seen.add(sig)
+                ordered.append(f)
+        if len(dated) >= 3:
+            order = sorted(range(len(ordered)), key=lambda k: (year(ordered[k]) if year(ordered[k]) else -1, k))
+            last_year = None
+            slots = []
+            for k, f in enumerate(ordered):
+                last_year = year(f) or last_year
+                slots.append((last_year if last_year else 0, k))
+            ordered = [ordered[k] for _, k in sorted(slots)]
+        sentences, prev_subj, n_passive = [], None, 0
+        for idx, f in enumerate(ordered[:limit]):
+            core = self._fact_sentence(f)
+            plural = self.mem.subj_num.get(f.subj, "sg") == "pl"
+            subj_txt = self._np(f.subj, "pl" if plural else "sg", f.subj in self.mem.proper)
+            if prev_subj == f.subj and core.startswith(subj_txt + " "):
+                pron = self._pronoun_for(f.subj)
+                if pron:
+                    core = pron + core[len(subj_txt):]
+            elif (self.style == "varied" and f.obj and not f.adj and "_" not in f.rel and f.rel not in ("isa", "attr")
+                  and f.obj not in PRONOUNS and not is_instance(f.obj) and idx % 3 == 2 and n_passive < 2 and f.subj != prev_subj):
+                v = variants(subj_txt, f.rel, self._obj_np(f.obj, f.obj_num), f.tense == "past", plural)
+                if "passive" in v:
+                    core, n_passive = v["passive"], n_passive + 1
+            sentences.append(core)
+            prev_subj = f.subj
+        if not sentences:
+            return ""
+        return " ".join(s + " ." for s in sentences)
+
+    def _pronoun_for(self, subj: str) -> str:
+        """A pronoun for a subject that was just named, or '' if the name should be repeated (gender unknown)."""
+        from .comprehension import FEMALE, MALE
+        if self.mem.subj_num.get(subj, "sg") == "pl":
+            return "they"
+        first, last = subj.split()[0], subj.split(" of ")[0].split()[-1]
+        if first in FEMALE or subj in FEMALE:
+            return "she"
+        if first in MALE or subj in MALE:
+            return "he"
+        isa_kinds = [self.lex.kind(f.obj) for r, f in self.mem.facts_about(subj) if r == "isa"]
+        if "person" in isa_kinds or self.lex.kind(first) == "person":
+            return ""                                            # a person of unknown gender: repeat the name
+        return "it"
+
+    def rephrase(self, sentence: str) -> Dict[str, str]:
+        """One sentence of the user's, said in other grammatical forms (passive, negative, future, question), built by rule."""
+        toks = tokenize_cased(sentence)
+        tag_sentence(toks, self.lex)
+        props = Reader(self.lex, Discourse(), None, {}, {}).read(toks)
+        for p in props:
+            if p.rel in ("attr", "isa", "count", "can", "have") or not p.obj:
+                continue
+            pl = p.subj_num == "pl"
+            sub = self._np(p.subj, "pl" if pl else "sg", p.subj_proper)
+            obj = p.obj if p.obj_proper else self._obj_np(p.obj, p.obj_num)
+            return variants(sub, p.rel.split("_")[0], obj, p.tense == "past", pl, p.neg)
+        return {}
+
     def _cannot(self, e: Exception) -> str:
         top = self.numbers.max_taught
         return f"{e} i can count to {to_words(top)} so far ." if top >= 0 and self.numbers.can_count() else f"{e} teach me : one two three four ..."
@@ -476,18 +636,30 @@ class Workspace:
         toks = tokenize_cased(question)
         tag_sentence(toks, self.lex)
         self._mark_names(toks)
-        nq = ClauseParser(self.lex, self.discourse)._number_question([t.text for t in toks if t.tag != "PUNCT"], question)
+        words = [t.text for t in toks if t.tag != "PUNCT"]
+        nq = ClauseParser(self.lex, self.discourse)._number_question(words, question)
         if nq is not None:                                           # a question about numbers: no word to look up
             return self._number_reply(nq), nq, None
+        gq = parse_grammar_question(words)
+        if gq is not None:
+            return self._grammar_reply(*gq), None, None
+        topic = self._retell_topic(words)
+        if topic is not None:
+            text = self.retell(topic)
+            return (Reply(text, confidence=1.0, note="retold from what i have read") if text else Reply("i do not know .", kind="idk")), None, None
+        lemma = lambda x: self.lex.analyze(x)[0].lemma if x.isalpha() else x
+        kq = parse_knowledge_question(words, lemma)
+        if kq is not None and (kq[0] != "parts" or kq[1] in self.core):          # "what does tom have ?" is an ordinary fact question
+            return self._meaning_reply(*kq), None, None
         unk = [t for t in toks if t.tag in ("N", "PN", "ADJ", "V") and not t.known and not self._known(t.lemma)]
         if unk:
             w = unk[0].lemma
             self.pending = w
             return Reply(f"i do not know the word {w} . what is it ?", kind="unknown_word", note=w), None, None
-        parser = ClauseParser(self.lex, self.discourse, self._ents(), creating=False, prefer=prefer)
+        parser = ClauseParser(self.lex, self.discourse, self._ents(), creating=False, prefer=prefer, def_alias=self.def_alias)
         q = parser.parse_question(toks)
         if q is not None:
-            q.subj = self.aliases.get(q.subj, q.subj) if q.subj_proper or q.subj in self.aliases else q.subj
+            q.subj = self.aliases.get(q.subj, q.subj) if q.subj_proper and q.subj in self.aliases else q.subj
         if q is not None and parser.ambiguous:
             return self._clarify(question, parser.ambiguous[0]), q, None
         self.clarifying = None
@@ -496,6 +668,11 @@ class Workspace:
         if q.kind in ("arithmetic", "number"):
             return self._number_reply(q), q, None
         ans = self.mem.query(q)
+        if q.kind == "event" and not ans.items and q.want == "where":       # older, place-only facts ("the cow lives in the farm")
+            q2 = Query("fact", subj=q.subj, rel=q.rel + "_@", want="obj", answer_type="place")
+            ans2 = self.mem.query(q2)
+            if ans2.items:
+                return self._realise(q2, ans2), q2, ans2
         return self._realise(q, ans), q, ans
 
     def _mark_names(self, toks: List[Tok]) -> None:
@@ -645,7 +822,7 @@ class Workspace:
         return self.ask(question, prefer={lemma: hits[0]})
 
     def _known(self, lemma: str) -> bool:
-        return lemma in self.entities or lemma in self.mem.defs or bool(self.lex.senses(lemma)) or \
+        return lemma in self.entities or lemma in self.seen or lemma in self.mem.defs or bool(self.lex.senses(lemma)) or \
             lemma in self.lex.proper or (lemma, "isa") in {(s, r) for (s, r) in self.mem.slots}
 
     def fluency(self, text: str) -> Optional[float]:
@@ -661,6 +838,8 @@ class Workspace:
         if is_instance(lemma) and lemma in self.mem.ents.items:
             same = [e.id for e in self.mem.ents.of(self.mem.ents.items[lemma].lemma)]
             return self._label(lemma, same) if len(same) > 1 else "the " + self.mem.ents.items[lemma].lemma
+        if lemma in self.mem.the_names:
+            return "the " + lemma
         if proper or lemma in self.lex.proper or lemma in self.mem.proper:
             return lemma
         if number == "pl":
@@ -678,7 +857,9 @@ class Workspace:
         return f"{a_an(words[0])} {' '.join(words)}"
 
     def _obj_np(self, lemma: str, number: str, qty: str = "") -> str:
-        if lemma in PRONOUNS or lemma in NO_ARTICLE:
+        if lemma in self.mem.the_names:
+            return "the " + lemma
+        if lemma in PRONOUNS or lemma in NO_ARTICLE or lemma in self.mem.proper or lemma in self.lex.proper:
             return lemma
         if is_instance(lemma) and lemma in self.mem.ents.items:
             return self._inst_desc(lemma)
@@ -701,6 +882,11 @@ class Workspace:
             a, op, b = q.expr
             word = {"+": "plus", "-": "minus", "*": "times"}[op]
             return Reply(f"{number_word(a)} {word} {number_word(b)} is {number_word(int(ans.text_hint))} .", confidence=1.0)
+        if q.kind in ("event", "happened"):
+            if not ans.items:
+                return idk
+            sents = [self._fact_sentence(f) for f in ans.items[: (1 if q.kind == "event" else 3)]]
+            return Reply(" ".join(s + " ." for s in sents), confidence=ans.confidence, note="from the event's roles")
         if q.kind == "actions":
             if not ans.items:
                 return idk
@@ -711,6 +897,11 @@ class Workspace:
                 tail = (" , " + " , ".join(vps[1:-1]) if len(vps) > 2 else "") + " and " + vps[-1]
             return Reply(f"{sub} {vps[0]}{tail} .", confidence=ans.confidence)
         if q.kind == "define":
+            holders = sorted(self.mem.reverse.get(("isa", q.subj), set()))      # "who was the leader ?" -> whoever was made the leader
+            if holders:
+                names = " and ".join(self._np(h, self.mem.subj_num.get(h, "sg"), h in self.mem.proper) for h in holders[:2])
+                return Reply(f"{names} {'were' if len(holders) > 1 else 'was'} {'the ' if q.num != 'pl' else ''}{q.subj if q.num != 'pl' else inflect_noun(q.subj, 'pl')} .",
+                             confidence=1.0, note="from what i have read")
             facts = self._about(q.subj, q.num == "pl", q.subj_proper)
             if facts and (q.subj in self.mem.proper or not (ans.chain or ans.text_hint)):
                 return Reply(facts, confidence=1.0, note="from what i have read")
@@ -791,12 +982,38 @@ class Workspace:
                          f"{self._obj_np(top.obj, 'sg')} .", confidence=conf, inferred=ans.inferred, note=note)
         # ordinary verb: the dog eats bones (list the strongest few)
         objs = [f for f in ans.items if f.obj][:3]
+        if not objs and ans.items and ans.items[0].adj.get("inf"):             # "what did the baker forget ?" -> forgot to put out the oven
+            return Reply(self._fact_sentence(ans.items[0]) + " .", confidence=conf)
         if not objs:
             return idk
-        parts = [self._obj_np(f.obj, f.obj_num) for f in objs]
+        parts = [self._obj_phrase(f) for f in objs]
         past = objs[0].tense == "past"
         return Reply(f"{hedge}{sub} {self._verb(rel, 'pl' if pl else 'sg', past=past)} {' and '.join(parts)} .", confidence=conf,
                      inferred=ans.inferred, note=note)
+
+    _ROLE_ORDER = ("where", "to", "from", "with", "about", "for", "by", "when", "duration", "inf")
+
+    def _fact_sentence(self, f) -> str:
+        """A whole event as one sentence: subject, verb, object and every role it was told with."""
+        pl = self.mem.subj_num.get(f.subj, "sg") == "pl"
+        sub = self._np(f.subj, "pl" if pl else "sg", f.subj in self.mem.proper)
+        if f.rel == "called":
+            core = f"{sub} {'were' if pl else 'was'} called {self._obj_np(f.obj, 'sg')}"
+        elif f.rel == "attr":
+            be = ("were" if pl else "was") if f.tense == "past" else ("are" if pl else "is")
+            core = f"{sub} {be} {f.obj}"
+        elif f.rel == "isa":
+            core = f"{sub} {'were' if pl else 'was'} " + (inflect_noun(f.obj, "pl") if pl else f"{a_an(f.obj)} {f.obj}")
+        else:
+            core = f"{sub} {self._vp(f, pl)}"
+        tail = [("to " + f.adj[k] if k == "inf" else f.adj[k]) for k in self._ROLE_ORDER if k in f.adj and f.adj[k] not in core]
+        return " ".join([core] + tail)
+
+    def _obj_phrase(self, f) -> str:
+        """The object of a stored fact, with its quantity: 'twelve seconds', '13000 houses', 'the oven'."""
+        if f.qty and f.qty not in ("one", "") and (f.obj_num != "sg" or f.qty.split()[0].isdigit() or f.qty.split()[0] in WORD_VALUE):
+            return f"{f.qty} {inflect_noun(lemma_of(f.obj), 'pl')}"
+        return self._obj_np(f.obj, f.obj_num)
 
     def _vp(self, f, pl: bool) -> str:
         """The verb phrase of one stored fact: 'ate it', 'jumped on the pail', 'sat'."""
@@ -804,7 +1021,9 @@ class Workspace:
         v = self._verb(verb, "pl" if pl else "sg", past=f.tense == "past")
         if not f.obj:
             return v
-        obj = self._obj_np(f.obj, f.obj_num)
+        if prep and any(x.startswith(prep + " ") for x in f.adj.values()):
+            return v                                          # the roles already say "in the bakery": do not say it twice
+        obj = self._obj_phrase(f)
         return f"{v} {prep + ' ' if prep and prep != '@' else ''}{obj}".strip()
 
     def _about(self, subj: str, pl: bool, proper: bool) -> str:
@@ -825,6 +1044,10 @@ class Workspace:
         return " ".join(out)
 
     def _yesno_reply(self, q: Query, ans: Answer) -> Reply:
+        if (("_" in q.rel and q.rel != "@loc") or (q.rel not in ("attr", "isa", "can", "have") and q.obj)) and ans.items and not ans.items[0].neg \
+                and ans.items[0].subj:
+            return Reply(("yes , " if ans.verdict == "yes" else "no , ") + self._fact_sentence(ans.items[0]) + " .",
+                         confidence=ans.confidence, note=f"inferred from {ans.via}" if ans.inferred else "")
         pl = q.num == "pl"
         sub = self._np(q.subj, "pl" if pl else "sg", q.subj_proper)
         be = "are" if pl else "is"
@@ -1034,7 +1257,7 @@ class Workspace:
         with open(os.path.join(directory, "lexicon_learned.json"), "w") as f:
             json.dump(self.lex.learned_entries(), f, indent=1)
         with open(os.path.join(directory, "workspace.json"), "w") as f:
-            json.dump(dict(seen=sorted(self.seen), entities=sorted(self.entities), aliases=self.aliases), f)
+            json.dump(dict(seen=sorted(self.seen), entities=sorted(self.entities), aliases=self.aliases, def_alias=self.def_alias), f)
         if self.model is not None:
             self.model.save(os.path.join(directory, "language_model.pkl"))
 
@@ -1059,6 +1282,7 @@ class Workspace:
                 d = json.load(f)
             self.seen, self.entities = set(d["seen"]), set(d["entities"])
             self.aliases = d.get("aliases", {})
+            self.def_alias = d.get("def_alias", {})
         p = os.path.join(directory, "language_model.pkl")
         if os.path.exists(p) and self.model is not None:
             from .model import HebbianLM

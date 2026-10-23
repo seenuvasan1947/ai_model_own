@@ -168,6 +168,18 @@ def main() -> None:
                   "share_recalled_from_memory_after_taught_k_times", "wrong_claim_taught_10_times_changes_answer", "limits_counted_only_to_9"):
             print(f"     {k}: {j_res[k]}")
         report["workspace_numbers"] = j_res
+        from hebbian_lm import evaluate_story as es
+        story_lex = Lexicon.default()
+        src_name = "WordNet + bundled dictionary" if story_lex.wn else "bundled dictionary only (its 520 words were written with these passages in mind, so this is not a held-out result)"
+        print(f"  K. reading short factual passages and answering questions from different angles ({src_name}):")
+        story = es.run(lambda: Workspace(model=None, lexicon=story_lex, take_notes=True))
+        for k, v in story.items():
+            print(f"     {k:8} right {v['right']:>2}/{v['total']}   did not know {v['idk']:>2}   wrong {v['wrong']:>2}")
+        rr = es.retell_report(lambda: Workspace(model=None, lexicon=story_lex, style="varied", take_notes=False, seed=1))
+        for k, v in rr.items():
+            print(f"     retell {k:8} key facts {v['key_facts']}   invented sentences {v['invented_sentences']}   word for word {v['copied_word_for_word']}/{v['sentences']}   grammar issues {v['grammar_issues']}")
+        report["stories"] = {k: {x: y for x, y in v.items() if x != "rows"} for k, v in story.items()}
+        report["retell"] = {k: v for k, v in rr.items()}
         i_res = ew.benchmark_selective_notes()
         print("  I. selective notes (50-sentence paragraphs: 10 new facts + 40 restatements; synthetic):")
         for k, v in i_res.items():

@@ -15,6 +15,8 @@ What you type:
     /lm <question>               ->  ask the language layer alone (its diffuse knowledge)
     /say <start>                 ->  the language layer continues a sentence;   /free [n]  free sentences
     /classes                     ->  the word categories the language layer invented for itself
+    /retell [topic]              ->  tell what it has read (about a topic) in its own sentences
+    /rephrase <sentence>         ->  the same sentence as a passive, a negative, a future and a question
     /note <text>                 ->  take a note on purpose (kept word for word and also understood)
     /notes [cue]                 ->  look in the notes (all of them if no cue)
     /sleep [n]                   ->  time passes (n units, default 100): facts and notes fade, used ones last longer
@@ -103,6 +105,11 @@ def main() -> None:
             elif cmd == "classes" and ws.model:
                 for k, words in ws.model.categories().items():
                     print(f"  unit {k:2d} ({len(words):3d} words): {' '.join(words[:14])}")
+            elif cmd == "retell":
+                print("ai>", ws.retell(rest) or "i have nothing to tell yet .")
+            elif cmd == "rephrase" and rest:
+                for k, v in (ws.rephrase(rest) or {"": "i could not find a verb with an object in that sentence ."}).items():
+                    print(f"  {k:9}{v}")
             elif cmd == "note" and rest:
                 n = ws.note(rest)
                 print(f"ai> noted ( note {n.id if n else '-'} )")

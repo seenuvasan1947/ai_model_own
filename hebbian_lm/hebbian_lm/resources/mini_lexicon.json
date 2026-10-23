@@ -4573,6 +4573,1504 @@
 "antonyms": [],
 "synonyms": [],
 "examples": []
+},
+{
+"lemma": "soldier",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who serves in an army",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "army",
+"pos": "n",
+"kind": "group",
+"gloss": "a large organised group of soldiers",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "officer",
+"pos": "n",
+"kind": "person",
+"gloss": "a person with authority in an army or a company",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "leader",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who leads others",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rebel",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who fights against the rulers",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rebellion",
+"pos": "n",
+"kind": "event",
+"gloss": "a fight against the rulers",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "mutiny",
+"pos": "n",
+"kind": "event",
+"gloss": "a rebellion by soldiers",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "king",
+"pos": "n",
+"kind": "person",
+"gloss": "a man who rules a country",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "queen",
+"pos": "n",
+"kind": "person",
+"gloss": "a woman who rules a country",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "crown",
+"pos": "n",
+"kind": "object",
+"gloss": "a ring worn by a king or queen; the ruling power",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "company",
+"pos": "n",
+"kind": "group",
+"gloss": "a business; a group of people working together",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "captain",
+"pos": "n",
+"kind": "person",
+"gloss": "the person in charge of a ship",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "baker",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who makes bread",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "bakery",
+"pos": "n",
+"kind": "building",
+"gloss": "a place where bread is made",
+"hypernyms": [
+"building"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "inventor",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who makes new things",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "astronaut",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who travels in space",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "brother",
+"pos": "n",
+"kind": "person",
+"gloss": "a boy or man with the same parents",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "survivor",
+"pos": "n",
+"kind": "person",
+"gloss": "a person who lives through a disaster",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fire",
+"pos": "n",
+"kind": "event",
+"gloss": "burning that gives off heat and light",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "flame",
+"pos": "n",
+"kind": "thing",
+"gloss": "the glowing part of a fire",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wind",
+"pos": "n",
+"kind": "weather",
+"gloss": "air that moves",
+"hypernyms": [
+"weather"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ocean",
+"pos": "n",
+"kind": "place",
+"gloss": "a very large sea",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sea",
+"pos": "n",
+"kind": "place",
+"gloss": "a large body of salt water",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "island",
+"pos": "n",
+"kind": "place",
+"gloss": "land with water all around",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "city",
+"pos": "n",
+"kind": "place",
+"gloss": "a large town",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "country",
+"pos": "n",
+"kind": "place",
+"gloss": "a land with its own people",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "museum",
+"pos": "n",
+"kind": "building",
+"gloss": "a place where old and important things are shown",
+"hypernyms": [
+"building"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "church",
+"pos": "n",
+"kind": "building",
+"gloss": "a building for prayer",
+"hypernyms": [
+"building"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cathedral",
+"pos": "n",
+"kind": "building",
+"gloss": "a large important church",
+"hypernyms": [
+"building"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "diary",
+"pos": "n",
+"kind": "object",
+"gloss": "a book in which you write each day",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "house",
+"pos": "n",
+"kind": "building",
+"gloss": "a building to live in",
+"hypernyms": [
+"building"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "ship",
+"pos": "n",
+"kind": "object",
+"gloss": "a large boat",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "iceberg",
+"pos": "n",
+"kind": "object",
+"gloss": "a huge piece of floating ice",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "disaster",
+"pos": "n",
+"kind": "event",
+"gloss": "a very bad event",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "war",
+"pos": "n",
+"kind": "event",
+"gloss": "a fight between countries",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "battle",
+"pos": "n",
+"kind": "event",
+"gloss": "a fight between armies",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "voyage",
+"pos": "n",
+"kind": "event",
+"gloss": "a long journey by sea",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "flight",
+"pos": "n",
+"kind": "event",
+"gloss": "a journey through the air",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "airplane",
+"pos": "n",
+"kind": "object",
+"gloss": "a machine that flies",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "machine",
+"pos": "n",
+"kind": "object",
+"gloss": "a thing with parts that does work",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "engine",
+"pos": "n",
+"kind": "object",
+"gloss": "a machine that makes things move",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rocket",
+"pos": "n",
+"kind": "object",
+"gloss": "a vehicle that flies into space",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "spacecraft",
+"pos": "n",
+"kind": "object",
+"gloss": "a vehicle that travels in space",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "moon",
+"pos": "n",
+"kind": "place",
+"gloss": "the large round object that circles the earth",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "earth",
+"pos": "n",
+"kind": "place",
+"gloss": "the planet we live on",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rock",
+"pos": "n",
+"kind": "object",
+"gloss": "a piece of stone",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "photograph",
+"pos": "n",
+"kind": "object",
+"gloss": "a picture made with a camera",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "television",
+"pos": "n",
+"kind": "object",
+"gloss": "a screen that shows programmes",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "surface",
+"pos": "n",
+"kind": "thing",
+"gloss": "the outside or top of something",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "glider",
+"pos": "n",
+"kind": "object",
+"gloss": "a plane without an engine",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lifeboat",
+"pos": "n",
+"kind": "object",
+"gloss": "a small boat for saving people from a ship",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cartridge",
+"pos": "n",
+"kind": "object",
+"gloss": "a case holding a bullet and powder",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rifle",
+"pos": "n",
+"kind": "object",
+"gloss": "a long gun",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fat",
+"pos": "n",
+"kind": "substance",
+"gloss": "an oily substance from animals",
+"hypernyms": [
+"substance"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sand",
+"pos": "n",
+"kind": "substance",
+"gloss": "tiny grains of rock",
+"hypernyms": [
+"substance"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "dune",
+"pos": "n",
+"kind": "place",
+"gloss": "a hill of sand",
+"hypernyms": [
+"place"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rumour",
+"pos": "n",
+"kind": "thing",
+"gloss": "a story that may not be true",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "control",
+"pos": "n",
+"kind": "abstract",
+"gloss": "power over something",
+"hypernyms": [
+"thing"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "diary",
+"pos": "n",
+"kind": "object",
+"gloss": "a book in which you write each day",
+"hypernyms": [
+"object"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "people",
+"pos": "n",
+"kind": "person",
+"gloss": "men, women and children",
+"hypernyms": [
+"person"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hour",
+"pos": "n",
+"kind": "time",
+"gloss": "sixty minutes",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "minute",
+"pos": "n",
+"kind": "time",
+"gloss": "sixty seconds",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "second",
+"pos": "n",
+"kind": "time",
+"gloss": "a very short time",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "day",
+"pos": "n",
+"kind": "time",
+"gloss": "twenty-four hours",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "week",
+"pos": "n",
+"kind": "time",
+"gloss": "seven days",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "month",
+"pos": "n",
+"kind": "time",
+"gloss": "about thirty days",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "year",
+"pos": "n",
+"kind": "time",
+"gloss": "twelve months",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "night",
+"pos": "n",
+"kind": "time",
+"gloss": "the dark part of the day",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "morning",
+"pos": "n",
+"kind": "time",
+"gloss": "the early part of the day",
+"hypernyms": [
+"time"
+],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "start",
+"pos": "v",
+"kind": "verb",
+"gloss": "to begin",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "begin",
+"pos": "v",
+"kind": "verb",
+"gloss": "to start",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "end",
+"pos": "v",
+"kind": "verb",
+"gloss": "to finish",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "finish",
+"pos": "v",
+"kind": "verb",
+"gloss": "to come to an end",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "burn",
+"pos": "v",
+"kind": "verb",
+"gloss": "to be on fire",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "attack",
+"pos": "v",
+"kind": "verb",
+"gloss": "to hurt or fight someone",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "march",
+"pos": "v",
+"kind": "verb",
+"gloss": "to walk with steady steps",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lead",
+"pos": "v",
+"kind": "verb",
+"gloss": "to go in front and guide",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "take",
+"pos": "v",
+"kind": "verb",
+"gloss": "to get hold of",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "write",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put words on paper",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "design",
+"pos": "v",
+"kind": "verb",
+"gloss": "to plan how something will look",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "order",
+"pos": "v",
+"kind": "verb",
+"gloss": "to tell someone to do something",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "pull",
+"pos": "v",
+"kind": "verb",
+"gloss": "to draw towards you",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "stop",
+"pos": "v",
+"kind": "verb",
+"gloss": "to end or prevent",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "spread",
+"pos": "v",
+"kind": "verb",
+"gloss": "to reach over a wider area",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "destroy",
+"pos": "v",
+"kind": "verb",
+"gloss": "to ruin completely",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rescue",
+"pos": "v",
+"kind": "verb",
+"gloss": "to save from danger",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "command",
+"pos": "v",
+"kind": "verb",
+"gloss": "to be in charge of",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "hit",
+"pos": "v",
+"kind": "verb",
+"gloss": "to strike",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "sink",
+"pos": "v",
+"kind": "verb",
+"gloss": "to go down under water",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "die",
+"pos": "v",
+"kind": "verb",
+"gloss": "to stop living",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "leave",
+"pos": "v",
+"kind": "verb",
+"gloss": "to go away from",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "carry",
+"pos": "v",
+"kind": "verb",
+"gloss": "to hold and move",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "land",
+"pos": "v",
+"kind": "verb",
+"gloss": "to come down to the ground",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "launch",
+"pos": "v",
+"kind": "verb",
+"gloss": "to send off",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fly",
+"pos": "v",
+"kind": "verb",
+"gloss": "to move through the air",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "stay",
+"pos": "v",
+"kind": "verb",
+"gloss": "to remain",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "collect",
+"pos": "v",
+"kind": "verb",
+"gloss": "to gather",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "watch",
+"pos": "v",
+"kind": "verb",
+"gloss": "to look at",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "return",
+"pos": "v",
+"kind": "verb",
+"gloss": "to come or go back",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "refuse",
+"pos": "v",
+"kind": "verb",
+"gloss": "to say no to",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "serve",
+"pos": "v",
+"kind": "verb",
+"gloss": "to work for",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "rule",
+"pos": "v",
+"kind": "verb",
+"gloss": "to be in charge of a country",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "forget",
+"pos": "v",
+"kind": "verb",
+"gloss": "to fail to remember",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "call",
+"pos": "v",
+"kind": "verb",
+"gloss": "to give a name to",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "make",
+"pos": "v",
+"kind": "verb",
+"gloss": "to build or create",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "build",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make by putting parts together",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "test",
+"pos": "v",
+"kind": "verb",
+"gloss": "to try something to see how it works",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "work",
+"pos": "v",
+"kind": "verb",
+"gloss": "to do a job",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "become",
+"pos": "v",
+"kind": "verb",
+"gloss": "to begin to be",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cover",
+"pos": "v",
+"kind": "verb",
+"gloss": "to go over a distance",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "last",
+"pos": "v",
+"kind": "verb",
+"gloss": "to continue for a time",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "display",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put on show",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "use",
+"pos": "v",
+"kind": "verb",
+"gloss": "to do something with a thing for a purpose",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "find",
+"pos": "v",
+"kind": "verb",
+"gloss": "to come across",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "grease",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put oil or fat on",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "happen",
+"pos": "v",
+"kind": "verb",
+"gloss": "to take place",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "cause",
+"pos": "v",
+"kind": "verb",
+"gloss": "to make something happen",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "say",
+"pos": "v",
+"kind": "verb",
+"gloss": "to speak words",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "step",
+"pos": "v",
+"kind": "verb",
+"gloss": "to put down a foot",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "fall",
+"pos": "v",
+"kind": "verb",
+"gloss": "to drop down",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "die",
+"pos": "v",
+"kind": "verb",
+"gloss": "to stop living",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "angry",
+"pos": "a",
+"kind": "adjective",
+"gloss": "feeling cross",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "strong",
+"pos": "a",
+"kind": "adjective",
+"gloss": "having great force",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "wooden",
+"pos": "a",
+"kind": "adjective",
+"gloss": "made of wood",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "large",
+"pos": "a",
+"kind": "adjective",
+"gloss": "big",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "first",
+"pos": "a",
+"kind": "adjective",
+"gloss": "coming before all others",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "new",
+"pos": "a",
+"kind": "adjective",
+"gloss": "not old",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "old",
+"pos": "a",
+"kind": "adjective",
+"gloss": "not new",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "safe",
+"pos": "a",
+"kind": "adjective",
+"gloss": "not in danger",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "successful",
+"pos": "a",
+"kind": "adjective",
+"gloss": "having done well",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "same",
+"pos": "a",
+"kind": "adjective",
+"gloss": "not different",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "lunar",
+"pos": "a",
+"kind": "adjective",
+"gloss": "of the moon",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "small",
+"pos": "a",
+"kind": "adjective",
+"gloss": "little",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "great",
+"pos": "a",
+"kind": "adjective",
+"gloss": "very big or important",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "british",
+"pos": "a",
+"kind": "adjective",
+"gloss": "of Britain",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
+},
+{
+"lemma": "indian",
+"pos": "a",
+"kind": "adjective",
+"gloss": "of India",
+"hypernyms": [],
+"antonyms": [],
+"synonyms": [],
+"examples": []
 }
 ]
 }

@@ -39,7 +39,9 @@ BE_FORMS = {"is": "sg", "are": "pl", "am": "sg1", "was": "sg", "were": "pl", "be
 AUX = {"do", "does", "did", "can", "could", "will", "would", "should", "may", "might", "must", "shall"}
 HAVE_FORMS = {"has": "sg", "have": "pl", "had": ""}
 PREPOSITIONS = {"in", "on", "at", "under", "near", "to", "from", "of", "with", "by", "over", "into", "behind",
-                "above", "below", "inside", "outside", "beside", "between", "through", "across", "toward"}
+                "above", "below", "inside", "outside", "beside", "between", "through", "across", "toward", "about", "after",
+                "before", "during", "until", "since", "against", "among", "around", "along", "beyond", "despite", "except",
+                "upon", "within", "without", "towards", "throughout", "onto", "till", "for"}
 CONJ = {"and", "or", "but", "because", "if", "then", "while", "so", "plus", "minus", "times", "divided", "than"}
 WH = {"what", "who", "whom", "where", "when", "why", "how", "which", "whose"}
 NEG = {"not", "never", "n't"}
@@ -99,6 +101,7 @@ IRREGULAR_VERBS = {  # form -> (lemma, feature)
     "had": ("have", "past"), "did": ("do", "past"), "was": ("be", "past"), "were": ("be", "past"),
 }
 VOWELS = set("aeiou")
+SAME_PAST = {"put", "hit", "cut", "set", "let", "shut", "hurt", "cost", "read", "quit", "split", "spread", "burst", "cast", "rid"}
 _MORE_IRREGULAR = [   # (lemma, past, past participle)
     ("steal", "stole", "stolen"), ("shake", "shook", "shaken"), ("break", "broke", "broken"), ("choose", "chose", "chosen"),
     ("wear", "wore", "worn"), ("ride", "rode", "ridden"), ("rise", "rose", "risen"), ("hide", "hid", "hidden"),
@@ -216,8 +219,12 @@ def inflect_verb(lemma: str, form: str) -> str:
     rev = {(v[0], v[1]): k for k, v in IRREGULAR_VERBS.items()}
     if (lemma, form) in rev:
         return rev[(lemma, form)]
+    if form in ("past", "pp") and lemma in SAME_PAST:
+        return lemma
+    if form == "pp":
+        return inflect_verb(lemma, "past")                 # regular verbs: the participle is the past form
     if lemma == "be":
-        return {"base": "be", "3sg": "is", "past": "was", "ing": "being"}.get(form, "be")
+        return {"base": "be", "3sg": "is", "past": "was", "ing": "being", "pp": "been"}.get(form, "be")
     if form == "base":
         return lemma
     if form == "3sg":

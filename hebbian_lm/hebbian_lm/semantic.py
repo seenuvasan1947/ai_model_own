@@ -29,6 +29,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from .comprehension import Prop, Query, evaluate_arithmetic, number_word
 from .entities import EntityStore, is_instance, lemma_of
 from .lexicon import Lexicon
+from .roles import TIME_UNITS, same_verb
 
 NON_ACTIONS = {"attr", "isa", "count", "antonym", "equals", "can", "have", "@loc"}
 SPATIAL = ("in", "on", "at", "near", "under", "inside", "behind", "beside", "above", "below")
@@ -47,6 +48,8 @@ class Fact:
     source: str = "read"
     obj_num: str = "sg"
     rel: str = ""
+    subj: str = ""                   # whose fact this is (kept so events can be found without knowing the subject)
+    adj: Dict[str, str] = field(default_factory=dict)       # roles: where / when / with / about / duration ...
     stab: float = 0.0                # half-life of the trace in time units: grows each time it is re-read or recalled
     reh: int = 0                     # times it was strengthened again or successfully recalled
     tense: str = "present"
@@ -75,6 +78,7 @@ class SemanticMemory:
         self.defs: Dict[str, str] = {}               # definitions learned or told
         self.subj_num: Dict[str, str] = {}           # remembered grammatical number of a subject
         self.proper: Set[str] = set()
+        self.the_names: Set[str] = set()             # names that go with "the": the Titanic, the British, the Great Fire of London
         self.ents = EntityStore()                    # the instances ("ball#1") that facts can be about
         self.t = 0
         self.rng = random.Random(0)                  # traces differ a little in how durable they are
@@ -102,7 +106,7 @@ class SemanticMemory:
             return True
         if rel == "have":
             return a.obj == b_obj and a.qty != b_qty
-        if rel.startswith("live_") or rel in SPATIAL:
+        if rel.startswith("live_") or rel in SPATIAL or rel.endswith(("_in", "_at", "_on")):
             return True
         return False
 
@@ -121,6 +125,9 @@ class SemanticMemory:
             f.reh += 1
             f.stab = min(self.base_stab * 25, max(f.stab, self.base_stab) * self.stab_growth)
         f.tense = prop.tense
+        f.subj = prop.subj
+        if prop.adj:
+            f.adj.update(prop.adj)
         f.strength += 1.0
         f.count += 1
         f.t = self.t
@@ -133,6 +140,12 @@ class SemanticMemory:
         self.subj_num.setdefault(prop.subj, prop.subj_num)
         if prop.subj_proper:
             self.proper.add(prop.subj)
+        if prop.obj_proper:
+            self.proper.add(prop.obj)
+        if prop.subj_the:
+            self.the_names.add(prop.subj)
+        if prop.obj_the:
+            self.the_names.add(prop.obj)
         inh = self.inhibit_told if told else self.inhibit_read
         for k, g in group.items():
             if k == key:
@@ -292,6 +305,10 @@ class SemanticMemory:
             v = evaluate_arithmetic(q.expr)
             return Answer(text_hint=str(v) if v is not None else "", confidence=1.0 if v is not None else 0.0,
                           via="arithmetic rules")
+        if q.kind == "event":
+            return self._event(q)
+        if q.kind == "happened":
+            return self._happened(q)
         if q.kind == "define":
             return self._define(q.subj)
         if q.kind == "actions":
@@ -324,11 +341,14 @@ class SemanticMemory:
             return self._yesno(q)
         if q.want == "subj":
             subs: Dict[str, float] = {}
+            tenses: Dict[str, str] = {}
             for s in self.reverse.get((q.rel, q.obj), set()):
                 for f in self.slots.get((s, q.rel), {}).values():
                     if lemma_of(f.obj) == q.obj and not f.neg and f.strength > 0.15:
                         subs[s] = max(subs.get(s, 0.0), f.score(now))
-            items = [Fact(obj=s, strength=v, rel=q.rel) for s, v in sorted(subs.items(), key=lambda kv: -kv[1])]
+                        tenses[s] = f.tense
+            items = [Fact(obj=s, strength=v, rel=q.rel, tense=tenses.get(s, "present"))
+                     for s, v in sorted(subs.items(), key=lambda kv: -kv[1])]
             return Answer(items=items[:3], confidence=1.0 if items else 0.0)
         if q.want == "qty":
             fs = [f for f in self._collect(q.subj, [q.rel], "") if lemma_of(f.obj) == q.obj]
@@ -357,6 +377,75 @@ class SemanticMemory:
                 a.confidence *= 0.6 ** depth
                 return a
         return Answer()
+
+    # ------------------------------------------------------------------ events
+    @staticmethod
+    def same_name(a: str, b: str) -> bool:
+        """'mutiny' ~ 'sepoy mutiny', 'buster' ~ 'buster bear', 'soldiers' ~ 'soldier'."""
+        a, b = lemma_of(a), lemma_of(b)
+        if a == b:
+            return True
+        ta, tb = set(a.split()), set(b.split())
+        return bool(ta and tb) and (ta <= tb or tb <= ta)
+
+    _ROLE_KEYS = {"n": ("n",), "where": ("where", "to", "from"), "when": ("when",), "why": ("about", "for", "because"), "with": ("with", "by"),
+                  "about": ("about",), "duration": ("duration",), "by": ("by",), "from": ("from",), "for": ("for",)}
+
+    def _event(self, q: Query) -> Answer:
+        keys = self._ROLE_KEYS.get(q.want, (q.want,))
+        found = []
+        for (s, r), grp in self.slots.items():
+            if q.want == "who_inf":
+                if not same_verb(q.rel, r):
+                    continue
+                for f in grp.values():
+                    if not f.neg and f.strength > 0.15 and f.adj.get("inf", "").split(" ")[0] == q.obj:
+                        found.append((True, f.score(self.t), f))
+                continue
+            if not self.same_name(q.subj, s):
+                continue
+            exact = r.split("_")[0] == q.rel
+            if q.rel == "attr":
+                if r != "attr":
+                    continue
+            elif not same_verb(q.rel, r):
+                continue
+            for f in grp.values():
+                if q.want == "duration" and not f.adj.get("duration") and lemma_of(f.obj) in TIME_UNITS and f.qty:
+                    found.append((exact, f.score(self.t), f))                 # "the flight lasted twelve seconds"
+                    continue
+                if f.neg or f.strength <= 0.15 or not any(f.adj.get(k) for k in keys):
+                    continue
+                if q.rel == "attr" and f.obj not in (q.alts or (q.obj,)):
+                    continue
+                if q.obj and q.rel != "attr" and q.obj.split()[0] not in lemma_of(f.obj).split():
+                    continue
+                found.append((exact, f.score(self.t), f))
+        found.sort(key=lambda x: (-x[0], -x[1]))
+        items = [f for _, _, f in found]
+        return Answer(items=items[:3], confidence=1.0 if items else 0.0)
+
+    def _happened(self, q: Query) -> Answer:
+        """'what happened in 1858 ?' / 'what happened after the mutiny ?': the events whose time matches."""
+        prep, _, rest = q.obj.partition(" ")
+        want = set(rest.split()) - {"the", "a", "an"}
+        items = []
+        for (s, r), grp in self.slots.items():
+            if r in ("attr", "isa", "count", "antonym", "equals", "can", "have"):
+                continue
+            for f in grp.values():
+                w = f.adj.get("when", "")
+                if f.neg or f.strength <= 0.15 or not w:
+                    continue
+                wp, _, wr = w.partition(" ")
+                wt = set(wr.split()) - {"the", "a", "an"}
+                if prep in ("after", "before", "during", "until", "since"):
+                    if wp == prep and any(self.same_name(x, y) for x in want for y in wt):
+                        items.append(f)
+                elif want and want <= wt | set(wr.split()):
+                    items.append(f)
+        items.sort(key=lambda f: f.t)
+        return Answer(items=items[:4], confidence=1.0 if items else 0.0)
 
     def _rank(self, fs: List[Fact], now: int) -> Answer:
         if not fs:
@@ -427,22 +516,24 @@ class SemanticMemory:
         return sum(len(g) for g in self.slots.values())
 
     def to_dict(self) -> dict:
-        return dict(t=self.t, clock=self.clock, entities=self.ents.to_dict(), defs=self.defs, subj_num=self.subj_num, proper=sorted(self.proper),
+        return dict(t=self.t, clock=self.clock, entities=self.ents.to_dict(), defs=self.defs, subj_num=self.subj_num, proper=sorted(self.proper), the_names=sorted(self.the_names),
                     facts=[dict(subj=s, rel=r, **{k: getattr(f, k) for k in
-                                                  ("obj", "qty", "neg", "strength", "count", "t", "told", "source", "obj_num", "stab", "reh", "tense")})
+                                                  ("obj", "qty", "neg", "strength", "count", "t", "told", "source", "obj_num", "stab", "reh", "tense", "adj")})
                            for (s, r), grp in self.slots.items() for f in grp.values()])
 
     def from_dict(self, d: dict) -> None:
         self.t, self.defs, self.subj_num = d["t"], d["defs"], d["subj_num"]
         self.proper = set(d.get("proper", []))
         self.clock = d.get("clock", 0.0)
+        self.the_names = set(d.get("the_names", []))
         self.ents.from_dict(d.get("entities", {}))
         self.slots.clear()
         self.reverse.clear()
         for x in d["facts"]:
             f = Fact(obj=x["obj"], qty=x["qty"], neg=x["neg"], strength=x["strength"], count=x["count"], t=x["t"],
                      told=x["told"], source=x["source"], obj_num=x["obj_num"], rel=x["rel"],
-                     stab=x.get("stab", self.base_stab), reh=x.get("reh", 0), tense=x.get("tense", "present"))
+                     stab=x.get("stab", self.base_stab), reh=x.get("reh", 0), tense=x.get("tense", "present"),
+                     subj=x["subj"], adj=x.get("adj", {}))
             self.slots.setdefault((x["subj"], x["rel"]), {})[(f.obj, f.qty, f.neg)] = f
             self.reverse.setdefault((x["rel"], f.obj), set()).add(x["subj"])
             if is_instance(f.obj):

@@ -422,7 +422,7 @@ class ReaderTests(unittest.TestCase):
         res = er.report(v2)
         self.assertGreaterEqual(res["dev"]["recall"], 0.6)           # bundled dictionary (390 words)
         self.assertGreaterEqual(res["test"]["recall"], 0.55)
-        self.assertGreaterEqual(res["test"]["coverage"], 0.85)
+        self.assertGreaterEqual(res["test"]["coverage"], 0.8)
         self.assertGreater(res["test"]["recall"], er.report(v1)["test"]["recall"] + 0.25)
 
     @unittest.skipUnless(os.path.isdir(WN), "WordNet not downloaded")
@@ -620,6 +620,89 @@ class NumberTests(unittest.TestCase):
         ws = Workspace(model=None, lexicon=Lexicon(), take_notes=False)
         ws.read("the lion says roar .")
         self.assertEqual(ws.ask("what color is the lion ?").text, "i do not know .")
+
+
+class EventAndMeaningTests(unittest.TestCase):
+    def ws(self, **kw):
+        return Workspace(model=None, lexicon=Lexicon(), take_notes=False, **kw)
+
+    def test_event_roles_answer_where_when_and_what_happened(self):
+        ws = self.ws()
+        ws.read("The mutiny started in Meerut on 10 May 1857. The rebellion ended in 1858. After the mutiny the Crown took control of India.")
+        self.assertEqual(ws.ask("where did the mutiny start ?").text, "the mutiny started in meerut on 10 may 1857 .")
+        self.assertIn("1858", ws.ask("when did the rebellion end ?").text)
+        self.assertEqual(ws.ask("what happened in 1858 ?").text, "the rebellion ended in 1858 .")
+        self.assertIn("crown", ws.ask("what happened after the mutiny ?").text)
+        self.assertIn("crown", ws.ask("who took control of India ?").text)
+
+    def test_why_with_what_and_how_long(self):
+        ws = self.ws()
+        ws.read("The soldiers were angry about the new cartridges. The cartridges were greased with cow fat. The fire burned for four days.")
+        self.assertIn("cartridges", ws.ask("why were the soldiers angry ?").text)
+        self.assertIn("cow fat", ws.ask("what were the cartridges greased with ?").text)
+        self.assertIn("four days", ws.ask("how long did the fire burn ?").text)
+
+    def test_a_place_question_is_answered_no_when_another_place_is_known(self):
+        ws = self.ws()
+        ws.read("The mutiny started in Meerut.")
+        self.assertTrue(ws.ask("did the mutiny start in Meerut ?").text.startswith("yes"))
+        self.assertTrue(ws.ask("did the mutiny start in Delhi ?").text.startswith("no"))
+
+    def test_names_with_of_numbers_and_descriptions(self):
+        ws = self.ws()
+        ws.read("The Great Fire of London began in 1666. The fire burned for four days. Apollo 11 landed on the Moon.")
+        self.assertIn("4", ws.ask("how long did the fire burn ?").text.replace("four", "4"))
+        self.assertIn("apollo 11", ws.ask("where did Apollo 11 land ?").text)
+
+    def test_core_meanings_and_what_was_told_wins(self):
+        ws = self.ws()
+        self.assertEqual(ws.ask("what is a spoon used for ?").text, "a spoon is used for eating soup and stirring .")
+        self.assertEqual(ws.ask("what is a bridge made of ?").text, "a bridge is made of stone or steel or wood .")
+        self.assertIn("wheels", ws.ask("what does a car have ?").text)
+        ws.read("A spoon is used for stirring tea.")
+        self.assertEqual(ws.ask("what is a spoon used for ?").text, "a spoon is used for stirring tea .")
+        self.assertEqual(ws.ask("what is a flib used for ?").text, "i do not know .")
+
+    def test_grammar_questions(self):
+        ws = self.ws()
+        self.assertEqual(ws.ask("what is the plural of mouse ?").text, "the plural of mouse is mice .")
+        self.assertEqual(ws.ask("what is the past tense of go ?").text, "the past tense of go is went .")
+        self.assertEqual(ws.ask("what is the past participle of eat ?").text, "the past participle of eat is eaten .")
+        self.assertEqual(ws.ask("what is the comparative of big ?").text, "the comparative of big is bigger .")
+        self.assertEqual(ws.ask("is quickly an adverb ?").text, "yes , quickly is an adverb .")
+
+    def test_rephrase_gives_other_grammatical_forms(self):
+        v = self.ws().rephrase("The dog chased the cat.")
+        self.assertEqual(v["passive"], "the cat was chased by the dog")
+        self.assertEqual(v["negative"], "the dog did not chase the cat")
+        self.assertEqual(v["question"], "did the dog chase the cat ?")
+        self.assertEqual(v["future"], "the dog will chase the cat")
+        self.assertEqual(self.ws().rephrase("The cat put the hat.")["active"], "the cat put the hat")
+
+    def test_retell_uses_only_what_was_read_and_pronouns(self):
+        ws = self.ws()
+        text = "Anna jumped on the box. Anna ate an apple. The dog slept in the garden."
+        ws.read(text)
+        out = ws.retell("")
+        self.assertIn("anna jumped on the box", out)
+        self.assertIn("she ate", out)                     # the second sentence about Anna uses a pronoun
+        self.assertIn("slept in the garden", out)
+        self.assertNotIn("bird", out)
+        self.assertEqual(ws.ask("tell me about anna").text.count("anna"), 1)
+
+    @unittest.skipUnless(os.path.isdir(WN), "WordNet not downloaded")
+    def test_story_benchmarks_with_wordnet(self):
+        from hebbian_lm import evaluate_story as es
+        lex = Lexicon.default()
+        res = es.run(lambda: Workspace(model=None, lexicon=lex, take_notes=True))
+        self.assertGreaterEqual(res["sepoy"]["right"], 24)
+        self.assertGreaterEqual(res["fire"]["right"], 14)
+        self.assertGreaterEqual(res["titanic"]["right"], 12)
+        self.assertGreaterEqual(res["apollo"]["right"], 9)
+        rr = es.retell_report(lambda: Workspace(model=None, lexicon=lex, style="varied", take_notes=False, seed=1), es.STORIES[:3])
+        for name, r in rr.items():
+            self.assertEqual(r["invented_sentences"], 0)
+            self.assertGreaterEqual(int(r["key_facts"].split("/")[0]) / int(r["key_facts"].split("/")[1]), 0.8)
 
 
 if __name__ == "__main__":

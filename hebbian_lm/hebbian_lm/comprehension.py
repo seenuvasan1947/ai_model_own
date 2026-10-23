@@ -26,6 +26,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .entities import EntityStore, is_instance, lemma_of
 from .numbers import WORD_VALUE as NUMWORDS, parse_number
+from .roles import classify, time_phrase
 from .lexicon import (AUX, BE_FORMS, FUNCTION_POS, HAVE_FORMS, NUMBER_WORDS, PL_DET, PRONOUNS, SG_DET, Analysis, Lexicon)
 
 CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]|[\"\u201c\u201d]|[+*/=\u00d7\u00f7]|(?<![A-Za-z])-(?![A-Za-z])")
@@ -50,6 +51,7 @@ class NP:
     of: str = ""                    # "the opposite of X": X
     text: str = ""
     owner: str = ""                 # possessor key: "tom" in "tom's ball" (a name or an entity id)
+    owner_proper: bool = False
     ref: str = ""                   # the entity id this phrase refers to ("ball#2"), once bound
     indef: bool = False             # "a ball": introduces a new instance when the clause is about a particular thing
 
@@ -73,6 +75,11 @@ class Prop:
     subj_num: str = "sg"
     obj_num: str = "sg"
     subj_proper: bool = False
+    adj: Dict[str, str] = field(default_factory=dict)     # roles: where / when / with / about / duration / from ... = "prep phrase"
+
+    obj_proper: bool = False
+    subj_the: bool = False          # the name was introduced with "the" (the Titanic, the British)
+    obj_the: bool = False
 
     def key(self) -> Tuple[str, str, str, str, bool]:
         return (self.subj, self.rel, self.obj, self.qty, self.neg)
@@ -93,6 +100,7 @@ class Query:
     subj_proper: bool = False
     expr: Tuple[int, str, int] = (0, "", 0)
     raw: str = ""
+    alts: Tuple[str, ...] = ()      # other surface forms of the predicate (greased / grease)
 
 
 @dataclass
@@ -108,7 +116,9 @@ class Tok:
 
 # --------------------------------------------------------------------------- tagger
 FUNCTION_NAMES = set(FUNCTION_POS)
-PARTICLES = {"down", "up", "out", "off", "away", "back", "over", "around", "along", "forward", "together", "aside", "about"}
+MONTH_WORDS = {"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+FACTITIVE = {"make", "call", "name", "elect", "choose", "appoint", "crown", "declare", "consider"}
+PARTICLES = {"down", "up", "out", "off", "away", "back", "over", "around", "along", "forward", "together", "aside"}
 INTENSIFIERS = {"very", "so", "too", "quite", "rather", "really", "just", "almost", "most", "more", "much", "not", "always", "never"}
 LINKING = {"feel", "look", "seem", "become", "grow", "get", "turn", "sound", "smell", "taste", "remain", "stay", "appear"}
 TAGS = ["POSS", "DET", "ADJ", "N", "PN", "V", "AUX", "PREP", "PRON", "CONJ", "WH", "NEG", "NUM", "QUANT", "ADV", "PUNCT"]
@@ -120,9 +130,9 @@ _T = {
               "ADV": -1, "PREP": -1, "QUANT": -0.5},
     "DET": {"ADJ": 0, "N": 0, "NUM": -0.4, "ADV": -1.2, "QUANT": -1},
     "ADJ": {"N": 0, "ADJ": -0.3, "CONJ": -0.4, "PUNCT": -0.2, "PREP": -0.5, "ADV": -1, "NUM": -1},
-    "N": {"POSS": -0.1, "V": 0, "AUX": 0, "PREP": 0, "N": -1.0, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7,
+    "N": {"WH": 0, "POSS": -0.1, "V": 0, "AUX": 0, "PREP": 0, "N": -1.0, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7,
           "PRON": -1, "ADJ": -0.8, "NUM": -0.8},
-    "PN": {"POSS": 0, "V": 0, "AUX": 0, "PREP": 0, "N": -0.6, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7, "PN": -0.3},
+    "PN": {"WH": 0, "POSS": 0, "V": 0, "AUX": 0, "PREP": 0, "N": -0.25, "CONJ": 0, "PUNCT": 0, "ADV": -0.4, "NEG": -1, "DET": -0.7, "PN": -0.3},
     "PRON": {"V": 0, "AUX": 0, "ADV": -0.3, "NEG": -1, "PUNCT": -0.3, "PREP": -0.5, "CONJ": -0.3, "DET": -1.0},
     "V": {"DET": 0, "N": -0.3, "PREP": 0, "ADV": -0.2, "PRON": -0.2, "ADJ": -0.6, "NUM": -0.3, "PUNCT": 0,
           "CONJ": -0.3, "NEG": -0.5, "V": -3, "PN": -0.2, "QUANT": -0.5},
@@ -206,6 +216,11 @@ def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
         if t.text.isdigit():
             cands.append([("NUM", Analysis(t.text, t.text, "num", {"value": t.text}, [], True), 0.0)])
             continue
+        if t.text in MONTH_WORDS and (
+                (i > 0 and toks[i - 1].text.isdigit()) or (i + 1 < len(toks) and toks[i + 1].text.isdigit() and len(toks[i + 1].text) == 4)
+                or (i > 0 and toks[i - 1].text in ("in", "of", "since", "until", "during", "early", "late", "mid"))):
+            cands.append([("PN", Analysis(t.text, t.text, "n", {"number": "sg"}, [], True), 0.0)])      # "on 10 May 1857"
+            continue
         analyses = lex.analyze(t.text)
         opts: List[Tuple[str, Analysis, float]] = []
         for rank, a in enumerate(analyses):
@@ -231,8 +246,8 @@ def tag_sentence(toks: List[Tok], lex: Lexicon) -> None:
             if a.pos == "v":
                 opts = [("V", a, 0.9), ("N", Analysis(t.text, t.text, "n", {"number": "sg"}, [], False), 1.0)]
         # a capitalised word in mid-sentence is a name, not a verb or adjective; so is the first word of "Little Joe"
-        starts_name = (i == 0 and t.cap and i + 1 < len(toks) and toks[i + 1].cap and toks[i + 1].text.isalpha()
-                       and t.text not in FUNCTION_NAMES)
+        starts_name = (i == 0 and t.cap and i + 1 < len(toks) and t.text not in FUNCTION_NAMES
+                       and ((toks[i + 1].cap and toks[i + 1].text.isalpha()) or (toks[i + 1].text.isdigit() and len(toks[i + 1].text) <= 3)))
         if (t.cap and i > 0 or starts_name) and not t.text.isdigit() and t.text not in FUNCTION_NAMES:
             first = analyses[0] if analyses else None
             nm = Analysis(t.text, t.text, "n", {"number": "sg"}, first.senses if first and first.pos == "n" else [], True)
@@ -294,14 +309,14 @@ class Discourse:
                 self.subjects.insert(0, np)
                 del self.subjects[4:]
 
-    def resolve(self, pron: str, lex: Lexicon) -> Optional[NP]:
+    def resolve(self, pron: str, lex: Lexicon, exclude: str = "") -> Optional[NP]:
         info = PRONOUNS.get(pron)
         if info is None:
             return None
         num, kind, gender = info
         seen = set()
         for e in self.subjects + self.entities:        # the subject of the last clause is the likeliest antecedent
-            if e.key in seen:
+            if e.key in seen or e.key == exclude:      # an object pronoun is not its own clause's subject ("they used them")
                 continue
             seen.add(e.key)
             ek = e.kind or lex.kind(e.head)
@@ -312,7 +327,9 @@ class Discourse:
                 if e.number == "sg" and e.head in FEMALE:
                     return e
             elif pron == "it":
-                if ek != "person" and not e.proper and e.number == "sg":
+                named_thing = e.proper and lex.kind(e.head.split(" of ")[0].split()[-1]) not in ("person", "animal") and \
+                    (" " in e.head or e.det == "the") and e.head not in lex.proper
+                if (ek != "person" or named_thing) and (not e.proper or named_thing) and e.number == "sg":
                     return e
             elif pron in ("they", "them"):
                 if e.number == "pl":
@@ -326,15 +343,18 @@ class ClauseParser:
     """Reads tagged tokens into NPs, verb groups and complements."""
 
     def __init__(self, lex: Lexicon, discourse: Optional[Discourse] = None, ents: Optional[EntityStore] = None,
-                 creating: bool = True, prefer: Optional[Dict[str, str]] = None) -> None:
+                 creating: bool = True, prefer: Optional[Dict[str, str]] = None,
+                 def_alias: Optional[Dict[str, str]] = None) -> None:
         self.lex = lex
         self.discourse = discourse if discourse is not None else Discourse()
         self.ents = ents                    # None: no instances, every noun is its kind (the older behaviour)
         self.creating = creating            # reading statements may create instances; questions never do
         self.prefer = prefer or {}          # lemma -> entity id chosen by the user after a clarifying question
+        self.def_alias = def_alias if def_alias is not None else {}    # "mutiny" -> "sepoy mutiny" (a definite description of a named thing)
         self.ambiguous: List[Tuple[str, List[str]]] = []     # (lemma, candidate ids) of unresolved "the X"
         self._log: Dict[int, NP] = {}
         self._extra: List[Prop] = []
+        self._tail_ok = False
 
     # ---- noun phrases
     _POSS_DET = {"his": "he", "her": "she", "its": "it", "their": "they"}
@@ -352,13 +372,15 @@ class ClauseParser:
             if inner is not None and not inner.pron:
                 self._bind(np)
                 owner = np.head if np.proper else np.key
-                inner.owner, inner.text = owner, f"{np.text} 's {inner.text}"
+                inner.owner, inner.owner_proper, inner.text = owner, np.proper, f"{np.text} 's {inner.text}"
                 np, k = inner, k2
         elif np.det in self._POSS_DET:
             ante = self.discourse.resolve(self._POSS_DET[np.det], self.lex)
             if ante is not None:
-                np.owner = ante.key
+                np.owner, np.owner_proper = ante.key, ante.proper
             np.det = "the"
+        if np.det == "the" and not np.proper and not np.owner and np.head in self.def_alias and np.number == "sg":
+            np.head, np.proper, np.det = self.def_alias[np.head], True, ""       # "the mutiny" = the Sepoy Mutiny (a description, not the name)
         self._bind(np)
         self._log[id(toks[i])] = np
         return np, k
@@ -375,8 +397,7 @@ class ClauseParser:
             e = self.ents.find(np.head, np.owner)
             if e is None and self.creating:
                 e = self.ents.new(np.head, owner=np.owner, number=np.number, adjs=np.adjs)
-                self._extra.append(Prop(np.owner, "have", e.id, "one", False, "present", "sg", "sg",
-                                        not is_instance(np.owner)))
+                self._extra.append(Prop(np.owner, "have", e.id, "one", False, "present", "sg", "sg", np.owner_proper))
             if e is not None:
                 np.ref = e.id
             return
@@ -422,11 +443,17 @@ class ClauseParser:
             return np, i + 1
         det, qty, adjs = "", "", []
         j = i
+        while j + 1 < n and toks[j].text in ("about", "around", "nearly", "almost", "roughly", "over", "approximately", "more", "less", "only") \
+                and (toks[j + 1].tag == "NUM" or toks[j + 1].text == "than"):
+            j += 2 if toks[j + 1].text == "than" else 1          # "about 700", "more than 1500": an approximation, not a head
         while j < n and toks[j].tag in ("DET", "QUANT", "NUM"):
             if toks[j].tag == "DET":
                 det = toks[j].text
             else:
                 qty = toks[j].text
+                if j + 1 < n and toks[j + 1].text in ("million", "billion", "thousand", "hundred", "dozen", "lakh", "crore"):
+                    qty += " " + toks[j + 1].text
+                    j += 1
             j += 1
         while j < n and toks[j].tag == "ADJ" and j + 1 < n and toks[j + 1].tag in ("ADJ", "N", "PN", "NUM"):
             adjs.append(toks[j].lemma)
@@ -434,6 +461,9 @@ class ClauseParser:
         k = j
         while k < n and toks[k].tag in ("N", "PN"):
             k += 1
+        if self._tail_ok and k > j and toks[k - 1].tag == "N" and k < n and toks[k].tag in ("ADJ", "V") and \
+                self.lex.senses(toks[k].lemma, "n") and (k + 1 >= n or toks[k + 1].tag in ("CONJ", "PUNCT", "PREP")):
+            k += 1                                  # "greased with cow fat": a noun compound after a preposition
         if k == j:
             if j > i and toks[j - 1].tag == "NUM":     # "five" alone is a number, not a phrase
                 return None, i
@@ -446,6 +476,16 @@ class ClauseParser:
             while m > j and toks[m - 1].tag == "PN":
                 m -= 1
             name = " ".join(x.text for x in toks[m:k])
+            if k < n and ((toks[k].text.isdigit() and len(toks[k].text) <= 3 and toks[k - 1].cap) or toks[k].text in ("ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x")
+                          and toks[k].cap):
+                name += " " + toks[k].text                                  # "Apollo 11", "Saturn V"
+                k += 1
+            if k + 1 < n and toks[k].text == "of" and toks[k + 1].tag == "PN":
+                m2 = k + 1
+                while m2 < n and toks[m2].tag == "PN":
+                    m2 += 1
+                name += " of " + " ".join(x.text for x in toks[k + 1:m2])     # "Sea of Tranquility"
+                k = m2
         np = NP(head=name, number=noun_number(head, det, qty), det=det, adjs=adjs, qty=qty, proper=proper,
                 text=" ".join(x.text for x in toks[i:k]))
         s = head.analysis.senses[0] if head.analysis and head.analysis.senses else None
@@ -456,12 +496,12 @@ class ClauseParser:
             k += 2
         return np, k
 
-    def resolve(self, np: Optional[NP]) -> Optional[NP]:
+    def resolve(self, np: Optional[NP], exclude: str = "") -> Optional[NP]:
         if np is None or not np.pron:
             return np
         if np.pron in ("i", "you", "we", "me", "us"):
             return np
-        ante = self.discourse.resolve(np.pron, self.lex)
+        ante = self.discourse.resolve(np.pron, self.lex, exclude)
         if ante is not None:
             return ante.copy()
         return np
@@ -479,7 +519,7 @@ class ClauseParser:
                     for a in np.adjs:
                         if (np.key, "attr", a) not in seen:
                             seen.add((np.key, "attr", a))
-                            props.append(Prop(np.key, "attr", a, subj_num=np.number))
+                            props.append(Prop(np.key, "attr", a, subj_num=np.number, adj={"mod": "1"}))
             return props
         i = 0
         toks2 = [t for t in toks if t.tag != "PUNCT"]
@@ -517,16 +557,31 @@ class ClauseParser:
         subj, i = self.read_np(toks, 0)
         if subj is None:
             return props
+        if i + 1 < n and toks[i].tag == "PREP" and toks[i].text == "of" and not subj.pron and subj.head not in ("opposite", "antonym"):
+            inner, k = self.read_np(toks, i + 1)                     # "The Great Fire of London began ..."
+            if inner is not None:
+                subj = subj.copy(head=f"{subj.head} of {inner.head}", ref="", text=f"{subj.text} of {inner.text}")
+                i = k
+        apposition: Optional[NP] = None
+        if i + 1 < n and toks[i].text == "," and not subj.pron:      # "The baker, Thomas Farriner, had forgotten ..."
+            ap, k = self.read_np(toks, i + 1)
+            if ap is not None and ap.proper and not subj.proper and k < n and toks[k].text == ",":
+                apposition, i = ap, k + 1
         # coordination: "the boy and the girl"
         subjects = [subj]
-        while i + 1 < n and toks[i].text == "and":
+        while i + 1 < n and toks[i].text in ("and", ","):
             s2, j = self.read_np(toks, i + 1)
-            if s2 is None:
+            if s2 is None or (toks[i].text == "," and not (s2.proper and subj.proper)):
                 break
             subjects.append(s2)
             i = j
         subj = self.resolve(subj)
         subjects[0] = subj
+        if apposition is not None:                                   # the clause is about the named person; "the baker" is a description of him
+            self.def_alias[subj.head] = apposition.head
+            self._extra.append(Prop(apposition.head, "isa", subj.head, "", False, "present", "sg", "sg", True))
+            subj, subjects[0] = apposition, apposition
+        subj_qty = subj.qty if subj.qty and (subj.qty.isdigit() or subj.qty in NUMWORDS) else ""
         if len(subjects) > 1:
             subj = subj.copy(number="pl")
         # verb group
@@ -550,9 +605,15 @@ class ClauseParser:
                     if t.text == "did":
                         tense = "past"
                 elif t.text in HAVE_FORMS:
-                    verb_tok = t
-                    if t.text == "had":
-                        tense = "past"
+                    nxt = toks[j + 1] if j + 1 < n else None
+                    if nxt is not None and nxt.tag == "V" and nxt.feats.get("form") in ("past", "pp"):
+                        tense = "past" if t.text == "had" else tense      # "had forgotten": the participle is the verb
+                    elif nxt is not None and nxt.tag == "ADV" and j + 2 < n and toks[j + 2].tag == "V" and toks[j + 2].feats.get("form") in ("past", "pp"):
+                        tense = "past" if t.text == "had" else tense
+                    else:
+                        verb_tok = t
+                        if t.text == "had":
+                            tense = "past"
                 else:
                     modal = t.text
             j += 1
@@ -563,6 +624,10 @@ class ClauseParser:
             j += 1
             if verb_tok.feats.get("form") == "past" or verb_tok.text in ("ran", "ate", "saw"):
                 tense = "past" if not (be and verb_tok.feats.get("form") == "ing") else tense
+        if verb_tok is not None and not be and not modal and verb_tok.tag == "V" and verb_tok.feats.get("form") == "base" and \
+                subj.number == "sg" and not subj.pron and verb_tok.text == verb_tok.lemma and tense == "present" and not neg \
+                and not any(t.text in ("do", "does") for t in toks[i:j]):
+            tense = "past"                                  # "the Titanic hit an iceberg": a bare verb after a singular subject is past
         rest = toks[j:]
         subj_head = subj.key
         for sub in subjects:
@@ -587,22 +652,79 @@ class ClauseParser:
                 out += self._have(subj, rest, neg, tense)
             else:
                 out += self._verb_props(subj, lem, rest, neg, tense)
+        base = [p for p in out if p.subj == subj_head]
         for s in subjects[1:]:
-            out += [Prop(s.key, p.rel, p.obj, p.qty, p.neg, p.tense, s.number, p.obj_num) for p in out[:1]]
+            out += [Prop(s.key, p.rel, p.obj, p.qty, p.neg, p.tense, s.number, p.obj_num, s.proper, adj=dict(p.adj),
+                         obj_proper=p.obj_proper) for p in base]
         proper = {x.key for x in subjects if x.proper}
+        the = {x.key for x in subjects if x.proper and x.det == "the"}
         for p in out:
+            if p.subj in the:
+                p.subj_the = True
             if p.subj in proper:
                 p.subj_proper = True
+            if subj_qty and p.subj == subj.key:
+                p.adj.setdefault("n", subj_qty)                    # "More than 1500 people died": how many did
         return out
 
+    def read_pp_np(self, rest: List[Tok], i: int):
+        self._tail_ok = True
+        try:
+            return self.read_np(rest, i)
+        finally:
+            self._tail_ok = False
+
+    def _roles(self, rest: List[Tok], i: int = 0) -> Dict[str, str]:
+        """The roles of the prepositional phrases in rest[i:]: {'where': 'in meerut', 'when': 'on 10 may 1857', ...}."""
+        adj: Dict[str, str] = {}
+        while i < len(rest):
+            if rest[i].tag == "PREP" and rest[i].text not in ("of", "by"):
+                prep = rest[i].text
+                tp = time_phrase(rest, i + 1, prep)
+                if tp is not None:
+                    adj.setdefault(tp[0], f"{prep} {tp[1]}")
+                    i = tp[2]
+                    continue
+                np, k = self.read_pp_np(rest, i + 1)
+                if np is not None:
+                    role = classify(prep, np, self.lex)
+                    if role:
+                        adj.setdefault(role, f"{prep} {np.text}")
+                    i = k
+                    continue
+            i += 1
+        return adj
+
     def _passive(self, subj: NP, verb: Tok, rest: List[Tok], neg: bool) -> List[Prop]:
-        """"the nut was eaten by the squirrel" -> (squirrel, eat, nut); "the statue was unveiled" -> (statue, attr, unveiled)."""
+        """"the nut was eaten by the squirrel" -> (squirrel, eat, nut); "the statue was unveiled" -> (statue, attr, unveiled);
+        "a spoon is used for eating" -> (spoon, used_for, eating); "a table is made of wood"; "a bear is found in forests"."""
+        if verb.lemma in ("call", "name") and rest:
+            nm, _ = self.read_np(rest, 0)
+            if nm is not None:
+                return [Prop(subj.key, "called", nm.head, "", neg, "past", subj.number, "sg", subj.proper, obj_proper=nm.proper,
+                             obj_the=nm.proper and nm.det == "the")]
+        if verb.lemma == "use" and any(t.text == "for" for t in rest):
+            k = next(i for i, t in enumerate(rest) if t.text == "for")
+            phrase = " ".join(t.text for t in rest[k + 1:] if t.tag != "PUNCT")
+            if phrase:
+                return [Prop(subj.key, "used_for", phrase, "", neg, "present", subj.number, "sg", subj.proper)]
+        if verb.lemma == "make" and any(t.text in ("of", "from") for t in rest):
+            k = next(i for i, t in enumerate(rest) if t.text in ("of", "from"))
+            np2, _ = self.read_np(rest, k + 1)
+            if np2 is not None:
+                return [Prop(subj.key, "made_of", np2.head, "", neg, "present", subj.number, np2.number, subj.proper)]
+        if verb.lemma == "find" and any(t.text in ("in", "on", "at", "near") for t in rest):
+            k = next(i for i, t in enumerate(rest) if t.text in ("in", "on", "at", "near"))
+            np2, _ = self.read_np(rest, k + 1)
+            if np2 is not None:
+                return [Prop(subj.key, "found_in", np2.head, "", neg, "present", subj.number, np2.number, subj.proper)]
         for i, t in enumerate(rest):
             if t.text == "by":
                 agent, _ = self.read_np(rest, i + 1)
                 if agent is not None and not agent.pron:
-                    return [Prop(agent.key, verb.lemma, subj.key, "", neg, "past", agent.number, subj.number, agent.proper)]
-        return [Prop(subj.key, "attr", verb.text, neg=neg, tense="past", subj_num=subj.number)]
+                    return [Prop(agent.key, verb.lemma, subj.key, "", neg, "past", agent.number, subj.number, agent.proper,
+                                 adj=self._roles(rest))]
+        return [Prop(subj.key, "attr", verb.text, neg=neg, tense="past", subj_num=subj.number, adj=self._roles(rest))]
 
     def _copula(self, subj: NP, rest: List[Tok], neg: bool, tense: str) -> List[Prop]:
         sn = subj.number
@@ -624,13 +746,14 @@ class ClauseParser:
         # adjective(s)
         if rest[0].tag == "ADJ" or (rest[0].tag == "ADV" and len(rest) > 1 and rest[1].tag == "ADJ"):
             adj = next(t for t in rest if t.tag == "ADJ")
-            return [Prop(subj.key, "attr", adj.lemma, neg=neg, tense=tense, subj_num=sn)]
+            return [Prop(subj.key, "attr", adj.lemma, neg=neg, tense=tense, subj_num=sn,
+                         adj=self._roles(rest, rest.index(adj) + 1))]
         if rest[0].tag == "PREP":
             np, _ = self.read_np(rest, 1)
             if np is not None:
                 return [Prop(subj.key, rest[0].text, np.head, neg=neg, tense=tense, subj_num=sn)]
             return []
-        np, k = self.read_np(rest, 0)
+        np, k = self.read_pp_np(rest, 0)
         if np is not None:
             self.discourse.mention(np)
             # noun complement: "X is a Y" = isa; "X is (the) Y" with a colour/number is an attribute
@@ -668,10 +791,15 @@ class ClauseParser:
             w = next((t for t in rest if t.tag in ("N", "PN", "ADJ", "ADV", "V")), None)
             if w is not None:
                 return [Prop(subj.key, "say", w.lemma if w.tag != "V" else w.text, neg=neg, tense=tense, subj_num=sn)]
-        if rest and rest[0].tag != "PREP":
+        if rest and (rest[0].tag != "PREP" or (rest[0].text in ("about", "around", "over") and len(rest) > 1 and rest[1].tag == "NUM")):
             obj, i = self.read_np(rest, 0)
-            obj = self.resolve(obj)
+            obj = self.resolve(obj, exclude=subj.key)
             if obj is not None:
+                if i + 1 < len(rest) and rest[i].tag == "PREP" and rest[i].text == "of" and not obj.pron:
+                    inner, k2 = self.read_np(rest, i + 1)            # "control of India", "a cup of tea"
+                    if inner is not None:
+                        obj = obj.copy(head=f"{obj.head} of {inner.head}", ref="", text=f"{obj.text} of {inner.text}")
+                        i = k2
                 self._introduce(obj, subj, owned=False)
                 self.discourse.mention(obj)
                 objs = [obj]
@@ -682,18 +810,44 @@ class ClauseParser:
                     objs.append(o2)
                     i = j
                 for o in objs:
-                    out.append(Prop(subj.key, lemma, o.key, o.qty, neg, tense, sn, o.number, subj.proper))
-        # prepositional adjuncts: "lives in the farm", "walks to the park"
+                    out.append(Prop(subj.key, lemma, o.key, o.qty, neg, tense, sn, o.number, subj.proper, obj_proper=o.proper,
+                                    obj_the=o.proper and o.det == "the"))
+                if lemma in FACTITIVE and len(objs) == 1:                 # "made Bahadur their leader": he is the leader
+                    comp, k3 = self.read_np(rest, i)
+                    if comp is not None and not comp.pron and comp.head and comp.head != objs[0].head:
+                        out.append(Prop(objs[0].key, "isa", comp.head, "", neg, tense, objs[0].number, comp.number, objs[0].proper))
+                        i = k3
+        mains = list(out)
+        # prepositional adjuncts: "lives in the farm", "walks to the park": kept as a legacy relation (verb_prep) and, as roles,
+        # on the main fact: where / when / with / about / duration
+        adj, i = {}, i
+        extra = []
         while i < len(rest):
             if rest[i].tag == "PREP" and rest[i].text != "of":
-                np, k = self.read_np(rest, i + 1)
+                prep = rest[i].text
+                tp = time_phrase(rest, i + 1, prep)
+                if tp is not None:
+                    adj.setdefault(tp[0], f"{prep} {tp[1]}")
+                    i = tp[2]
+                    continue
+                np, k = self.read_pp_np(rest, i + 1)
                 if np is not None:
-                    out.append(Prop(subj.key, f"{lemma}_{rest[i].text}", np.head, "", neg, tense, sn, np.number))
+                    extra.append(Prop(subj.key, f"{lemma}_{prep}", np.head, "", neg, tense, sn, np.number, obj_proper=np.proper,
+                                      obj_the=np.proper and np.det == "the"))
+                    role = classify(prep, np, self.lex)
+                    if role:
+                        adj.setdefault(role, f"{prep} {np.text}")
                     i = k
                     continue
             i += 1
-        if not out:
-            out.append(Prop(subj.key, lemma, "", "", neg, tense, sn))
+        if not mains and extra:
+            mains = [extra[0]]                       # the first prepositional fact carries the roles of the event
+        elif not mains:
+            mains = [Prop(subj.key, lemma, "", "", neg, tense, sn)]
+            out.append(mains[0])
+        for p in mains:
+            p.adj = dict(adj)
+        out += extra
         return out
 
     # ---- questions about numbers
@@ -772,6 +926,70 @@ class ClauseParser:
                     return Query("number", expr=(a, cmp_words[cw] + "yn", b), raw=raw)
         return None
 
+    # ---- questions about events: when / where / why / how long / what happened
+    def _split_subject(self, toks: List[Tok], start: int, pred) -> Tuple[Optional[NP], int]:
+        """The shortest noun phrase starting at ``start`` that is followed by a token satisfying ``pred`` (the verb or predicate)."""
+        for j in range(start + 1, len(toks) + 1):
+            if j < len(toks) and pred(toks[j]):
+                sub, k = self.read_np(toks[:j], start)
+                if sub is not None and k == j:
+                    return self.resolve(sub), j
+        return None, start
+
+    def _event_question(self, toks: List[Tok], raw: str) -> Optional[Query]:
+        n = len(toks)
+        w0 = toks[0].text
+        verbish = lambda t: t.tag in ("V", "ADJ") or bool(self.lex.senses(t.lemma, "v")) and t.tag not in ("DET", "PREP", "PRON", "AUX")
+        if w0 == "what" and n >= 3 and toks[1].text == "happened":
+            rest = toks[2:]
+            if rest and rest[0].tag == "PREP":
+                tp = time_phrase(rest, 1, rest[0].text)
+                if tp is not None:
+                    return Query("happened", obj=f"{rest[0].text} {tp[1]}", want="when", raw=raw)
+                np, k = self.read_np(rest, 1)
+                if np is not None:
+                    return Query("happened", obj=f"{rest[0].text} {np.head}", want="when", raw=raw)
+            return None
+        if w0 == "how" and n > 3 and toks[1].text == "long" and toks[2].text in ("did", "does", "do"):
+            sub, j = self._split_subject(toks, 3, verbish)
+            if sub is not None:
+                rel = toks[j].lemma
+                if rel == "take" and j + 2 < n and toks[j + 1].text == "to":           # how long did the ship take to sink ?
+                    rel = toks[j + 2].lemma
+                return Query("event", subj=sub.key, rel=rel, want="duration", raw=raw)
+            return None
+        if w0 == "how" and n >= 4 and toks[1].text == "many":
+            sub, j = self._split_subject(toks, 2, lambda t: t.tag == "V" and t.feats.get("form") in ("past", "pp", "3sg", "base"))
+            if sub is not None and j == n - 1:                                       # how many people died ?
+                return Query("event", subj=sub.key, rel=toks[j].lemma, want="n", raw=raw)
+        if w0 == "who" and n >= 5 and toks[2].text == "to" and toks[1].tag == "V" and toks[3].tag in ("V", "AUX"):
+            return Query("event", subj="", rel=toks[1].lemma, obj=toks[3].lemma, want="who_inf", raw=raw)        # who refused to use X
+        if w0 in ("when", "where", "why", "how") and n >= 4 and toks[1].text in ("did", "do", "does"):
+            sub, j = self._split_subject(toks, 2, lambda t: bool(self.lex.senses(t.lemma, "v")) and t.tag not in ("DET", "PREP", "PRON"))
+            if sub is None:
+                return None
+            obj = ""
+            if j + 1 < n:
+                o, _ = self.read_np(toks, j + 1)
+                if o is not None:
+                    obj = o.head
+            role = {"how": "with"}.get(w0, w0)
+            return Query("event", subj=sub.key, rel=toks[j].lemma, obj=obj, want=role, raw=raw)
+        if w0 in ("when", "where", "why", "how") and n >= 4 and toks[1].text in BE_FORMS:
+            sub, j = self._split_subject(toks, 2, lambda t: t.tag in ("ADJ", "V") or bool(self.lex.senses(t.lemma, "a")))
+            if sub is None or j >= n:
+                return None
+            p = toks[j]
+            return Query("event", subj=sub.key, rel="attr", obj=p.lemma, alts=(p.text, p.lemma), want={"how": "with"}.get(w0, w0), raw=raw)
+        if w0 == "what" and n >= 5 and toks[1].text in BE_FORMS and toks[-1].tag == "PREP":
+            sub, j = self._split_subject(toks[:-1], 2, lambda t: t.tag in ("ADJ", "V") or bool(self.lex.senses(t.lemma, "a")))
+            if sub is not None and j == n - 2:
+                p = toks[j]
+                role = classify(toks[-1].text, NP(head=""), self.lex)
+                if role:
+                    return Query("event", subj=sub.key, rel="attr", obj=p.lemma, alts=(p.text, p.lemma), want=role, raw=raw)
+        return None
+
     # ---- questions
     def parse_question(self, toks: List[Tok]) -> Optional[Query]:
         toks = [t for t in toks if t.tag != "PUNCT"]
@@ -783,6 +1001,9 @@ class ClauseParser:
         nq = self._number_question([t.text for t in toks], raw)
         if nq is not None:
             return nq
+        eq = self._event_question(toks, raw)
+        if eq is not None:
+            return eq
         if w0 == "how" and n > 2 and toks[1].text == "many":
             np, k = self.read_np(toks, 2)
             if np is None:
@@ -806,6 +1027,10 @@ class ClauseParser:
                 return Query("fact", subj=sub.key, rel="attr", want="obj", answer_type="color", num=sub.number,
                              subj_proper=sub.proper, raw=raw)
             return None
+        if w0 == "what" and n >= 4 and toks[1].text in BE_FORMS and toks[-1].lemma in ("call", "name"):
+            sub, k = self.read_np(toks[:-1], 2)                       # what was the rocket called ?
+            if sub is not None:
+                return Query("fact", subj=self.resolve(sub).key, rel="called", want="obj", num=sub.number, subj_proper=sub.proper, raw=raw)
         if w0 == "what" and n >= 3 and toks[1].text in BE_FORMS:
             np, k = self.read_np(toks, 2)
             if np is not None and np.of:
@@ -830,6 +1055,16 @@ class ClauseParser:
             at = "sound" if v.lemma == "say" else ""
             return Query("fact", subj=sub.key, rel=v.lemma, want="obj", answer_type=at, num=sub.number,
                          subj_proper=sub.proper, raw=raw)
+        if w0 == "who" and n >= 4 and toks[1].text in ("did", "does", "do"):
+            sub, j = self._split_subject(toks, 2, lambda t: bool(self.lex.senses(t.lemma, "v")) and t.tag not in ("DET", "PREP", "PRON"))
+            if sub is not None:
+                return Query("fact", subj=sub.key, rel=toks[j].lemma, want="obj", answer_type="", num=sub.number,
+                             subj_proper=sub.proper, raw=raw)
+        if w0 == "who" and n >= 5 and toks[1].tag == "V" and toks[2].tag == "PREP" and toks[2].text != "to":
+            np, _ = self.read_np(toks, 3)                                                  # who wrote about the fire ?
+            if np is not None:
+                return Query("fact", rel=f"{toks[1].lemma}_{toks[2].text}", obj=np.head, want="subj", answer_type="person_or_animal",
+                             obj_num=np.number, raw=raw)
         if w0 == "who" and n >= 3:
             v = toks[1]
             if v.text in BE_FORMS:
@@ -837,7 +1072,11 @@ class ClauseParser:
                 if np is not None:
                     return Query("define", subj=np.head, raw=raw)
                 return None
-            np, _ = self.read_np(toks, 2)
+            np, k = self.read_np(toks, 2)
+            if np is not None and k + 1 < n and toks[k].text == "of":                    # "who took control of India ?"
+                inner, _ = self.read_np(toks, k + 1)
+                if inner is not None:
+                    np = np.copy(head=f"{np.head} of {inner.head}")
             if np is not None:
                 return Query("fact", rel="have" if v.text in HAVE_FORMS else v.lemma, obj=np.head, want="subj",
                              answer_type="person_or_animal",

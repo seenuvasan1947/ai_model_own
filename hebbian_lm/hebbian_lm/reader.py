@@ -22,8 +22,13 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 from .comprehension import ClauseParser, Discourse, NP, Prop, Tok, _TO_PREP_VERBS
+from .roles import time_phrase
 from .entities import EntityStore
 
+NEEDS_OBJECT = {"build", "make", "take", "write", "design", "destroy", "rescue", "hit", "carry", "collect", "launch", "attack", "find", "use",
+                "give", "buy", "bring", "catch", "eat", "drink", "read", "draw", "paint", "cut", "break", "fix", "open", "close", "throw", "kick",
+                "push", "pull", "lift", "save", "kill", "win", "lose", "cook", "bake", "wear", "pay", "send", "hold", "keep", "tell", "show", "teach",
+                "order", "command", "serve", "lead", "rule", "cover", "test", "invent", "capture", "defeat", "fire", "paint", "plant", "grow"}
 LEAD_WORDS = {"but", "and", "so", "then", "now", "yes", "no", "well", "oh", "why", "still", "yet", "also", "indeed",
               "however", "perhaps", "maybe", "only", "just", "next", "suddenly", "again", "even", "too", "anyway", "sir",
               "alas", "ah", "hello", "hurrah", "ugh", "hm", "please", "surely", "certainly", "presently", "soon",
@@ -90,9 +95,10 @@ def _strip(toks: List[Tok]) -> List[Tok]:
 
 class Reader:
     def __init__(self, lex, discourse: Discourse, ents: Optional[EntityStore] = None,
-                 aliases: Optional[Dict[str, str]] = None) -> None:
+                 aliases: Optional[Dict[str, str]] = None, def_alias: Optional[Dict[str, str]] = None) -> None:
         self.lex = lex
-        self.parser = ClauseParser(lex, discourse, ents)
+        self.def_alias = def_alias if def_alias is not None else {}
+        self.parser = ClauseParser(lex, discourse, ents, def_alias=self.def_alias)
         self.aliases = aliases if aliases is not None else {}
         self.last_subj: Optional[List[Tok]] = None
         self.clauses_seen = 0
@@ -103,16 +109,36 @@ class Reader:
         if not narration:
             return []
         props: List[Prop] = []
+        main: Optional[Prop] = None
         said = self._said_clause(narration)
         if said is not None:
             props, narration = said
             if not narration:
                 return self._finish(props)
+        lead, narration = self._leading_adjunct(narration)
         narration = self._drop_openers(narration)
         for c in self.clauses(narration):
             if c.skip or not c.toks:
                 continue
-            props += self._parse_clause(c)
+            got = self._parse_clause(c)
+            if c.kind == "inf" and got and main is not None:
+                p0 = got[0]
+                verb = p0.rel.split("_")[0]
+                from .entities import lemma_of
+                o = lemma_of(p0.obj)
+                obj = o and (o if p0.obj_proper or o in self.lex.proper else "the " + o)
+                main.adj.setdefault("inf", f"{verb} {obj}".strip())        # "refused to use the cartridges"
+            elif got and c.kind != "rel":
+                main = got[0]
+            if lead and got and not props:
+                for role, text in lead.items():
+                    got[0].adj.setdefault(role, text)              # "After the mutiny the Crown took control ..."
+            props += got
+        # "They built and flew the first airplane": the first verb shares the object of the coordinated one
+        for a, b in zip(props, props[1:]):
+            if (a.subj == b.subj and not a.obj and not a.adj and b.obj and a.rel == a.rel.split("_")[0] and b.rel == b.rel.split("_")[0]
+                    and a.rel != b.rel and a.rel in NEEDS_OBJECT):
+                a.obj, a.obj_num, a.obj_proper = b.obj, b.obj_num, b.obj_proper
         return self._finish(props)
 
     def _narration(self, toks: List[Tok]) -> List[Tok]:
@@ -140,6 +166,25 @@ class Reader:
                 return [prop], rest
         return None
 
+    def _leading_adjunct(self, toks: List[Tok]):
+        """'After the mutiny the British Crown took control': the opening time phrase belongs to the main fact."""
+        if toks and toks[0].tag == "PREP" and toks[0].text in ("after", "before", "during", "until", "since", "in", "on", "at", "by"):
+            prep = toks[0].text
+            tp = time_phrase(toks, 1, prep)
+            if tp is not None:
+                k = tp[2]
+                if k < len(toks) and toks[k].text == ",":
+                    k += 1
+                if _pred(toks[k:]):
+                    return {tp[0]: f"{prep} {tp[1]}"}, toks[k:]
+            else:
+                np, k = self.parser.read_np(toks, 1)
+                if np is not None and prep in ("after", "before", "during", "until", "since"):
+                    j = k + 1 if k < len(toks) and toks[k].text == "," else k
+                    if j < len(toks) and _pred(toks[j:]):
+                        return {"when": f"{prep} {np.text}"}, toks[j:]
+        return {}, toks
+
     def _drop_openers(self, toks: List[Tok]) -> List[Tok]:
         toks = list(toks)
         changed = True
@@ -164,7 +209,8 @@ class Reader:
                 return toks[i + 1:]
         # "That morning, he ..." : a short opener with no verb, then a comma
         for i, t in enumerate(toks[:6]):
-            if t.text == "," and i and not _pred(toks[:i]) and _pred(toks[i + 1:]):
+            if t.text == "," and i and not _pred(toks[:i]) and _pred(toks[i + 1:]) and toks[0].tag in ("ADV", "PREP", "CONJ", "ADJ", "N", "NUM") \
+                    and not (toks[0].tag in ("N", "DET", "PN") and not self.lex.senses(toks[0].lemma, "r")):
                 return toks[i + 1:]
         return toks
 
@@ -284,12 +330,21 @@ class Reader:
         """"Buster Bear" and later "Buster" are the same: register every word of a longer name and map short forms to it."""
         for p in props:
             if p.subj_proper and " " in p.subj:
-                words = p.subj.split()
+                last = p.subj.split(" of ")[0].split()[-1]               # "great fire of london" -> fire
+                if self.lex.senses(last, "n"):                       # "the mutiny" later means the Sepoy Mutiny
+                    if self.def_alias.setdefault(last, p.subj) != p.subj:
+                        self.def_alias[last] = ""                    # two names end in the same noun: ambiguous, do not guess
+                words = p.subj.split(" of ")[0].split()
                 for n in range(1, len(words)):                       # "little joe" and "joe" for "little joe otter"
                     for a in range(0, len(words) - n + 1):
                         span = " ".join(words[a:a + n])
                         if n > 1 or (a == 0 and not self.lex.senses(span, "a")) or not self.lex.senses(span):
                             self.aliases.setdefault(span, p.subj)
+        for p in props:
+            if p.rel == "called" and p.obj_proper:                    # "The airplane was called the Wright Flyer": one thing, two names
+                self.def_alias[p.subj] = p.obj
+                from .comprehension import NP
+                self.parser.discourse.mention(NP(head=p.obj, proper=True, det="the" if p.obj_the else "", number=p.subj_num), subject=True)
         out = []
         for p in props:
             subj, obj = p.subj, p.obj
@@ -297,5 +352,6 @@ class Reader:
                 subj = self.aliases[subj]
             if obj in self.aliases and not self.lex.senses(obj, "n") and obj not in self.lex.proper:
                 obj = self.aliases[obj]
-            out.append(Prop(subj, p.rel, obj, p.qty, p.neg, p.tense, p.subj_num, p.obj_num, p.subj_proper))
+            out.append(Prop(subj, p.rel, obj, p.qty, p.neg, p.tense, p.subj_num, p.obj_num, p.subj_proper, adj=p.adj,
+                            obj_proper=p.obj_proper, subj_the=p.subj_the, obj_the=p.obj_the))
         return out
