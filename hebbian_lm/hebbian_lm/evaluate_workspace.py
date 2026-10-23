@@ -24,6 +24,7 @@ import numpy as np
 from .curriculum import Language
 from .lexicon import Lexicon
 from .model import HebbianLM
+from .numbers import to_words
 from .workspace import Workspace
 
 OOV_ANIMALS = ["zebra", "sparrow", "kitten", "puppy", "wolf", "tiger", "giraffe", "goat", "fox", "snake", "turtle",
@@ -310,3 +311,90 @@ def benchmark_selective_notes(trials: int = 30, seed: int = 0) -> dict:
         new_facts_noted=round(new_in_notes / new_total, 3), notes_that_are_new_facts=round(noted_new / max(1, kept), 3),
         attended_topic_noted=round(attn / trials, 3), chance=0.4, flagged_noted=round(flag / trials, 3),
         recovered_after_forgetting=round(rec / rec_n, 3))
+
+
+def benchmark_numbers(seed: int = 0) -> dict:
+    """J. Learned number sense (numbers.py). The answer key is exact Python arithmetic; the system never uses it.
+
+    * ``counting``: counting taught from 0 to N (once or three times). Next/previous number for the numbers it was shown
+      ("seen") and for numbers it never counted ("unseen", up to 2000).
+    * ``operations``: after school (count to 100 three times, practise the small tables): 200 random problems per operation,
+      asked through the question path.
+    * ``practice``: 100 addition facts are *taught* as statements k times ("seven plus eight is fifteen ."); share then
+      answered from memory (recalled) instead of counted.
+    * ``wrong_claims``: a wrong fact taught 10 times; does it change the answer?
+    * ``limits``: counted only to 9 (never saw 9 -> 10): what does it do with 8 + 9, and does it say so?"""
+    from .numbers import CannotCount, NumberSense
+    rng = random.Random(seed)
+    out = {}
+    rows = []
+    for N in (9, 19, 39, 100):
+        for reps in (1, 3):
+            ns = NumberSense()
+            ns.teach_counting(N, reps)
+
+            def acc(rng_, f, key):
+                ok = tot = 0
+                for n in rng_:
+                    tot += 1
+                    try:
+                        ok += f(n) == key(n)
+                    except CannotCount:
+                        pass
+                return round(ok / max(1, tot), 3)
+            rows.append(dict(taught_to=N, times=reps,
+                             next_seen=acc(range(0, N), ns.succ, lambda n: n + 1),
+                             next_unseen=acc(range(N, 2000), ns.succ, lambda n: n + 1),
+                             previous_unseen=acc(range(N + 2, 2000), ns.pred, lambda n: n - 1)))
+    out["counting"] = rows
+    ws = Workspace(model=None, lexicon=Lexicon(), take_notes=False)
+    ws.school(100, 3)
+    probs = {
+        "plus": [(a, b) for a, b in ((rng.randint(0, 99), rng.randint(0, 99)) for _ in range(200))],
+        "minus": [(max(a, b), min(a, b)) for a, b in ((rng.randint(0, 99), rng.randint(0, 99)) for _ in range(200))],
+        "times": [(rng.randint(0, 12), rng.randint(0, 12)) for _ in range(200)],
+        "divided by": [(b * rng.randint(0, 12) + rng.randint(0, b - 1), b) for b in (rng.randint(1, 12) for _ in range(200))],
+    }
+    ops = {}
+    for word, ps in probs.items():
+        ok = 0
+        for a, b in ps:
+            ans = ws.ask(f"what is {a} {word} {b} ?").text
+            if word == "divided by":
+                q, r = divmod(a, b)
+                want = f"{to_words(q)}" + (f" remainder {to_words(r)}" if r else "")
+                ok += ans.endswith(f"is {want} .")
+            else:
+                key = {"plus": a + b, "minus": a - b, "times": a * b}[word]
+                ok += ans.endswith(f"is {to_words(key)} .")
+        ops[word] = round(ok / len(ps), 3)
+    out["operations_after_school"] = ops
+    # steps counted: first time vs after practice
+    ns = ws.numbers
+    pairs = [(rng.randint(10, 99), rng.randint(10, 99)) for _ in range(50)]
+    steps = []
+    for rep in range(4):
+        steps.append(round(sum(ns.compute("+", a, b).steps for a, b in pairs) / len(pairs), 1))
+    out["mean_counting_steps_per_sum_when_asked_1st_2nd_3rd_4th_time"] = steps
+    # practice curve
+    curve = {}
+    facts = [(a, b) for a in range(0, 10) for b in range(0, 10)]
+    for k in (0, 1, 2, 3, 5):
+        w = Workspace(model=None, lexicon=Lexicon(), take_notes=False)
+        w.numbers.teach_counting(100, 3)
+        for _ in range(k):
+            for a, b in facts:
+                w.read(f"{a} plus {b} is {a + b} .")
+        rec = sum(w.numbers.compute("+", a, b).method == "recalled" for a, b in facts)
+        curve[k] = round(rec / len(facts), 3)
+    out["share_recalled_from_memory_after_taught_k_times"] = curve
+    w = Workspace(model=None, lexicon=Lexicon(), take_notes=False)
+    w.school(100, 3)
+    for _ in range(10):
+        w.read("two plus two is five .")
+    out["wrong_claim_taught_10_times_changes_answer"] = w.ask("what is two plus two ?").text != "two plus two is four ."
+    w2 = Workspace(model=None, lexicon=Lexicon(), take_notes=False)
+    w2.numbers.teach_counting(9, 3)
+    out["limits_counted_only_to_9"] = dict(
+        three_plus_four=w2.ask("what is 3 plus 4 ?").text, eight_plus_nine=w2.ask("what is 8 plus 9 ?").text)
+    return out

@@ -40,7 +40,7 @@ AUX = {"do", "does", "did", "can", "could", "will", "would", "should", "may", "m
 HAVE_FORMS = {"has": "sg", "have": "pl", "had": ""}
 PREPOSITIONS = {"in", "on", "at", "under", "near", "to", "from", "of", "with", "by", "over", "into", "behind",
                 "above", "below", "inside", "outside", "beside", "between", "through", "across", "toward"}
-CONJ = {"and", "or", "but", "because", "if", "then", "while", "so", "plus", "minus", "times", "divided"}
+CONJ = {"and", "or", "but", "because", "if", "then", "while", "so", "plus", "minus", "times", "divided", "than"}
 WH = {"what", "who", "whom", "where", "when", "why", "how", "which", "whose"}
 NEG = {"not", "never", "n't"}
 QUANT = {"many", "much", "few", "several", "all", "most", "some"}

@@ -25,9 +25,12 @@ from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Tuple
 
 from .entities import EntityStore, is_instance, lemma_of
+from .numbers import WORD_VALUE as NUMWORDS, parse_number
 from .lexicon import (AUX, BE_FORMS, FUNCTION_POS, HAVE_FORMS, NUMBER_WORDS, PL_DET, PRONOUNS, SG_DET, Analysis, Lexicon)
 
-CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]|[\"\u201c\u201d]")
+CASED_TOKEN = re.compile(r"[A-Za-z]+(?:'[a-z]+)?|[0-9]+|[.,?!:;]|[\"\u201c\u201d]|[+*/=\u00d7\u00f7]|(?<![A-Za-z])-(?![A-Za-z])")
+_SYMBOL = {"+": ["plus"], "-": ["minus"], "*": ["times"], "\u00d7": ["times"], "/": ["divided", "by"], "\u00f7": ["divided", "by"],
+           "=": ["equals"]}
 END = {".", "?", "!"}
 MALE = {"boy", "man", "king", "father", "brother", "he", "tom", "ben", "sam", "max", "jack"}
 FEMALE = {"girl", "woman", "queen", "mother", "sister", "she", "anna", "lily", "mia", "emma", "zoe"}
@@ -165,7 +168,9 @@ def tokenize_cased(text: str) -> List[Tok]:
     for k, w in enumerate(raw):
         low = w.lower()
         cap = w[:1].isupper()
-        if low in _NT:
+        if low in _SYMBOL:
+            out += [Tok(x, False) for x in _SYMBOL[low]]
+        elif low in _NT:
             out += [Tok(x, cap and i == 0) for i, x in enumerate(_NT[low])]
         elif low.endswith("n't") and len(low) > 3:
             out += [Tok(low[:-3], cap), Tok("not", False)]
@@ -691,6 +696,82 @@ class ClauseParser:
             out.append(Prop(subj.key, lemma, "", "", neg, tense, sn))
         return out
 
+    # ---- questions about numbers
+    def _number_question(self, w: List[str], raw: str) -> Optional[Query]:
+        """what is 27 plus 15 | what comes after 39 | what comes before forty | count from 3 to 8 | which is bigger , 7 or 12"""
+        isnum = lambda x: x.isdigit() or x in NUMWORDS or x in ("hundred", "thousand", "and")
+        def numeral(words: List[str]) -> Optional[int]:
+            while words and words[0] == "and":
+                words = words[1:]
+            while words and words[-1] == "and":
+                words = words[:-1]
+            return parse_number(words) if words else None
+        ops = {"plus": "+", "add": "+", "minus": "-", "subtract": "-", "times": "*", "multiplied": "*", "divided": "/"}
+        for i, x in enumerate(w):
+            if x in ops and 0 < i < len(w) - 1:
+                left, j = [], i - 1
+                while j >= 0 and isnum(w[j]):
+                    left.insert(0, w[j]); j -= 1
+                right, k = [], i + 1
+                if k < len(w) and w[k] in ("by", "from", "to"):
+                    k += 1
+                while k < len(w) and isnum(w[k]):
+                    right.append(w[k]); k += 1
+                a, b = numeral(left), numeral(right)
+                if a is not None and b is not None:
+                    if x == "subtract":                    # "subtract 3 from 10"
+                        a, b = b, a
+                    return Query("arithmetic", expr=(a, ops[x], b), raw=raw)
+        def after(word: str) -> Optional[int]:
+            if word in w:
+                k = w.index(word) + 1
+                tail = []
+                while k < len(w) and isnum(w[k]):
+                    tail.append(w[k]); k += 1
+                return numeral(tail)
+            return None
+        for word, op in (("after", "succ"), ("before", "pred")):
+            if word in w and ("comes" in w or "come" in w or "number" in w or "is" in w or "next" in w):
+                n = after(word)
+                if n is not None:
+                    return Query("number", expr=(n, op, 0), raw=raw)
+        if "next" in w and "number" in w:
+            n = after("after") if "after" in w else None
+            if n is not None:
+                return Query("number", expr=(n, "succ", 0), raw=raw)
+        if w and w[0] == "count":
+            if "to" in w and "from" in w:
+                a, b = after("from"), after("to")
+            else:
+                a, b = 0, after("to")
+            if a is not None and b is not None:
+                return Query("number", expr=(a, "count", b), raw=raw)
+        cmp_words = {"bigger": "gt", "larger": "gt", "greater": "gt", "more": "gt", "smaller": "lt", "less": "lt", "fewer": "lt", "biggest": "gt", "largest": "gt", "smallest": "lt"}
+        cw = next((x for x in w if x in cmp_words), None)
+        if cw is not None:
+            if "or" in w:
+                i = w.index("or")
+                left, j = [], i - 1
+                while j >= 0 and isnum(w[j]):
+                    left.insert(0, w[j]); j -= 1
+                right, k = [], i + 1
+                while k < len(w) and isnum(w[k]):
+                    right.append(w[k]); k += 1
+                a, b = numeral(left), numeral(right)
+                if a is not None and b is not None and w[0] in ("which", "what"):
+                    return Query("number", expr=(a, cmp_words[cw] + "?", b), raw=raw)
+            if "than" in w and w[0] in ("is", "are"):
+                i = w.index("than")
+                left = [x for x in w[1:w.index(cw)] if isnum(x)]
+                right = []
+                k = i + 1
+                while k < len(w) and isnum(w[k]):
+                    right.append(w[k]); k += 1
+                a, b = numeral(left), numeral(right)
+                if a is not None and b is not None:
+                    return Query("number", expr=(a, cmp_words[cw] + "yn", b), raw=raw)
+        return None
+
     # ---- questions
     def parse_question(self, toks: List[Tok]) -> Optional[Query]:
         toks = [t for t in toks if t.tag != "PUNCT"]
@@ -699,13 +780,9 @@ class ClauseParser:
             return None
         raw = " ".join(t.text for t in toks)
         w0 = toks[0].text
-        # arithmetic
-        nums = [t for t in toks if t.text in NUMBER_WORDS or t.text.isdigit()]
-        ops = {"plus": "+", "minus": "-", "times": "*"}
-        op = next((ops[t.text] for t in toks if t.text in ops), "")
-        if op and len(nums) >= 2:
-            val = lambda t: NUMBER_WORDS[t.text] if t.text in NUMBER_WORDS else int(t.text)
-            return Query("arithmetic", expr=(val(nums[0]), op, val(nums[1])), raw=raw)
+        nq = self._number_question([t.text for t in toks], raw)
+        if nq is not None:
+            return nq
         if w0 == "how" and n > 2 and toks[1].text == "many":
             np, k = self.read_np(toks, 2)
             if np is None:

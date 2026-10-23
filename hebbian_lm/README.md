@@ -1,5 +1,7 @@
 # Hebbian Semantic Workspace
 
+> **Branch `hebbian-v3` (in progress): [V3.md](V3.md)** — learned counting and arithmetic, and the wrong-relation fix.
+>
 > **Release 1.0.0 — [RELEASE.md](RELEASE.md)** (trained model in `release/v1.0/`, run `python chat.py --workspace release/v1.0/workspace`).
 >
 > **This is v2 (branch `hebbian-v2`).** What changed from the working v1 and the new numbers are in **[V2.md](V2.md)**; v1 is unchanged on branch `hebbian-approach`.
@@ -42,7 +44,7 @@ It combines four parts, each doing the job it is good at:
 pip install -r requirements.txt     # numpy
 python train.py                     # ~20 s; trains and prints a full report
 python chat.py                      # talk to it
-python -m unittest discover -s tests   # 82 tests
+python -m unittest discover -s tests   # 90 tests
 ```
 
 ## A real session (offline dictionary)
@@ -161,6 +163,6 @@ What each mechanism of the language layer contributes (switched off one at a tim
 | `train.py`, `chat.py`, `real_text.py`, `fetch_wordnet.py` | train + report, chat, real-English check, optional WordNet download |
 | `hebbian_lm/entities.py` | the instance registry (`ball#1`, owner, qualifiers) |
 | `hebbian_lm/reader.py`, `notes.py`, `evaluate_real.py` | v2: clause reader for real text, note keeper, real-text evaluation |
-| `tests/` | 82 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
+| `tests/` | 90 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
 
 No GitHub Actions or separate build branch was needed: training takes about 20 s and the tests about 25 s on a plain CPU.

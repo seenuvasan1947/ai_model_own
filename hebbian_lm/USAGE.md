@@ -98,6 +98,19 @@ Turn it off with `Workspace(..., instances=False)` (then one noun is one entity,
 
 Not understood (it says so): relative clauses, passives, "if/because", questions about time, metaphor.
 
+## 3a. Numbers (v3)
+
+`python train.py` sends the number sense to school (counts to 100 three times and practises the tables). Or teach it yourself in the chat:
+
+```
+you> zero one two three four five six seven eight nine ten .       # a counting run
+you> ten comes after nine .                                         # one step
+you> seven plus eight is fifteen .                                  # a fact: checked by counting, then practised
+you> what comes after thirty nine ?    what is 27 + 15 ?    what is 20 divided by 3 ?    count from 3 to 8 ?
+you> which is bigger , 7 or 12 ?       is 12 more than 7 ?
+```
+Each answer shows in `[ ]` whether it was `counted` (with the number of steps) or `recalled`. Details and limits: [V3.md](V3.md).
+
 ## 3b. Notes, forgetting, real text (v2)
 
 * It keeps **notes, not a transcript**: only the points worth keeping are written down (new facts, names, numbers, definitions,
@@ -165,7 +178,7 @@ python train.py --report report.json   # write all numbers as JSON
 ## 6. Check it works
 
 ```bash
-python -m unittest discover -s tests   # 82 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
+python -m unittest discover -s tests   # 90 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
 python real_text.py                    # the same language layer on real children's books (downloads ~4 MB once)
 python real_text.py --dictionary wordnet
 ```

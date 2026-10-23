@@ -88,6 +88,8 @@ def main() -> None:
     if lexicon is not None:
         ws = Workspace(model=m, lexicon=lexicon)
         n = ws.preload([f.statement for f in lang.facts_train if f.rel != "sum"], told=False)
+        sch = ws.school(100, 3)
+        print(f"number sense: counted to {sch['counted_to']} three times and practised the tables ({sch['traces']} remembered sums)")
         ws.save(args.workspace)
         print(f"workspace saved to {args.workspace}/ ({n} facts preloaded into semantic memory)")
     if args.no_eval:
@@ -158,6 +160,14 @@ def main() -> None:
         for r in g:
             print(f"     {r['time']:>6} {r['plain']:>8} {r['rehearsed']:>10} {r['notes']:>11} {r['false_answers']:>6}")
         report["workspace_forgetting"] = g
+        j_res = ew.benchmark_numbers()
+        print("  J. learned number sense (answer key = exact arithmetic, used only for scoring):")
+        for r in j_res["counting"]:
+            print(f"     counting taught to {r['taught_to']:>3} x{r['times']}: next of shown numbers {r['next_seen']}   next of unseen (to 2000) {r['next_unseen']}   previous of unseen {r['previous_unseen']}")
+        for k in ("operations_after_school", "mean_counting_steps_per_sum_when_asked_1st_2nd_3rd_4th_time",
+                  "share_recalled_from_memory_after_taught_k_times", "wrong_claim_taught_10_times_changes_answer", "limits_counted_only_to_9"):
+            print(f"     {k}: {j_res[k]}")
+        report["workspace_numbers"] = j_res
         i_res = ew.benchmark_selective_notes()
         print("  I. selective notes (50-sentence paragraphs: 10 new facts + 40 restatements; synthetic):")
         for k, v in i_res.items():

@@ -547,5 +547,80 @@ class MemoryAndNotesTests(unittest.TestCase):
         self.assertTrue(any(w in outs[0] for w in ("think", "believe", "remember", "not sure")), outs)
 
 
+class NumberTests(unittest.TestCase):
+    def ws(self):
+        return Workspace(model=None, lexicon=Lexicon(), take_notes=False)
+
+    def test_untrained_falls_back_to_the_rule_and_says_so(self):
+        r = self.ws().ask("what is seven plus eight ?")
+        self.assertEqual(r.text, "seven plus eight is fifteen .")
+        self.assertIn("not learned to count", r.note)
+
+    def test_counting_is_learned_from_a_run_and_carries_generalise(self):
+        from hebbian_lm.numbers import CannotCount, NumberSense
+        ns = NumberSense()
+        with self.assertRaises(CannotCount):
+            ns.succ(3)
+        ns.teach_counting(19, 2)
+        self.assertEqual(ns.succ(39), 40)           # never counted that far: the digit links are shared across places
+        self.assertEqual(ns.succ(1999), 2000)
+        self.assertEqual(ns.pred(1000), 999)
+        ns9 = NumberSense()
+        ns9.teach_counting(9)
+        self.assertEqual(ns9.succ(8), 9)
+        with self.assertRaises(CannotCount):
+            ns9.succ(9)                              # never saw 9 -> 10: it says it has not learned that
+
+    def test_operations_come_from_counting_and_match_exact_arithmetic(self):
+        ws = self.ws()
+        ws.school(100, 2)
+        for q, a in [("what is 27 + 15 ?", "twenty seven plus fifteen is forty two ."), ("what is 50 minus 17 ?", "fifty minus seventeen is thirty three ."),
+                     ("what is 6 times 7 ?", "six times seven is forty two ."), ("what is 20 divided by 3 ?", "twenty divided by three is six remainder two ."),
+                     ("what is 250 plus 375 ?", "two hundred and fifty plus three hundred and seventy five is six hundred and twenty five .")]:
+            self.assertEqual(ws.ask(q).text, a)
+
+    def test_practice_turns_counting_into_memory_and_a_wrong_claim_loses_to_counting(self):
+        ws = self.ws()
+        ws.numbers.teach_counting(100, 2)
+        self.assertIn("counted", ws.ask("what is 7 plus 8 ?").note)
+        ws.read("seven plus eight is fifteen .")
+        self.assertEqual(ws.ask("what is 7 plus 8 ?").note, "recalled")
+        for _ in range(10):
+            ws.read("two plus two is five .")
+        self.assertEqual(ws.ask("what is two plus two ?").text, "two plus two is four .")
+
+    def test_teaching_by_sentences_and_next_previous_compare_count(self):
+        ws = self.ws()
+        ws.converse("zero one two three four five six seven eight nine ten .")
+        r = ws.converse("what comes after nine ?")
+        self.assertEqual(r.text, "after nine comes ten .")
+        self.assertEqual(ws.ask("what comes before ten ?").text, "before ten comes nine .")
+        self.assertEqual(ws.ask("count from 3 to 6 ?").text, "three four five six .")
+        self.assertEqual(ws.ask("which is bigger , 7 or 10 ?").text, "ten is bigger .")
+        self.assertIn("yes", ws.ask("is 8 more than 3 ?").text)
+        self.assertEqual(ws.ask("what comes after ten ?").text, "after ten comes eleven .")    # never shown, but the digit links give it
+
+    def test_practice_fades_and_it_counts_again(self):
+        ws = self.ws()
+        ws.school(100, 2)
+        ws.ask("what is 7 plus 8 ?")
+        ws.sleep(5000, replay=False)
+        self.assertIn("counted", ws.ask("what is 7 plus 8 ?").note)
+
+    def test_numbers_survive_save_and_load(self):
+        ws = self.ws()
+        ws.school(100, 2)
+        with tempfile.TemporaryDirectory() as d:
+            ws.save(d)
+            w2 = Workspace.open(d, lexicon=Lexicon())
+        self.assertEqual(w2.ask("what is 12 plus 30 ?").text, "twelve plus thirty is forty two .")
+        self.assertTrue(w2.numbers.can_count())
+
+    def test_understood_question_without_an_answer_is_not_answered_by_another_relation(self):
+        ws = Workspace(model=None, lexicon=Lexicon(), take_notes=False)
+        ws.read("the lion says roar .")
+        self.assertEqual(ws.ask("what color is the lion ?").text, "i do not know .")
+
+
 if __name__ == "__main__":
     unittest.main()

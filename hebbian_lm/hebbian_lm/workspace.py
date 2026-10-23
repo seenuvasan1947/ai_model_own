@@ -29,6 +29,7 @@ from typing import Dict, List, Optional, Set
 from .comprehension import (END, NP, ClauseParser, Discourse, Prop, Query, Tok, number_word, tag_sentence, tokenize_cased)
 from .entities import is_instance, lemma_of
 from .notes import CUES, Note, NoteKeeper
+from .numbers import WORD_VALUE, CannotCount, NumberSense, parse_number, to_words
 from .reader import Reader, clean_text
 from .lexicon import PL_DET, PRONOUNS, SG_DET, Lexicon, inflect_noun, inflect_verb
 from .semantic import NON_ACTIONS, SPATIAL, Answer, SemanticMemory
@@ -55,6 +56,7 @@ class ReadReport:
     unknown_words: List[str] = field(default_factory=list)   # the dictionary could not explain these
     defined: List[str] = field(default_factory=list)         # explained by the text itself ("a flib is an animal")
     questions: int = 0
+    number_notes: List[str] = field(default_factory=list)    # what was learned about counting and arithmetic
 
 
 @dataclass
@@ -82,6 +84,7 @@ class Workspace:
         self.seen: Set[str] = set()                 # lemmas already processed (so each is looked up once)
         self.entities: Set[str] = set()             # every subject/object lemma stored so far
         self.pending: Optional[str] = None          # a word the user has been asked to explain
+        self.numbers = NumberSense()                # counting and arithmetic, learned (see numbers.py)
         self.notes = NoteKeeper(self.lex)           # sentences kept word for word, indexed by content words
         self.take_notes = take_notes                # write down every sentence that is read
         self.style = style                          # "plain": one fixed wording | "varied": own-words answers
@@ -108,6 +111,9 @@ class Workspace:
                 rep.questions += 1
                 continue
             tag_sentence(sent, self.lex)
+            handled = self._number_statement(sent, rep)
+            if handled:
+                continue
             self._mark_names(sent)
             self._meet_words(sent, rep)
             if self.real_text:
@@ -215,6 +221,161 @@ class Workspace:
         for toks, props, fresh, words in entries:
             nk.read_words(words)
 
+    # ---- numbers: counting runs, "N comes after M", "a plus b is c"
+    _OPS = {"plus": "+", "minus": "-", "times": "*", "divided": "/"}
+
+    def _numerals(self, words: List[str]) -> Optional[List[int]]:
+        """A run of number words / digits as a list of numbers ('twenty one twenty two' -> [21, 22]); None if anything else is in it."""
+        out, i = [], 0
+        words = [w for w in words if w != ","]
+        while i < len(words):
+            best = None
+            for j in range(len(words), i, -1):
+                seg = words[i:j]
+                v = parse_number(seg)
+                if v is not None and to_words(v).replace(" and ", " ").split() == [x for x in seg if x != "and"] or \
+                        (v is not None and len(seg) == 1 and seg[0].isdigit()):
+                    best = (v, j)
+                    break
+            if best is None:
+                return None
+            out.append(best[0])
+            i = best[1]
+        return out
+
+    def _number_statement(self, sent: List[Tok], rep: ReadReport) -> bool:
+        words = [t.text for t in sent if t.text not in END and t.text != '"']
+        if not words or not any(w.isdigit() or w in WORD_VALUE for w in words):
+            return False
+        # 1. a counting run: "one two three four five"
+        seq = self._numerals(words)
+        if seq is not None and len(seq) >= 3:
+            used = self.numbers.hear(seq)
+            if used:
+                rep.number_notes.append(f"counted {to_words(seq[0])} to {to_words(seq[-1])} ( {used} steps )")
+            return True
+        # 2. "four comes after three" / "after three comes four" / "the number after three is four"
+        for pat in (("after", "comes"), ("comes", "after"), ("after", "is"), ("after", "come")):
+            if all(p in words for p in pat):
+                nums = [self._numerals(seg) for seg in self._split_on(words, set(pat) | {"the", "number", "that", "which"})]
+                nums = [n[0] for n in nums if n]
+                if len(nums) == 2:
+                    after, comes = (nums[0], nums[1]) if words.index(pat[0]) < words.index(pat[1]) else (nums[1], nums[0])
+                    if pat[0] == "after" and pat[1] in ("comes", "come", "is") and words.index("after") < words.index(pat[1]):
+                        a, b = nums[0], nums[1]
+                    else:
+                        b, a = nums[0], nums[1]
+                    if self.numbers.hear([a, b]):
+                        rep.number_notes.append(f"{to_words(b)} comes after {to_words(a)}")
+                    return True
+        # 3. "two plus three is five" / "2 + 3 = 5"
+        for i, w in enumerate(words):
+            if w in self._OPS and 0 < i < len(words) - 2:
+                right_part = words[i + 1:]
+                if right_part and right_part[0] == "by":
+                    right_part = right_part[1:]
+                eq = next((k for k, x in enumerate(right_part) if x in ("is", "equals", "are", "makes", "make", "gives")), None)
+                if eq is None:
+                    return False
+                a, b, c = parse_number(words[:i]), parse_number(right_part[:eq]), parse_number(right_part[eq + 1:])
+                if None in (a, b, c):
+                    return False
+                if not self.numbers.can_count():
+                    rep.number_notes.append("i have not learned to count yet , so i cannot check it ; teach me : one two three four ...")
+                    return True
+                try:
+                    ok, r = self.numbers.check_taught(self._OPS[w], a, b, c)
+                except CannotCount as e:
+                    rep.number_notes.append(str(e))
+                    return True
+                word = {"+": "plus", "-": "minus", "*": "times", "/": "divided by"}[self._OPS[w]]
+                if ok:
+                    rep.number_notes.append(f"practised {to_words(a)} {word} {to_words(b)} is {to_words(c)} ( {r.method} )")
+                else:
+                    rep.number_notes.append(f"that does not match my counting : {to_words(a)} {word} {to_words(b)} is {to_words(r.value)}")
+                return True
+        return False
+
+    @staticmethod
+    def _split_on(words: List[str], stop: Set[str]) -> List[List[str]]:
+        out, cur = [], []
+        for w in words:
+            if w in stop:
+                if cur:
+                    out.append(cur)
+                cur = []
+            else:
+                cur.append(w)
+        if cur:
+            out.append(cur)
+        return out
+
+    def school(self, count_to: int = 100, repeats: int = 3, tables: int = 10) -> Dict[str, int]:
+        """Send the number sense to school: count to ``count_to`` again and again, then practise the small tables until they are
+        remembered rather than counted. Returns how many traces exist afterwards."""
+        self.numbers.teach_counting(count_to, repeats)
+        for _ in range(repeats):
+            for a in range(0, tables + 1):
+                for b in range(0, tables + 1):
+                    self.numbers.compute("+", a, b)
+                    if a >= b:
+                        self.numbers.compute("-", a, b)
+            for a in range(1, tables + 1):
+                for b in range(1, tables + 1):
+                    self.numbers.compute("*", a, b)
+        return dict(traces=len(self.numbers.traces), counted_to=self.numbers.max_taught)
+
+    def _number_reply(self, q: Query) -> Reply:
+        a, op, b = q.expr
+        ns = self.numbers
+        word = {"+": "plus", "-": "minus", "*": "times", "/": "divided by"}
+        if q.kind == "arithmetic":
+            if not ns.can_count():
+                from .comprehension import evaluate_arithmetic
+                v = evaluate_arithmetic((a, op, b)) if op != "/" else (a // b if b else None)
+                if v is None:
+                    return Reply("i do not know .", kind="idk")
+                return Reply(f"{to_words(a)} {word[op]} {to_words(b)} is {to_words(v)} .", confidence=1.0,
+                             note="by rule : i have not learned to count yet ( teach me : one two three four ... )")
+            try:
+                r = ns.compute(op, a, b)
+            except CannotCount as e:
+                return Reply(self._cannot(e), kind="idk", note="cannot count that")
+            tail = f" remainder {to_words(r.remainder)}" if op == "/" and r.remainder else ""
+            how = "recalled" if r.method == "recalled" else f"counted , {r.steps} steps"
+            return Reply(f"{to_words(a)} {word[op]} {to_words(b)} is {to_words(r.value)}{tail} .", confidence=1.0, note=how)
+        try:
+            if op == "succ":
+                return Reply(f"after {to_words(a)} comes {to_words(ns.succ(a))} .", confidence=1.0, note="counted")
+            if op == "pred":
+                return Reply(f"before {to_words(a)} comes {to_words(ns.pred(a))} .", confidence=1.0, note="counted")
+            if op == "count":
+                if b < a or b - a > 40:
+                    return Reply("i do not want to count that many ." if b > a else "i can only count upwards .", kind="idk")
+                seq, x = [a], a
+                while x != b:
+                    x = ns.succ(x)
+                    seq.append(x)
+                return Reply(" ".join(to_words(n) for n in seq) + " .", confidence=1.0, note="counted")
+            if op in ("gt?", "lt?"):
+                big = (op == "gt?")
+                first_less = ns.less(a, b)
+                pick = (b if first_less else a) if big else (a if first_less else b)
+                return Reply(f"{to_words(pick)} is {'bigger' if big else 'smaller'} .", confidence=1.0, note="compared on the number line")
+            if op in ("gtyn", "ltyn"):
+                if a == b:
+                    return Reply(f"no , {to_words(a)} is the same as {to_words(b)} .", confidence=1.0)
+                yes = (not ns.less(a, b)) if op == "gtyn" else ns.less(a, b)
+                rel = "more" if op == "gtyn" else "less"
+                return Reply(f"{'yes' if yes else 'no'} , {to_words(a)} is {'' if yes else 'not '}{rel} than {to_words(b)} .", confidence=1.0)
+        except CannotCount as e:
+            return Reply(self._cannot(e), kind="idk", note="cannot count that")
+        return Reply("i do not know .", kind="idk")
+
+    def _cannot(self, e: Exception) -> str:
+        top = self.numbers.max_taught
+        return f"{e} i can count to {to_words(top)} so far ." if top >= 0 and self.numbers.can_count() else f"{e} teach me : one two three four ..."
+
     def _ents(self):
         return self.mem.ents if self.instances else None
 
@@ -299,7 +460,9 @@ class Workspace:
             noted = self._from_notes(question, q, reply)
             if noted is not None:
                 reply = noted
-        if self.model is not None and (reply.kind == "not_understood" or (reply.kind == "idk" and q is not None and q.kind == "fact")):
+        if self.model is not None and reply.kind == "not_understood":
+            # only for questions the rules could not read at all. A question that was understood and has no answer stays
+            # "i do not know": the language layer would answer a different relation ("what color is the lion ?" -> "says roar")
             a = self.model.ask(question, abstain=True)       # diffuse knowledge learned from bulk reading
             if a.strip() != "i do not know .":
                 reply = Reply(a, kind="answer", note="answered by the language model alone")
@@ -313,6 +476,9 @@ class Workspace:
         toks = tokenize_cased(question)
         tag_sentence(toks, self.lex)
         self._mark_names(toks)
+        nq = ClauseParser(self.lex, self.discourse)._number_question([t.text for t in toks if t.tag != "PUNCT"], question)
+        if nq is not None:                                           # a question about numbers: no word to look up
+            return self._number_reply(nq), nq, None
         unk = [t for t in toks if t.tag in ("N", "PN", "ADJ", "V") and not t.known and not self._known(t.lemma)]
         if unk:
             w = unk[0].lemma
@@ -327,6 +493,8 @@ class Workspace:
         self.clarifying = None
         if q is None:
             return Reply("i did not understand the question .", kind="not_understood"), None, None
+        if q.kind in ("arithmetic", "number"):
+            return self._number_reply(q), q, None
         ans = self.mem.query(q)
         return self._realise(q, ans), q, ans
 
@@ -385,6 +553,7 @@ class Workspace:
     def sleep(self, units: float = 1.0, replay: bool = True, consolidate_lm: bool = False) -> Dict[str, int]:
         """Time passes. Facts and notes fade (each with a half-life that grows with use); during sleep the most recently used
         notes are replayed, which refreshes the facts they hold; the language layer can consolidate its categories."""
+        self.numbers.advance(units)
         forgot = self.mem.advance(units)
         dropped = self.notes.advance(units)
         replayed = 0
@@ -691,6 +860,7 @@ class Workspace:
             return self.ask(t)
         rep = self.read(t if t.endswith((".", "!")) else t + " .", told=True)
         bits = []
+        bits += rep.number_notes
         if rep.new_words:
             bits.append("looked up " + ", ".join(rep.new_words[:6]))
         if rep.defined:
@@ -859,6 +1029,8 @@ class Workspace:
         self.mem.save(os.path.join(directory, "memory.json"))
         with open(os.path.join(directory, "notes.json"), "w", encoding="utf-8") as f:
             json.dump(self.notes.to_dict(), f)
+        with open(os.path.join(directory, "numbers.json"), "w", encoding="utf-8") as f:
+            json.dump(self.numbers.to_dict(), f)
         with open(os.path.join(directory, "lexicon_learned.json"), "w") as f:
             json.dump(self.lex.learned_entries(), f, indent=1)
         with open(os.path.join(directory, "workspace.json"), "w") as f:
@@ -868,6 +1040,10 @@ class Workspace:
 
     def load(self, directory: str) -> None:
         self.mem.load(os.path.join(directory, "memory.json"))
+        p = os.path.join(directory, "numbers.json")
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as f:
+                self.numbers.from_dict(json.load(f))
         p = os.path.join(directory, "notes.json")
         if os.path.exists(p):
             with open(p, encoding="utf-8") as f:
