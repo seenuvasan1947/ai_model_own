@@ -3,7 +3,7 @@
 First release of the Hebbian Semantic Workspace: a language system that is not a transformer, learns without backpropagation,
 and reads, remembers, forgets and answers.
 
-**Get it:** tag `v1.0.0` (branch `hebbian-v2`). **Trained model:** `release/v1.0/workspace/` (12 MB, checksums in
+**Get it:** branch `release-v1.0.0` (frozen at the release; `hebbian-v2` may move on). **Trained model:** `release/v1.0/workspace/` (12 MB, checksums in
 `release/v1.0/SHA256SUMS`). **Run it:** `python chat.py --workspace release/v1.0/workspace` (needs only Python 3.9+ and numpy).
 **Rebuild it yourself:** `python train.py` (about a minute on a CPU). Full guide: [USAGE.md](USAGE.md).
 
@@ -43,4 +43,4 @@ python train.py                                            # reproduces the benc
 ## Versions
 
 * `hebbian-approach`: the earlier working version (language layer + workspace + separate entities), unchanged.
-* `hebbian-v2` / `v1.0.0`: this release (real-text reader, forgetting, selective notes, own-words answers).
+* `release-v1.0.0` (= `hebbian-v2` at release time): this release (real-text reader, forgetting, selective notes, own-words answers).

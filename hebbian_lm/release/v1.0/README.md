@@ -11,7 +11,7 @@ code of this release. It contains the semantic memory (`memory.json`, 68 backgro
 
 ```bash
 git clone https://github.com/seenuvasan1947/ai_model_own
-cd ai_model_own && git checkout v1.0.0        # or the hebbian-v2 branch
+cd ai_model_own && git checkout release-v1.0.0     # same code as branch hebbian-v2 at the release commit
 cd hebbian_lm
 pip install -r requirements.txt               # numpy only
 sha256sum -c release/v1.0/SHA256SUMS --ignore-missing 2>/dev/null || (cd release/v1.0 && sha256sum -c SHA256SUMS)
