@@ -152,6 +152,19 @@ def main() -> None:
         for k in f_on:
             if k != "stories":
                 print(f"     {k:20} {f_on[k]:>6} {f_off[k]:>6}")
+        print("  G. forgetting and notes (40 facts told once, share answered right after time passes; 'false_answers' = invented answers):")
+        g = ew.benchmark_forgetting()
+        print(f"     {'time':>6} {'no help':>8} {'rehearsed':>10} {'with notes':>11} {'false':>6}")
+        for r in g:
+            print(f"     {r['time']:>6} {r['plain']:>8} {r['rehearsed']:>10} {r['notes']:>11} {r['false_answers']:>6}")
+        report["workspace_forgetting"] = g
+        from hebbian_lm import evaluate_real as er
+        v1x, v2x = er.extractors(mini)
+        rv1, rv2 = er.report(v1x), er.report(v2x)
+        print("  H. real fiction, hand-labelled sentences (recall of labelled propositions / coverage), bundled dictionary:")
+        for k in ("dev", "test"):
+            print(f"     {k:5} v1 parser recall {rv1[k]['recall']} coverage {rv1[k]['coverage']}   ->   v2 reader recall {rv2[k]['recall']} coverage {rv2[k]['coverage']} precision {rv2[k]['precision']}")
+        report["real_text"] = dict(v1=rv1, v2=rv2, qa=ew.benchmark_real_qa())
         report["workspace_pronouns"], report["workspace_reasoning"], report["workspace_grammar"] = c, d["correct"], e
         report["workspace_entities"] = dict(on=f_on, off=f_off)
     if args.ablations:

@@ -156,6 +156,15 @@ next to a slow statistical learner.
 * **Dictionary learning at run time**: `a flib is a bird` where *flib* is not in the dictionary adds a learned entry (kind,
   hypernyms) to the lexicon and places the word in the language layer's categories.
 
+### v2: reader, forgetting and notes
+
+See [V2.md](V2.md) for the list. In short: `reader.py` cuts a tagged sentence into clauses by rule (coordination, subordinators,
+relatives, infinitives, causatives, quotes) and hands each to the v1 clause parser with the right subject. Fact strength decays as
+`0.5^(dt/half-life)` where the half-life grows with each re-reading (×1.6) and each use (×1.25), so Hebbian strengthening and
+decay are two sides of one rule: what is activated again persists. `notes.py` keeps sentences verbatim with idf-weighted
+word→note links that are strengthened by use; recollection = note search → read the note again → the fact is relearned. This is
+symbolic bookkeeping with Hebbian-style weights, like the rest of the workspace; only the language layer learns by local rules.
+
 ### Entities (separate things of the same kind)
 
 Facts are keyed by lemma unless a *particular* thing was introduced; then they are keyed by an instance id (`ball#2`) from

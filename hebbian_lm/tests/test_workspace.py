@@ -354,5 +354,163 @@ class EntityTests(unittest.TestCase):
         self.assertEqual(ws.check("tom's ball is red ."), [])
 
 
+class ReaderTests(unittest.TestCase):
+    def ws(self, **kw):
+        return Workspace(model=None, lexicon=Lexicon(), take_notes=False, **kw)
+
+    def props(self, text):
+        return {(p.subj, p.rel, p.obj) for p in self.ws().read(text).props}
+
+    def test_verb_phrase_coordination_shares_the_subject(self):
+        p = self.props("Tom sat down and scratched his head .")
+        self.assertIn(("tom", "sit", ""), p)
+        self.assertIn(("tom", "scratch", "head#1"), p)               # "his head" is tom's own head: an instance
+
+    def test_clauses_after_but_and_because(self):
+        p = self.props("The cat ran , but the dog slept because it was tired .")
+        self.assertIn(("cat", "run", ""), p)
+        self.assertIn(("dog", "sleep", ""), p)
+
+    def test_relative_clause_and_complement_clause(self):
+        p = self.props("There was a crash which made everybody turn . Anna knew that the dog barked .")
+        self.assertIn(("crash", "make", "everybody"), p)
+        self.assertIn(("anna", "know", ""), p)
+        self.assertIn(("dog", "bark", ""), p)
+
+    def test_infinitive_and_causative(self):
+        p = self.props("Tom wanted to sing . It made him feel queer .")
+        self.assertIn(("tom", "want", ""), p)
+        self.assertIn(("tom", "sing", ""), p)
+        self.assertIn(("it", "make", "tom"), p)                      # "him" is Tom
+        self.assertIn(("tom", "feel", "queer"), p)
+
+    def test_passive(self):
+        p = self.props("The nut was eaten by the squirrel . The statue was unveiled .")
+        self.assertIn(("squirrel", "eat", "nut"), p)
+        self.assertIn(("statue", "attr", "unveiled"), p)
+
+    def test_quoted_words_are_not_facts_but_the_speaker_is_noted(self):
+        p = self.props('"The moon is made of cheese ," said Anna .')
+        self.assertIn(("anna", "say", ""), p)
+        self.assertFalse(any(x[0] == "moon" for x in p))
+
+    def test_full_name_and_short_name_are_one_character(self):
+        ws = self.ws()
+        ws.read("Buster Bear lives in the forest . Buster ate the berries .")
+        self.assertEqual({p.subj for p in ws.read("Buster slept .").props}, {"buster bear"})
+        self.assertIn("buster bear", ws.ask("what did buster do ?").text)
+
+    def test_pronoun_prefers_the_subject_of_the_last_sentence(self):
+        ws = self.ws()
+        ws.read("Tom saw Ben . He ran .")
+        r = ws.ask("what did tom do ?").text
+        self.assertIn("ran", r)
+        self.assertIn("saw", r)
+        self.assertEqual(ws.ask("what did ben do ?").text, "i do not know .")
+
+    def test_what_did_x_do_summarises(self):
+        ws = self.ws()
+        ws.read("Anna jumped on the box . Anna ate an apple .")
+        r = ws.ask("what did anna do ?").text
+        self.assertIn("jumped", r)
+        self.assertIn("ate", r)
+
+    def test_real_text_gold_sets(self):
+        from hebbian_lm import evaluate_real as er
+        lex = Lexicon()
+        v1, v2 = er.extractors(lex)
+        res = er.report(v2)
+        self.assertGreaterEqual(res["dev"]["recall"], 0.6)           # bundled dictionary (390 words)
+        self.assertGreaterEqual(res["test"]["recall"], 0.55)
+        self.assertGreaterEqual(res["test"]["coverage"], 0.85)
+        self.assertGreater(res["test"]["recall"], er.report(v1)["test"]["recall"] + 0.25)
+
+    @unittest.skipUnless(os.path.isdir(WN), "WordNet not downloaded")
+    def test_real_text_gold_sets_with_wordnet(self):
+        from hebbian_lm import evaluate_real as er
+        _, v2 = er.extractors(Lexicon.default())
+        res = er.report(v2)
+        self.assertGreaterEqual(res["dev"]["recall"], 0.85)
+        self.assertGreaterEqual(res["test"]["recall"], 0.75)
+
+
+class MemoryAndNotesTests(unittest.TestCase):
+    def ws(self, **kw):
+        return Workspace(model=None, lexicon=Lexicon(), **kw)
+
+    def test_facts_fade_and_rehearsal_slows_it(self):
+        ws = self.ws(take_notes=False)
+        ws.read("the zebra is brown . the lion lives in the zoo .")
+        for _ in range(4):
+            ws.sleep(100, replay=False)
+            ws.ask("what color is the zebra ?")                    # used again and again
+        ws.sleep(700, replay=False)
+        self.assertEqual(ws.ask("what color is the zebra ?").text, "the zebra is brown .")
+        self.assertEqual(ws.ask("where does the lion live ?").text, "i do not know .")      # never used: gone
+
+    def test_forgotten_fact_is_found_again_in_the_notes(self):
+        ws = self.ws()
+        ws.read("the zebra is brown .")
+        ws.sleep(3000, replay=False)
+        self.assertEqual(ws.mem.size(), 0)
+        r = ws.ask("what color is the zebra ?")
+        self.assertIn("the zebra is brown .", r.text)
+        self.assertIn("notes", r.text + r.note)
+        self.assertEqual(ws.mem.size(), 1)                             # reading the note again re-learned it
+
+    def test_notes_do_not_invent_answers(self):
+        ws = self.ws()
+        ws.read("the zebra is brown . the lion eats meat .")
+        self.assertEqual(ws.ask("what color is the sparrow ?").text.split(" ")[0:3], ["i", "do", "not"])
+        self.assertEqual(ws.ask("what color is the lion ?").text, "i do not know .")
+
+    def test_correction_still_replaces_after_time_passes(self):
+        ws = self.ws(take_notes=False)
+        ws.read("the sky is blue .")
+        ws.sleep(100, replay=False)
+        ws.read("the sky is gray .")
+        self.assertEqual(ws.ask("what color is the sky ?").text, "the sky is gray .")
+
+    def test_note_keeper_cue_search_and_learning_from_use(self):
+        ws = self.ws()
+        ws.note("The meeting with the dentist is on Friday .")
+        ws.note("Buy milk and bread .")
+        hits = ws.recall("when is the dentist meeting ?")
+        self.assertEqual(hits[0].text, "The meeting with the dentist is on Friday .")
+        self.assertEqual(ws.recall("something about the moon"), [])
+
+    def test_the_same_note_twice_is_one_stronger_note(self):
+        ws = self.ws()
+        ws.read("the cat sleeps .")
+        ws.read("the cat sleeps .")
+        self.assertEqual(len(ws.notes), 1)
+        self.assertEqual(next(iter(ws.notes.notes.values())).recalls, 1)
+
+    def test_notes_and_clock_survive_save_and_load(self):
+        ws = self.ws()
+        ws.read("the zebra is brown .")
+        ws.sleep(50)
+        with tempfile.TemporaryDirectory() as d:
+            ws.save(d)
+            w2 = Workspace.open(d, lexicon=Lexicon())
+        self.assertEqual(len(w2.notes), 1)
+        self.assertEqual(w2.mem.clock, 50)
+        self.assertEqual(w2.ask("what color is the zebra ?").text, "the zebra is brown .")
+
+    def test_varied_style_keeps_the_content_and_varies_the_wording(self):
+        ws = self.ws(style="varied", seed=1)
+        ws.read("the zebra is brown .")
+        outs = {ws.ask("what color is the zebra ?").text for _ in range(12)}
+        self.assertGreater(len(outs), 1)
+        self.assertTrue(all("zebra is brown" in o for o in outs))
+
+    def test_faded_memory_is_hedged(self):
+        ws = self.ws(style="varied", seed=3, take_notes=False)
+        ws.read("the zebra is brown .")
+        ws.sleep(330, replay=False)
+        outs = [ws.ask("what color is the zebra ?").text for _ in range(1)]
+        self.assertTrue(any(w in outs[0] for w in ("think", "believe", "remember", "not sure")), outs)
+
+
 if __name__ == "__main__":
     unittest.main()

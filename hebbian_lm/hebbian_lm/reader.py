@@ -17,6 +17,7 @@ It is a rule system with known gaps (see README): ellipsis, long-distance depend
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -32,12 +33,27 @@ LEAD_PHRASES = [("by", "and", "by"), ("pretty", "soon"), ("at", "last"), ("all",
                 ("just", "then"), ("right", "away"), ("at", "once"), ("for", "a", "moment"), ("by", "this", "time")]
 CONJS = {"and", "but", "or", "nor", "yet", "so"}
 SUBORD = {"when", "while", "until", "after", "before", "because", "since", "if", "although", "though", "whenever",
-          "unless", "whereas", "wherever", "till"}
+          "unless", "whereas", "wherever", "till", "as"}
 RELATIVE = {"who", "whom", "which", "whose"}
 SPEECH = {"say", "ask", "reply", "answer", "cry", "shout", "mutter", "whisper", "snap", "exclaim", "call", "growl", "sigh",
           "remark", "observe", "murmur", "scream", "declare", "add", "continue", "tell", "think"}
 CAUSATIVE = {"make", "let", "help", "see", "watch", "hear", "feel", "have", "notice"}
 PRON_OBJ = {"him", "them", "me", "us", "her", "it", "everybody", "everyone", "somebody", "someone", "nobody"}
+
+
+_ABBREV = re.compile(r"\b(Mr|Mrs|Ms|Dr|St|Prof|Sr|Jr|Capt|Col|Gen|Rev|Hon|vs|etc)\.")
+_BRACKET = re.compile(r"\[[^\]]*\]")
+_SHOUT = re.compile(r"(?:\b(?:[IVXLC]+|[A-Z][A-Z'-]+)\b\s+){2,}(?=[A-Z][a-z]|\"|$)")
+
+
+def clean_text(text: str) -> str:
+    """Take out what is not a sentence of the story: [Illustration: ...] notes, ALL-CAPS headings, and the full stops of
+    Mr./Mrs./Dr. (which would otherwise end the sentence)."""
+    text = _BRACKET.sub(" ", text)
+    text = _ABBREV.sub(lambda m: m.group(1), text)
+    text = _SHOUT.sub(" ", text + " ")
+    text = text.replace("_", "")
+    return re.sub(r"\s+", " ", text).strip()
 
 
 @dataclass
@@ -86,11 +102,13 @@ class Reader:
         narration = self._narration(toks)
         if not narration:
             return []
+        props: List[Prop] = []
         said = self._said_clause(narration)
         if said is not None:
-            return self._finish(said)
+            props, narration = said
+            if not narration:
+                return self._finish(props)
         narration = self._drop_openers(narration)
-        props: List[Prop] = []
         for c in self.clauses(narration):
             if c.skip or not c.toks:
                 continue
@@ -111,12 +129,15 @@ class Reader:
             out = out[:-1]
         return _strip(out)
 
-    def _said_clause(self, toks: List[Tok]) -> Optional[List[Prop]]:
-        """'said Alice' / 'snapped Little Joe' after a quotation: (Alice, say)."""
+    def _said_clause(self, toks: List[Tok]):
+        """'said Alice' / 'snapped Little Joe, as ...' after a quotation: (Alice, say), then the rest is read normally."""
         if toks and toks[0].tag == "V" and toks[0].lemma in SPEECH:
             np, k = self.parser.read_np(toks, 1)
-            if np is not None and k == len(toks) and not np.pron:
-                return [Prop(np.key, toks[0].lemma, "", "", False, "past", np.number, "sg", np.proper)]
+            if np is not None:
+                self.parser.discourse.mention(np, subject=True)
+                prop = Prop(self.parser.resolve(np).key, toks[0].lemma, "", "", False, "past", np.number, "sg", np.proper)
+                rest = _strip(toks[k:])
+                return [prop], rest
         return None
 
     def _drop_openers(self, toks: List[Tok]) -> List[Tok]:
@@ -166,7 +187,11 @@ class Reader:
         # 3. subordinate / relative / complement clauses
         for i, t in enumerate(toks):
             nxt = toks[i + 1] if i + 1 < len(toks) else None
-            if t.text in SUBORD and nxt is not None and _pred(toks[i + 1:]) and (i == 0 or toks[i - 1].tag != "V" or True):
+            if t.text == "as" and nxt is not None and nxt.text in ("if", "though") and i + 2 < len(toks):
+                return self.clauses(toks[:i], kind, inherit) + self.clauses(toks[i + 2:], "sub")
+            if t.text == "as" and (i == 0 or not _pred(toks[i + 1:]) or toks[i + 1].tag not in ("PRON", "PN", "DET", "N")):
+                continue                                           # "as big as", "as a bear": not a clause
+            if t.text in SUBORD and nxt is not None and _pred(toks[i + 1:]):
                 if i == 0:
                     e = next((j for j in range(1, len(toks)) if toks[j].text == "," and _pred(toks[j + 1:])), None)
                     if e is not None:
@@ -207,7 +232,7 @@ class Reader:
                     head = head[:-1]
                 tail = toks[i + 1:]
                 subj_toks = None   # filled in from the head's own subject when the clause is parsed
-                return self.clauses(head, kind, inherit) + [Clause("inf", tail, subj_toks)]
+                return self.clauses(head, kind, inherit) + self.clauses(tail, "inf")
         return [Clause(kind, toks, inherit)]
 
     def _starts_clause(self, toks: List[Tok]) -> bool:
@@ -259,8 +284,12 @@ class Reader:
         """"Buster Bear" and later "Buster" are the same: register every word of a longer name and map short forms to it."""
         for p in props:
             if p.subj_proper and " " in p.subj:
-                for part in p.subj.split():
-                    self.aliases.setdefault(part, p.subj)
+                words = p.subj.split()
+                for n in range(1, len(words)):                       # "little joe" and "joe" for "little joe otter"
+                    for a in range(0, len(words) - n + 1):
+                        span = " ".join(words[a:a + n])
+                        if n > 1 or (a == 0 and not self.lex.senses(span, "a")) or not self.lex.senses(span):
+                            self.aliases.setdefault(span, p.subj)
         out = []
         for p in props:
             subj, obj = p.subj, p.obj

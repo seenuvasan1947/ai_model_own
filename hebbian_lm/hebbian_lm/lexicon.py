@@ -521,6 +521,9 @@ class Lexicon:
             sc += 0.6
         if a.pos == "r":
             sc -= 0.3
+        if a.pos == "n" and a.lemma == token and token.endswith("s") and len(token) > 3 and \
+                self._freq(token[:-1], "n") >= self._freq(token, "n") and self.senses(token[:-1], "n"):
+            sc -= 1.2                          # "things" is the plural of "thing", not a noun of its own
         if a.pos == "v" and token in IRREGULAR_VERBS and IRREGULAR_VERBS[token][0] == a.lemma:
             sc += 3.0                          # "made", "stole", "said" are verb forms before they are anything else
         return sc

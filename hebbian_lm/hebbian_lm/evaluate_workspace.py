@@ -194,3 +194,60 @@ def benchmark_entities(instances: bool = True, n: int = 60, seed: int = 0) -> di
     out = {k: round(v / n, 3) for k, v in score.items()}
     out["stories"] = n
     return out
+
+
+def _fact_pool(n: int, seed: int = 0) -> List[dict]:
+    return make_facts(min(20, (n + 4) // 5), seed=seed)[:n]
+
+
+def benchmark_forgetting(n_facts: int = 40, times=(0, 100, 200, 400, 600, 800, 1000, 1500), seed: int = 0) -> List[dict]:
+    """G. Human-like forgetting and the note keeper. 40 facts are told once; time passes; each fact is asked.
+
+    * ``plain``: nothing is done in between (no rehearsal) and there are no notes: facts fade away.
+    * ``rehearsed``: every fact is asked every 100 time units (each answer strengthens it and slows its forgetting).
+    * ``notes``: no rehearsal, but every sentence was also written down; when memory fails the note is looked up and read again.
+    * ``false_answers``: questions about things never told, with notes on: should stay 'i do not know'.
+    Numbers are the share of facts answered correctly."""
+    facts = _fact_pool(n_facts, seed)
+    never = [f"what color is the {a} ?" for a in ("hippo", "panda", "camel", "otter", "moose", "gecko", "llama", "parrot")]
+    rows = []
+    for T in times:
+        row = {"time": T}
+        for name, take_notes, rehearse in (("plain", False, False), ("rehearsed", False, True), ("notes", True, False)):
+            ws = Workspace(model=None, lexicon=Lexicon(), take_notes=take_notes)
+            for f in facts:
+                ws.read(f["statement"])
+            t = 0
+            while t < T:
+                step = min(100, T - t)
+                ws.sleep(step, replay=False)
+                t += step
+                if rehearse and t < T:
+                    for f in facts:
+                        ws.ask(f["question"])
+            row[name] = round(sum(_hit(ws.ask(f["question"]).text, f["value"]) for f in facts) / len(facts), 3)
+            if name == "notes":
+                row["false_answers"] = round(sum("do not know" not in ws.ask(q).text for q in never) / len(never), 3)
+        rows.append(row)
+    return rows
+
+
+def benchmark_real_qa(path: str = "") -> dict:
+    """H. Real sentences in, questions out. Each labelled sentence (resources/real_gold.json) is read alone by a fresh
+    workspace; for every labelled (subject, verb, object) with a noun/name subject and an object, ask "what did S V ?" and
+    check that the object appears in the answer. A pronoun subject stays a pronoun (no antecedent in a single sentence) and is asked as such."""
+    from .evaluate_real import PRON, load_gold
+    out = {}
+    for split in ("dev", "test"):
+        n = ok = 0
+        for item in load_gold(path)[split]:
+            qs = [(s, v, o) for s, v, o in item["gold"] if o and v != "be" and o not in PRON]
+            if not qs:
+                continue
+            ws = Workspace(model=None, lexicon=Lexicon.default(), take_notes=False)
+            ws.read(item["s"])
+            for s, v, o in qs:
+                n += 1
+                ok += o in ws.ask(f"what did {s} {v} ?").text.replace(".", " ").split()
+        out[split] = dict(questions=n, correct=ok, accuracy=round(ok / max(1, n), 3))
+    return out

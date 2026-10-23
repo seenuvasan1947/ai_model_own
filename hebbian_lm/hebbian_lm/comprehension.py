@@ -277,28 +277,37 @@ def noun_number(head_tok: Tok, det: str, qty: str) -> str:
 class Discourse:
     """Who was mentioned recently, for pronoun resolution."""
     entities: List[NP] = field(default_factory=list)
+    subjects: List[NP] = field(default_factory=list)      # who was the subject of recent clauses (preferred antecedents)
 
-    def mention(self, np: NP) -> None:
+    def mention(self, np: NP, subject: bool = False) -> None:
         if np.head and not np.pron:
             self.entities = [e for e in self.entities if e.key != np.key]
             self.entities.insert(0, np)
             del self.entities[8:]
+            if subject:
+                self.subjects = [e for e in self.subjects if e.key != np.key]
+                self.subjects.insert(0, np)
+                del self.subjects[4:]
 
     def resolve(self, pron: str, lex: Lexicon) -> Optional[NP]:
         info = PRONOUNS.get(pron)
         if info is None:
             return None
         num, kind, gender = info
-        for e in self.entities:
+        seen = set()
+        for e in self.subjects + self.entities:        # the subject of the last clause is the likeliest antecedent
+            if e.key in seen:
+                continue
+            seen.add(e.key)
             ek = e.kind or lex.kind(e.head)
             if pron in ("he", "him"):
-                if e.head in MALE or (ek == "person" and e.head not in FEMALE):
+                if e.number == "sg" and (e.head in MALE or ((ek == "person" or e.proper) and e.head not in FEMALE)):
                     return e
             elif pron == "she":
-                if e.head in FEMALE:
+                if e.number == "sg" and e.head in FEMALE:
                     return e
             elif pron == "it":
-                if ek != "person" and e.number == "sg":
+                if ek != "person" and not e.proper and e.number == "sg":
                     return e
             elif pron in ("they", "them"):
                 if e.number == "pl":
@@ -552,7 +561,7 @@ class ClauseParser:
         rest = toks[j:]
         subj_head = subj.key
         for sub in subjects:
-            self.discourse.mention(sub)
+            self.discourse.mention(sub, subject=True)
         out: List[Prop] = []
         # ---- copula
         if be and verb_tok is None:
@@ -575,6 +584,10 @@ class ClauseParser:
                 out += self._verb_props(subj, lem, rest, neg, tense)
         for s in subjects[1:]:
             out += [Prop(s.key, p.rel, p.obj, p.qty, p.neg, p.tense, s.number, p.obj_num) for p in out[:1]]
+        proper = {x.key for x in subjects if x.proper}
+        for p in out:
+            if p.subj in proper:
+                p.subj_proper = True
         return out
 
     def _passive(self, subj: NP, verb: Tok, rest: List[Tok], neg: bool) -> List[Prop]:
@@ -667,7 +680,7 @@ class ClauseParser:
                     out.append(Prop(subj.key, lemma, o.key, o.qty, neg, tense, sn, o.number, subj.proper))
         # prepositional adjuncts: "lives in the farm", "walks to the park"
         while i < len(rest):
-            if rest[i].tag == "PREP":
+            if rest[i].tag == "PREP" and rest[i].text != "of":
                 np, k = self.read_np(rest, i + 1)
                 if np is not None:
                     out.append(Prop(subj.key, f"{lemma}_{rest[i].text}", np.head, "", neg, tense, sn, np.number))
@@ -723,12 +736,18 @@ class ClauseParser:
             if np is not None:
                 return Query("define", subj=np.head, num=np.number, raw=raw)
             return None
+        if w0 in ("what", "where") and n >= 4 and toks[1].text in ("does", "do", "did") and toks[-1].text.isalpha() \
+                and self.lex.senses(toks[-1].lemma, "v"):
+            toks[-1].tag = "V"                    # "what did crash make ?": the last word is the verb, not part of a noun group
+            toks[-1].lemma = self.lex.analyze(toks[-1].text)[0].lemma if toks[-1].lemma == toks[-1].text else toks[-1].lemma
         if w0 == "what" and n >= 3 and toks[1].text in ("does", "do", "did"):
             sub, k = self.read_np(toks, 2)
             sub = self.resolve(sub)
             if sub is None or k >= n:
                 return None
             v = toks[k]
+            if v.lemma == "do" and k + 1 == n:
+                return Query("actions", subj=sub.key, num=sub.number, subj_proper=sub.proper, raw=raw)
             if v.lemma == "mean":
                 return Query("define", subj=sub.key, raw=raw)
             at = "sound" if v.lemma == "say" else ""

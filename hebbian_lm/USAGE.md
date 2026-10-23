@@ -1,5 +1,7 @@
 # How to run and use it
 
+(v2: notes, forgetting, real-text reading and own-words answers are described in section 3b and [V2.md](V2.md).)
+
 Everything here runs on a plain CPU with Python 3.9+ and NumPy. No GPU, no PyTorch, no internet needed (one optional
 download makes the dictionary much bigger).
 
@@ -88,6 +90,21 @@ Turn it off with `Workspace(..., instances=False)` (then one noun is one entity,
 
 Not understood (it says so): relative clauses, passives, "if/because", questions about time, metaphor.
 
+## 3b. Notes, forgetting, real text (v2)
+
+* Every sentence you tell it is also **written down as a note**. `/note text` takes a note on purpose; `/notes cue` searches;
+  `/forget 3` throws note 3 away.
+* **Time and forgetting.** Each chat turn lets one time unit pass (`--time-per-turn`, 0 = never); `/sleep 500` lets 500 pass.
+  A fresh fact has a half-life of about 120 units (240 if you *told* it); reading it again or using it to answer makes the
+  half-life longer, so what you use stays and what you don't fades and is finally dropped.
+* **Recollection.** When it cannot remember, it looks in the notes, reads the matching note again and answers with
+  `my notes remind me : ...`; if nothing matches it still says `i do not know .` (it does not invent).
+* **Own words.** Answers vary in wording with how sure the memory is (`i think ...`, `i vaguely remember that ...`);
+  `--style plain` gives the single fixed wording. `what did buster do ?` and `who is buster bear ?` summarise what it read.
+* **Reading a story.** Paste a paragraph of ordinary prose: it splits long sentences into clauses, follows `he/she/it` to the
+  last subject, treats `Buster Bear` / `Buster` as one character, ignores quoted speech as fact (but notes who spoke), and keeps
+  the original sentences as notes. Python: `ws.read(paragraph)`; `ws.sleep(100)`; `ws.recall("dentist")`; `ws.note("...")`.
+
 ## 4. Using it from Python
 
 ```python
@@ -137,7 +154,7 @@ python train.py --report report.json   # write all numbers as JSON
 ## 6. Check it works
 
 ```bash
-python -m unittest discover -s tests   # 58 tests, ~25 s (WordNet tests are skipped if it is not downloaded)
+python -m unittest discover -s tests   # 78 tests, ~28 s (WordNet tests are skipped if it is not downloaded)
 python real_text.py                    # the same language layer on real children's books (downloads ~4 MB once)
 python real_text.py --dictionary wordnet
 ```

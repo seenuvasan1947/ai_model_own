@@ -69,6 +69,31 @@ def score(sentences: List[dict], extract: Callable[[str], List[Prop3]]) -> dict:
                 gold_props=n_gold, extracted=n_sys)
 
 
+def extractors(lexicon=None):
+    """The v1 single-clause parser and the v2 clause reader, as sentence -> propositions functions."""
+    from .comprehension import ClauseParser, Discourse, tag_sentence
+    from .lexicon import Lexicon
+    from .reader import Reader, clean_text
+    from .workspace import Workspace
+    lex = lexicon or Lexicon.default()
+
+    def v1(text: str):
+        d, out = Discourse(), []
+        for sent in Workspace._sentences(text):
+            tag_sentence(sent, lex)
+            out += [(p.subj, p.rel, p.obj) for p in ClauseParser(lex, d, None).parse_declarative(sent)]
+        return out
+
+    def v2(text: str):
+        d, r, out = Discourse(), None, []
+        r = Reader(lex, d, None)
+        for sent in Workspace._sentences(clean_text(text)):
+            tag_sentence(sent, lex)
+            out += [(p.subj, p.rel, p.obj) for p in r.read(sent)]
+        return out
+    return v1, v2
+
+
 def report(extract: Callable[[str], List[Prop3]], verbose: bool = False) -> dict:
     data = load_gold()
     out = {k: score(data[k], extract) for k in ("dev", "test")}

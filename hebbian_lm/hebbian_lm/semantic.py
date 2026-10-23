@@ -21,6 +21,8 @@ Everything can be inspected (`explain`) and saved as JSON.
 from __future__ import annotations
 
 import json
+import math
+import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -28,6 +30,7 @@ from .comprehension import Prop, Query, evaluate_arithmetic, number_word
 from .entities import EntityStore, is_instance, lemma_of
 from .lexicon import Lexicon
 
+NON_ACTIONS = {"attr", "isa", "count", "antonym", "equals", "can", "have", "@loc"}
 SPATIAL = ("in", "on", "at", "near", "under", "inside", "behind", "beside", "above", "below")
 PLACE_KINDS = {"place", "building"}
 
@@ -44,6 +47,9 @@ class Fact:
     source: str = "read"
     obj_num: str = "sg"
     rel: str = ""
+    stab: float = 0.0                # half-life of the trace in time units: grows each time it is re-read or recalled
+    reh: int = 0                     # times it was strengthened again or successfully recalled
+    tense: str = "present"
 
     def score(self, now: int, half_life: float = 400.0) -> float:
         age = max(0, now - self.t)
@@ -71,6 +77,12 @@ class SemanticMemory:
         self.proper: Set[str] = set()
         self.ents = EntityStore()                    # the instances ("ball#1") that facts can be about
         self.t = 0
+        self.rng = random.Random(0)                  # traces differ a little in how durable they are
+        self.clock = 0.0                             # time units that have passed (see ``advance``); events alone do not age memory
+        self.base_stab = 120.0                       # half-life of a fresh fact, in time units; told facts get twice
+        self.stab_growth = 1.6                       # each re-reading multiplies the half-life (spacing / consolidation)
+        self.recall_boost = 0.4                      # strength added when a fact is successfully used to answer
+        self.prune_below = 0.03
         self.inhibit_read = 0.25
         self.inhibit_told = 0.8
 
@@ -102,8 +114,13 @@ class SemanticMemory:
         key = (prop.obj, prop.qty, prop.neg)
         f = group.get(key)
         if f is None:
-            f = Fact(obj=prop.obj, qty=prop.qty, neg=prop.neg, obj_num=prop.obj_num, rel=rel)
+            f = Fact(obj=prop.obj, qty=prop.qty, neg=prop.neg, obj_num=prop.obj_num, rel=rel,
+                     stab=self.base_stab * (2.0 if told else 1.0) * math.exp(self.rng.gauss(0.0, 0.45)))
             group[key] = f
+        else:
+            f.reh += 1
+            f.stab = min(self.base_stab * 25, max(f.stab, self.base_stab) * self.stab_growth)
+        f.tense = prop.tense
         f.strength += 1.0
         f.count += 1
         f.t = self.t
@@ -125,6 +142,43 @@ class SemanticMemory:
             elif g.obj == prop.obj and g.qty == prop.qty and g.neg != prop.neg:
                 g.strength *= (1.0 - inh)         # an assertion and its denial compete
         return f
+
+    # ------------------------------------------------------------------ time: forgetting and rehearsal
+    def advance(self, units: float) -> int:
+        """Time passes. Every trace loses strength with its own half-life (a trace that was re-read or recalled often has
+        a long one); traces that fall below ``prune_below`` are forgotten for good. Returns how many were forgotten."""
+        if units <= 0:
+            return 0
+        self.clock += units
+        gone = 0
+        for key in list(self.slots):
+            grp = self.slots[key]
+            for k in list(grp):
+                f = grp[k]
+                f.strength *= 0.5 ** (units / (f.stab or self.base_stab))
+                if f.strength < self.prune_below:
+                    del grp[k]
+                    gone += 1
+            if not grp:
+                del self.slots[key]
+        if gone:
+            self.reverse.clear()
+            for (subj, rel), grp in self.slots.items():
+                for f in grp.values():
+                    self.reverse.setdefault((rel, f.obj), set()).add(subj)
+                    if is_instance(f.obj):
+                        self.reverse.setdefault((rel, lemma_of(f.obj)), set()).add(subj)
+        return gone
+
+    def rehearse(self, facts: List[Fact]) -> None:
+        """Using a fact to answer a question strengthens it (the testing effect) and slows its forgetting."""
+        for f in facts:
+            if f.source == "dictionary" or not f.stab:
+                continue
+            f.strength += self.recall_boost
+            f.stab = min(self.base_stab * 25, f.stab * 1.25)
+            f.reh += 1
+            f.t = self.t
 
     @staticmethod
     def _slot_rel(rel: str) -> str:
@@ -240,6 +294,15 @@ class SemanticMemory:
                           via="arithmetic rules")
         if q.kind == "define":
             return self._define(q.subj)
+        if q.kind == "actions":
+            fs = [f for r, f in self.facts_about(q.subj) if r not in NON_ACTIONS and not f.neg and f.strength > 0.15]
+            best: Dict[str, Fact] = {}                          # one fact per verb: the object if there is one, else a place
+            for f in fs:
+                v = f.rel.split("_")[0]
+                cur = best.get(v)
+                if cur is None or (("_" in cur.rel) and ("_" not in f.rel)):
+                    best[v] = f
+            return Answer(items=list(best.values())[:4], confidence=1.0 if best else 0.0)
         if q.kind == "opposite":
             ants = []
             for f in self._collect(q.subj, ["antonym"], ""):
@@ -277,6 +340,11 @@ class SemanticMemory:
             return self._rank(fs, now)
         rels = self._rels_for(q)
         fs = self._collect(q.subj, rels, q.answer_type)
+        if not fs and q.answer_type == "sound":                  # "what did they say ?" may have a non-sound answer
+            fs = self._collect(q.subj, rels, "")
+        if not fs and not q.rel.endswith("_@") and q.rel not in ("@loc", "attr", "have", "can"):
+            preps = sorted({r for (s, r) in self.slots if s == q.subj and r.startswith(q.rel + "_")})
+            fs = self._collect(q.subj, preps, "") if preps else []        # "what did he jump ?" -> jumped on the pail
         ans = self._rank(fs, now)
         if ans.items:
             return ans
@@ -298,6 +366,7 @@ class SemanticMemory:
         rivals = sum(f.score(now) for f in fs[1:] if f.rel == fs[0].rel and f.obj != fs[0].obj
                      and self._conflict(f.rel, fs[0], f.obj, f.qty))
         conf = top / (top + rivals) if top + rivals > 0 else 0.0
+        conf *= 0.5 + 0.5 * min(1.0, fs[0].strength)          # a faded trace is a less certain one
         return Answer(items=fs, confidence=conf)
 
     def _define(self, x: str) -> Answer:
@@ -358,20 +427,22 @@ class SemanticMemory:
         return sum(len(g) for g in self.slots.values())
 
     def to_dict(self) -> dict:
-        return dict(t=self.t, entities=self.ents.to_dict(), defs=self.defs, subj_num=self.subj_num, proper=sorted(self.proper),
+        return dict(t=self.t, clock=self.clock, entities=self.ents.to_dict(), defs=self.defs, subj_num=self.subj_num, proper=sorted(self.proper),
                     facts=[dict(subj=s, rel=r, **{k: getattr(f, k) for k in
-                                                  ("obj", "qty", "neg", "strength", "count", "t", "told", "source", "obj_num")})
+                                                  ("obj", "qty", "neg", "strength", "count", "t", "told", "source", "obj_num", "stab", "reh", "tense")})
                            for (s, r), grp in self.slots.items() for f in grp.values()])
 
     def from_dict(self, d: dict) -> None:
         self.t, self.defs, self.subj_num = d["t"], d["defs"], d["subj_num"]
         self.proper = set(d.get("proper", []))
+        self.clock = d.get("clock", 0.0)
         self.ents.from_dict(d.get("entities", {}))
         self.slots.clear()
         self.reverse.clear()
         for x in d["facts"]:
             f = Fact(obj=x["obj"], qty=x["qty"], neg=x["neg"], strength=x["strength"], count=x["count"], t=x["t"],
-                     told=x["told"], source=x["source"], obj_num=x["obj_num"], rel=x["rel"])
+                     told=x["told"], source=x["source"], obj_num=x["obj_num"], rel=x["rel"],
+                     stab=x.get("stab", self.base_stab), reh=x.get("reh", 0), tense=x.get("tense", "present"))
             self.slots.setdefault((x["subj"], x["rel"]), {})[(f.obj, f.qty, f.neg)] = f
             self.reverse.setdefault((x["rel"], f.obj), set()).add(x["subj"])
             if is_instance(f.obj):

@@ -21,16 +21,21 @@ from __future__ import annotations
 
 import json
 import os
+import random
+import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
 from .comprehension import (END, NP, ClauseParser, Discourse, Prop, Query, Tok, number_word, tag_sentence, tokenize_cased)
 from .entities import is_instance, lemma_of
-from .reader import Reader
-from .lexicon import PL_DET, SG_DET, Lexicon, inflect_noun, inflect_verb
-from .semantic import SPATIAL, Answer, SemanticMemory
+from .notes import Note, NoteKeeper
+from .reader import Reader, clean_text
+from .lexicon import PL_DET, PRONOUNS, SG_DET, Lexicon, inflect_noun, inflect_verb
+from .semantic import NON_ACTIONS, SPATIAL, Answer, SemanticMemory
 
 VOWEL_SOUND = set("aeiou")
+NO_ARTICLE = {"something", "nothing", "everything", "anything", "everybody", "everyone", "somebody", "someone", "nobody",
+              "himself", "herself", "itself", "themselves", "myself", "yourself", "here", "there", "home"}
 
 
 @dataclass
@@ -66,7 +71,8 @@ def a_an(word: str) -> str:
 
 class Workspace:
     def __init__(self, model=None, lexicon: Optional[Lexicon] = None, memory: Optional[SemanticMemory] = None,
-                 instances: bool = True, real_text: bool = True) -> None:
+                 instances: bool = True, real_text: bool = True, take_notes: bool = True, style: str = "plain",
+                 seed: int = 0) -> None:
         self.lex = lexicon or Lexicon.default()
         self.model = model
         if model is not None and getattr(model, "lexicon", None) is None:
@@ -76,6 +82,11 @@ class Workspace:
         self.seen: Set[str] = set()                 # lemmas already processed (so each is looked up once)
         self.entities: Set[str] = set()             # every subject/object lemma stored so far
         self.pending: Optional[str] = None          # a word the user has been asked to explain
+        self.notes = NoteKeeper(self.lex)           # sentences kept word for word, indexed by content words
+        self.take_notes = take_notes                # write down every sentence that is read
+        self.style = style                          # "plain": one fixed wording | "varied": own-words answers
+        self.rng = random.Random(seed)
+        self.turn_time = 0.0                        # time units that pass with every chat turn (0 = time stands still)
         self.real_text = real_text                  # v2 reader: clauses, relatives, infinitives, dialogue, names
         self.aliases: Dict[str, str] = {}           # "buster" -> "buster bear"
         self.instances = instances                  # separate entities for separate mentions ("a red ball", "tom's ball")
@@ -85,15 +96,21 @@ class Workspace:
     def new_document(self) -> None:
         self.discourse = Discourse()
 
-    def read(self, text: str, told: bool = True, learn_lm: bool = True) -> ReadReport:
+    def read(self, text: str, told: bool = True, learn_lm: bool = True, take_notes: Optional[bool] = None) -> ReadReport:
         """Read statements: look up unknown words, understand each sentence, store what it says."""
         rep = ReadReport()
+        text = clean_text(text)
+        if take_notes if take_notes is not None else self.take_notes:
+            for raw in re.split(r"(?<=[.!?])\s+", text.strip()):
+                if raw and not raw.rstrip().endswith("?"):
+                    self.notes.add(raw, "told" if told else "read")
         for sent in self._sentences(text):
             end = sent[-1].text if sent and sent[-1].text in END else "."
             if end == "?":
                 rep.questions += 1
                 continue
             tag_sentence(sent, self.lex)
+            self._mark_names(sent)
             self._meet_words(sent, rep)
             if self.real_text:
                 props = Reader(self.lex, self.discourse, self._ents(), self.aliases).read(sent)
@@ -118,10 +135,23 @@ class Workspace:
 
     @staticmethod
     def _sentences(text: str) -> List[List[Tok]]:
-        out, cur = [], []
-        for t in tokenize_cased(text):
+        """Sentences, with quotation marks respected: a full stop inside "..." does not end the sentence unless the quote
+        closes right there ("Come and get it." But ...)."""
+        out, cur, inside = [], [], False
+        toks = tokenize_cased(text)
+        for i, t in enumerate(toks):
             cur.append(t)
-            if t.text in END:
+            if t.text == '"':
+                inside = not inside
+                if not inside and len(cur) > 1 and cur[-2].text in END and (i + 1 >= len(toks) or toks[i + 1].cap):
+                    out.append(cur)
+                    cur = []
+                continue
+            if t.text in END and not inside:
+                nxt = toks[i + 1] if i + 1 < len(toks) else None
+                if nxt is not None and nxt.text == '"' and not (i + 2 < len(toks) and toks[i + 2].text.isalpha() and
+                                                                  not toks[i + 2].cap):
+                    continue          # the closing quote belongs to this sentence
                 out.append(cur)
                 cur = []
         if cur:
@@ -175,33 +205,147 @@ class Workspace:
 
     # ================================================================== questions
     def ask(self, question: str, prefer: Optional[Dict[str, str]] = None) -> Reply:
+        """Answer from memory; if the memory has faded or has nothing, look in the notes; then (if on) put it in own words."""
+        reply, q, ans = self._ask_core(question, prefer)
+        if reply.kind == "answer" and ans is not None and not reply.note.startswith("answered by"):
+            self.mem.rehearse(ans.items[:1])                       # using a fact keeps it
+        if reply.kind in ("idk", "not_understood") and self.take_notes and len(self.notes):
+            noted = self._from_notes(question, q, reply)
+            if noted is not None:
+                reply = noted
+        if self.model is not None and (reply.kind == "not_understood" or (reply.kind == "idk" and q is not None and q.kind == "fact")):
+            a = self.model.ask(question, abstain=True)       # diffuse knowledge learned from bulk reading
+            if a.strip() != "i do not know .":
+                reply = Reply(a, kind="answer", note="answered by the language model alone")
+        if self.model is not None and reply.kind == "answer":
+            reply.fluency = self.fluency(reply.text)
+        if reply.kind in ("answer", "idk") and self.style == "varied":
+            reply = self._vary(reply)
+        return reply
+
+    def _ask_core(self, question: str, prefer: Optional[Dict[str, str]] = None):
         toks = tokenize_cased(question)
         tag_sentence(toks, self.lex)
+        self._mark_names(toks)
         unk = [t for t in toks if t.tag in ("N", "PN", "ADJ", "V") and not t.known and not self._known(t.lemma)]
         if unk:
             w = unk[0].lemma
             self.pending = w
-            return Reply(f"i do not know the word {w} . what is it ?", kind="unknown_word", note=w)
+            return Reply(f"i do not know the word {w} . what is it ?", kind="unknown_word", note=w), None, None
         parser = ClauseParser(self.lex, self.discourse, self._ents(), creating=False, prefer=prefer)
         q = parser.parse_question(toks)
+        if q is not None:
+            q.subj = self.aliases.get(q.subj, q.subj) if q.subj_proper or q.subj in self.aliases else q.subj
         if q is not None and parser.ambiguous:
-            return self._clarify(question, parser.ambiguous[0])
+            return self._clarify(question, parser.ambiguous[0]), q, None
         self.clarifying = None
         if q is None:
-            if self.model is not None:
-                a = self.model.ask(question, abstain=True)
-                if a.strip() != "i do not know .":
-                    return Reply(a, kind="answer", note="answered by the language model alone")
-            return Reply("i did not understand the question .", kind="not_understood")
+            return Reply("i did not understand the question .", kind="not_understood"), None, None
         ans = self.mem.query(q)
-        reply = self._realise(q, ans)
-        if reply.kind == "idk" and self.model is not None and q.kind == "fact":
-            a = self.model.ask(question, abstain=True)       # diffuse knowledge learned from bulk reading
-            if a.strip() != "i do not know .":
-                return Reply(a, kind="answer", note="answered by the language model alone")
-        if self.model is not None and reply.kind == "answer":
-            reply.fluency = self.fluency(reply.text)
-        return reply
+        return self._realise(q, ans), q, ans
+
+    def _mark_names(self, toks: List[Tok]) -> None:
+        """Names met while reading ("Buster Bear", then "buster") are names in a lowercase question too."""
+        known = set(self.mem.proper) | set(self.aliases) | set(self.aliases.values())
+        if not known:
+            return
+        i = 0
+        while i < len(toks):
+            for span in (3, 2, 1):
+                name = " ".join(t.text for t in toks[i:i + span])
+                if i + span <= len(toks) and name in known:
+                    for t in toks[i:i + span]:
+                        t.tag, t.known = "PN", True
+                    i += span - 1
+                    break
+            i += 1
+
+    # ---- notes: when memory fails, look it up, read it again, and so remember it
+    def _from_notes(self, question: str, q: Optional[Query], reply: Reply) -> Optional[Reply]:
+        hits = self.notes.search(question, k=3)
+        if not hits:
+            return None
+        best, score = hits[0]
+        if q is not None and q.kind != "define":
+            saved = self.discourse
+            self.discourse = Discourse()
+            try:
+                self.read(best.text, told=False, learn_lm=False, take_notes=False)     # read it again: recollection
+            finally:
+                self.discourse = saved
+            ans = self.mem.query(q)
+            again = self._realise(q, ans)
+            if again.kind == "answer":
+                self.notes.recalled(best, question)
+                self.mem.rehearse(ans.items[:1])
+                return Reply("my notes remind me : " + again.text, kind="answer", confidence=again.confidence,
+                             inferred=again.inferred, note=f"from my notes : {best.text}")
+            reply.note = f"related note : {best.text}"
+            return None
+        texts = " ".join(n.text if n.text.rstrip().endswith((".", "!", "?")) else n.text + " ." for n, _ in hits[:2])
+        self.notes.recalled(best, question)
+        return Reply("my notes say : " + texts, kind="answer", confidence=score, note="from my notes")
+
+    def note(self, text: str) -> Optional[Note]:
+        """Take a note on purpose: it is kept word for word and also read, so it is understood as well as written down."""
+        n = self.notes.add(text, "note")
+        self.read(text, told=True, learn_lm=True, take_notes=False)
+        return n
+
+    def recall(self, cue: str, k: int = 3) -> List[Note]:
+        return [n for n, _ in self.notes.search(cue, k=k, min_cover=0.3, require_anchors=False)]
+
+    # ---- time: forgetting and sleep
+    def sleep(self, units: float = 1.0, replay: bool = True, consolidate_lm: bool = False) -> Dict[str, int]:
+        """Time passes. Facts and notes fade (each with a half-life that grows with use); during sleep the most recently used
+        notes are replayed, which refreshes the facts they hold; the language layer can consolidate its categories."""
+        forgot = self.mem.advance(units)
+        dropped = self.notes.advance(units)
+        replayed = 0
+        if replay and len(self.notes):
+            recent = sorted((n for n in self.notes.notes.values() if n.recalls), key=lambda n: -n.last)[:5]
+            saved = self.discourse
+            self.discourse = Discourse()
+            try:
+                for n in recent:
+                    self.read(n.text, told=False, learn_lm=False, take_notes=False)
+                    replayed += 1
+            finally:
+                self.discourse = saved
+        if consolidate_lm and self.model is not None:
+            self.model.consolidate()
+        return dict(facts_forgotten=forgot, notes_dropped=dropped, notes_replayed=replayed)
+
+    # ---- own-words answers
+    _FRAMES = {
+        "sure": ["{s}", "{s}", "i know that {s0} .", "as far as i know , {s0} ."],
+        "think": ["i think {s0} .", "i believe {s0} .", "if i remember right , {s0} ."],
+        "unsure": ["i vaguely remember that {s0} .", "i am not sure , but i think {s0} ."],
+    }
+
+    def _vary(self, reply: Reply) -> Reply:
+        """Say the same thing in another way: the wording follows how sure the memory is, and among the candidates the
+        language layer's fluency (plus a little randomness, so repeated questions do not get identical replies) decides."""
+        if reply.kind != "answer" or reply.note.startswith(("answered by", "from my notes")) or reply.text.startswith(
+                ("yes", "no", "my notes", "i think", "which")):
+            return reply
+        t = reply.text.strip()
+        if not t.endswith(" .") or t.count(" . ") or " : " in t:
+            return reply
+        s0 = t[:-2]
+        s0 = s0[0].lower() + s0[1:] if s0 else s0
+        c = reply.confidence
+        mood = "sure" if c >= 0.8 else ("think" if c >= 0.45 else "unsure")
+        cands = [f.format(s=t, s0=s0) for f in self._FRAMES[mood]]
+        cands = list(dict.fromkeys(cands))
+        if self.model is not None:
+            scored = [(self.model.logprob(x) / max(1, len(x.split())), x) for x in cands]
+            top = sorted(scored, reverse=True)[:2]
+            pick = self.rng.choice(top)[1] if len(top) > 1 and top[0][0] - top[1][0] < 0.6 else top[0][1]
+        else:
+            pick = self.rng.choice(cands)
+        return Reply(pick, kind=reply.kind, confidence=reply.confidence, inferred=reply.inferred, note=reply.note,
+                     fluency=reply.fluency)
 
     # ---- which one? (several instances of the same noun)
     def _label(self, eid: str, among: List[str]) -> str:
@@ -257,6 +401,8 @@ class Workspace:
 
     # ================================================================== realisation (grammar rules)
     def _np(self, lemma: str, number: str = "sg", proper: bool = False) -> str:
+        if lemma in PRONOUNS or lemma in NO_ARTICLE:
+            return lemma
         if is_instance(lemma) and lemma in self.mem.ents.items:
             same = [e.id for e in self.mem.ents.of(self.mem.ents.items[lemma].lemma)]
             return self._label(lemma, same) if len(same) > 1 else "the " + self.mem.ents.items[lemma].lemma
@@ -277,6 +423,8 @@ class Workspace:
         return f"{a_an(words[0])} {' '.join(words)}"
 
     def _obj_np(self, lemma: str, number: str, qty: str = "") -> str:
+        if lemma in PRONOUNS or lemma in NO_ARTICLE:
+            return lemma
         if is_instance(lemma) and lemma in self.mem.ents.items:
             return self._inst_desc(lemma)
         if number == "pl":
@@ -298,7 +446,19 @@ class Workspace:
             a, op, b = q.expr
             word = {"+": "plus", "-": "minus", "*": "times"}[op]
             return Reply(f"{number_word(a)} {word} {number_word(b)} is {number_word(int(ans.text_hint))} .", confidence=1.0)
+        if q.kind == "actions":
+            if not ans.items:
+                return idk
+            sub = self._np(q.subj, "pl" if q.num == "pl" else "sg", q.subj_proper)
+            vps = [self._vp(f, q.num == "pl") for f in ans.items]
+            tail = ""
+            if len(vps) > 1:
+                tail = (" , " + " , ".join(vps[1:-1]) if len(vps) > 2 else "") + " and " + vps[-1]
+            return Reply(f"{sub} {vps[0]}{tail} .", confidence=ans.confidence)
         if q.kind == "define":
+            facts = self._about(q.subj, q.num == "pl", q.subj_proper)
+            if facts and (q.subj in self.mem.proper or not (ans.chain or ans.text_hint)):
+                return Reply(facts, confidence=1.0, note="from what i have read")
             if not ans.chain and not ans.text_hint:
                 return idk
             parts = []
@@ -343,8 +503,10 @@ class Workspace:
             return Reply(f"{hedge}{sub} {'have' if pl else 'has'} {qty} {noun} .", confidence=conf, inferred=ans.inferred, note=note)
         rel = q.rel
         if rel == "attr":
-            be = "are" if pl else "is"
+            be = ("were" if pl else "was") if top.tense == "past" else ("are" if pl else "is")
             return Reply(f"{hedge}{sub} {be} {top.obj} .", confidence=conf, inferred=ans.inferred, note=note)
+        if rel == "say" and not top.obj:
+            return idk
         if rel == "say":
             return Reply(f"{hedge}{sub} {self._verb('say', 'pl' if pl else 'sg')} {top.obj} .", confidence=conf, inferred=ans.inferred, note=note)
         if rel == "@loc" or rel in SPATIAL:
@@ -368,13 +530,44 @@ class Workspace:
                 parts = ' and '.join(self._inst_desc(f.obj) for f in things)
                 return Reply(f"{hedge}{sub} {'have' if pl else 'has'} {parts} .", confidence=conf)
             return Reply(f"{hedge}{sub} {'have' if pl else 'has'} {self._obj_np(top.obj, top.obj_num)} .", confidence=conf)
+        if "_" in top.rel and top.rel != rel and not rel.endswith("_@"):
+            verb, _, prep = top.rel.partition("_")
+            return Reply(f"{hedge}{sub} {self._verb(verb, 'pl' if pl else 'sg', past=top.tense == 'past')} {prep} "
+                         f"{self._obj_np(top.obj, 'sg')} .", confidence=conf, inferred=ans.inferred, note=note)
         # ordinary verb: the dog eats bones (list the strongest few)
         objs = [f for f in ans.items if f.obj][:3]
         if not objs:
             return idk
         parts = [self._obj_np(f.obj, f.obj_num) for f in objs]
-        return Reply(f"{hedge}{sub} {self._verb(rel, 'pl' if pl else 'sg')} {' and '.join(parts)} .", confidence=conf,
+        past = objs[0].tense == "past"
+        return Reply(f"{hedge}{sub} {self._verb(rel, 'pl' if pl else 'sg', past=past)} {' and '.join(parts)} .", confidence=conf,
                      inferred=ans.inferred, note=note)
+
+    def _vp(self, f, pl: bool) -> str:
+        """The verb phrase of one stored fact: 'ate it', 'jumped on the pail', 'sat'."""
+        verb, _, prep = f.rel.partition("_")
+        v = self._verb(verb, "pl" if pl else "sg", past=f.tense == "past")
+        if not f.obj:
+            return v
+        obj = self._obj_np(f.obj, f.obj_num)
+        return f"{v} {prep + ' ' if prep and prep != '@' else ''}{obj}".strip()
+
+    def _about(self, subj: str, pl: bool, proper: bool) -> str:
+        """Everything stored about a thing, as a few sentences: what it is, what it is like, what it did."""
+        facts = self.mem.facts_about(subj)
+        sub = self._np(subj, "pl" if pl else "sg", proper)
+        out = []
+        isa = [f for r, f in facts if r == "isa" and not f.neg and f.strength > 0.15][:1]
+        if isa:
+            out.append(f"{sub} {'are' if pl else 'is'} {'' if pl else a_an(isa[0].obj) + ' '}{isa[0].obj} .")
+        attrs = [f.obj for r, f in facts if r == "attr" and not f.neg and f.strength > 0.15][:3]
+        if attrs:
+            out.append(f"{sub} {'are' if pl else 'is'} {' and '.join(attrs)} .")
+        acts = self.mem.query(Query("actions", subj=subj)).items[:3]
+        if acts:
+            vps = [self._vp(f, pl) for f in acts]
+            out.append(f"{sub} {vps[0]}{(' , ' + ' , '.join(vps[1:-1]) if len(vps) > 2 else '')}{' and ' + vps[-1] if len(vps) > 1 else ''} .")
+        return " ".join(out)
 
     def _yesno_reply(self, q: Query, ans: Answer) -> Reply:
         pl = q.num == "pl"
@@ -402,6 +595,8 @@ class Workspace:
     # ================================================================== chat entry point
     def converse(self, text: str) -> Reply:
         t = text.strip()
+        if self.turn_time > 0:
+            self.sleep(self.turn_time, replay=False)
         if self.clarifying is not None and not t.endswith("?"):
             r = self._answer_clarification(t)
             if r is not None:
@@ -417,7 +612,9 @@ class Workspace:
         if rep.unknown_words:
             bits.append("not in my dictionary : " + ", ".join(rep.unknown_words) + " ; say for example ' a " + rep.unknown_words[0] + " is a ... ' to teach me")
         extra = f" ( {' ; '.join(bits)} )" if bits else ""
-        return Reply(f"ok , learned it .{extra}", kind="learned", note=f"{len(rep.props)} facts")
+        ack = "ok , learned it ." if self.style != "varied" else self.rng.choice(
+            ["ok , learned it .", "got it .", "i will remember that .", "noted .", "i see , thank you ."])
+        return Reply(f"{ack}{extra}", kind="learned", note=f"{len(rep.props)} facts")
 
     # ================================================================== a word, explained
     def describe(self, word: str) -> Dict[str, object]:
@@ -562,13 +759,20 @@ class Workspace:
     def preload(self, statements: List[str], told: bool = False) -> int:
         """Store a batch of known facts (no language-model learning); returns how many propositions were stored."""
         n = 0
-        for st in statements:
-            n += len(self.read(st, told=told, learn_lm=False).props)
+        base = self.mem.base_stab
+        self.mem.base_stab = base * 20            # schooling: background knowledge is long-term, it fades far more slowly
+        try:
+            for st in statements:
+                n += len(self.read(st, told=told, learn_lm=False, take_notes=False).props)
+        finally:
+            self.mem.base_stab = base
         return n
 
     def save(self, directory: str) -> None:
         os.makedirs(directory, exist_ok=True)
         self.mem.save(os.path.join(directory, "memory.json"))
+        with open(os.path.join(directory, "notes.json"), "w", encoding="utf-8") as f:
+            json.dump(self.notes.to_dict(), f)
         with open(os.path.join(directory, "lexicon_learned.json"), "w") as f:
             json.dump(self.lex.learned_entries(), f, indent=1)
         with open(os.path.join(directory, "workspace.json"), "w") as f:
@@ -578,6 +782,10 @@ class Workspace:
 
     def load(self, directory: str) -> None:
         self.mem.load(os.path.join(directory, "memory.json"))
+        p = os.path.join(directory, "notes.json")
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as f:
+                self.notes.from_dict(json.load(f))
         p = os.path.join(directory, "lexicon_learned.json")
         if os.path.exists(p):
             with open(p) as f:

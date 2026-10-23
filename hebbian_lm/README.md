@@ -1,5 +1,7 @@
 # Hebbian Semantic Workspace
 
+> **This is v2 (branch `hebbian-v2`).** What changed from the working v1 and the new numbers are in **[V2.md](V2.md)**; v1 is unchanged on branch `hebbian-approach`.
+
 A language system that is **not a transformer** and learns without backpropagation. It reads text, looks up words it
 has never met in a dictionary, turns sentences into stored facts, answers questions from those facts as grammatical
 sentences, says "I do not know" when it does not, and keeps learning from whatever you tell it.
@@ -38,7 +40,7 @@ It combines four parts, each doing the job it is good at:
 pip install -r requirements.txt     # numpy
 python train.py                     # ~20 s; trains and prints a full report
 python chat.py                      # talk to it
-python -m unittest discover -s tests   # 58 tests
+python -m unittest discover -s tests   # 78 tests
 ```
 
 ## A real session (offline dictionary)
@@ -117,10 +119,10 @@ What each mechanism of the language layer contributes (switched off one at a tim
   recognisably parts of speech (`come go make get eat look take …` / `came went thought looked saw ran heard took …`).
   Generation is locally fluent and globally incoherent (*"it was the first one that was ever made in america ."* but also
   *"she was very pretty , and ever ever ."*). Run `python real_text.py`.
-* **Comprehension on real fiction is limited.** On 300 random short sentences of one Gutenberg book, the rule engine extracts
-  at least one proposition from **58%**, and by eye (not measured rigorously) roughly half of those are right. Contractions
-  and names are handled; dialogue, relative clauses, passives, idioms and long sentences are not. It is built for plain
-  declarative English, not novels.
+* **Comprehension on real fiction** (v1 numbers; v2 improves them, see [V2.md](V2.md)): on 300 random short sentences of one
+  Gutenberg book the v1 rule engine extracted at least one proposition from **58%**. On 51 hand-labelled sentences v1 found 28–35%
+  of the labelled propositions, v2's clause reader 81–94% (with WordNet; 63–68% with the bundled dictionary). Still a rule
+  system: ellipsis, nested relatives, idioms and long-distance dependencies are not handled.
 
 ## What did not work, and what is still weak
 
@@ -156,6 +158,7 @@ What each mechanism of the language layer contributes (switched off one at a tim
 | `hebbian_lm/curriculum.py`, `evaluate.py`, `evaluate_workspace.py` | the synthetic world and every benchmark above |
 | `train.py`, `chat.py`, `real_text.py`, `fetch_wordnet.py` | train + report, chat, real-English check, optional WordNet download |
 | `hebbian_lm/entities.py` | the instance registry (`ball#1`, owner, qualifiers) |
-| `tests/` | 58 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
+| `hebbian_lm/reader.py`, `notes.py`, `evaluate_real.py` | v2: clause reader for real text, note keeper, real-text evaluation |
+| `tests/` | 78 tests (tokenizer, curriculum integrity, locality of learning, grammar, categories, facts, correction, abstention, morphology, parsing, memory, workspace scenarios, grammar repair, persistence) |
 
 No GitHub Actions or separate build branch was needed: training takes about 20 s and the tests about 25 s on a plain CPU.

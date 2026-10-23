@@ -15,7 +15,14 @@ What you type:
     /lm <question>               ->  ask the language layer alone (its diffuse knowledge)
     /say <start>                 ->  the language layer continues a sentence;   /free [n]  free sentences
     /classes                     ->  the word categories the language layer invented for itself
+    /note <text>                 ->  take a note on purpose (kept word for word and also understood)
+    /notes [cue]                 ->  look in the notes (all of them if no cue)
+    /sleep [n]                   ->  time passes (n units, default 100): facts and notes fade, used ones last longer
+    /forget <note id>            ->  throw a note away
     /save [dir]  /stats  /help  /quit
+
+Every sentence you tell it is also written down as a note. When it cannot remember a fact it looks in the notes, reads
+the note again and so remembers. Each chat turn also lets a little time pass (see --time-per-turn).
 
 If you use a word the dictionary cannot explain, it says so; explain it in a sentence ("a flib is an animal .") and
 it learns the word.
@@ -40,11 +47,15 @@ def main() -> None:
     ap.add_argument("--dictionary", choices=["auto", "mini", "wordnet"], default="auto",
                     help="auto = WordNet if data/wordnet exists, else the bundled mini dictionary")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--style", choices=["plain", "varied"], default="varied",
+                    help="varied = answers in its own words (wording follows how sure the memory is)")
+    ap.add_argument("--time-per-turn", type=float, default=1.0, help="time units that pass with every chat turn (0 = none)")
     args = ap.parse_args()
     if not os.path.exists(os.path.join(args.workspace, "memory.json")):
         sys.exit(f"{args.workspace}/ not found. Build one first:  python train.py")
     lex = Lexicon() if args.dictionary == "mini" else (Lexicon(wordnet="data/wordnet") if args.dictionary == "wordnet" else Lexicon.default())
     ws = Workspace.open(args.workspace, lexicon=lex)
+    ws.style, ws.turn_time = args.style, args.time_per_turn
     rng = np.random.default_rng(args.seed)
     src = "WordNet + mini dictionary" if lex.wn else "mini dictionary"
     print(f"workspace loaded ({src}): {ws.mem.size()} stored facts, language layer: {ws.model.stats() if ws.model else 'none'}")
@@ -65,7 +76,8 @@ def main() -> None:
             elif cmd == "help":
                 print(__doc__)
             elif cmd == "stats":
-                print(f"facts: {ws.mem.size()}   words seen: {len(ws.seen)}   language layer: {ws.model.stats() if ws.model else None}")
+                print(f"facts: {ws.mem.size()}   notes: {len(ws.notes)}   time: {ws.mem.clock:.0f}   words seen: {len(ws.seen)}   "
+                      f"language layer: {ws.model.stats() if ws.model else None}")
             elif cmd == "word" and rest:
                 for k, v in ws.describe(rest).items():
                     print(f"  {k}: {v}")
@@ -91,6 +103,20 @@ def main() -> None:
             elif cmd == "classes" and ws.model:
                 for k, words in ws.model.categories().items():
                     print(f"  unit {k:2d} ({len(words):3d} words): {' '.join(words[:14])}")
+            elif cmd == "note" and rest:
+                n = ws.note(rest)
+                print(f"ai> noted ( note {n.id if n else '-'} )")
+            elif cmd == "notes":
+                found = ws.notes.search(rest, k=8, min_cover=0.3, require_anchors=False) if rest else \
+                    [(n, ws.notes.retention(n)) for n in list(ws.notes.notes.values())[-12:]]
+                print("  no notes" if not found else "")
+                for n, sc in found:
+                    print(f"  [{n.id}] {n.text}   (remembered {ws.notes.retention(n):.2f}, used {n.recalls}x)")
+            elif cmd == "sleep":
+                units = float(rest) if rest.replace(".", "", 1).isdigit() else 100.0
+                print("  ", ws.sleep(units, consolidate_lm=True))
+            elif cmd == "forget" and rest.isdigit():
+                print("  forgotten" if ws.notes.forget(int(rest)) else "  no such note")
             elif cmd == "save":
                 ws.save(rest or args.workspace)
                 print(f"saved to {rest or args.workspace}")
