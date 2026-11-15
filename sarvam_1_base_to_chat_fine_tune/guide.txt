@@ -1,0 +1,45 @@
+
+pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 \
+--index-url https://download.pytorch.org/whl/cu121
+
+pip install "trl==0.15.2"
+
+pip install --upgrade "protobuf>=5.28.0,<6" sentencepiece
+
+
+python3 train_instruct.py
+
+python3 train_openhermes_sft.py
+
+python3 merge_sarvam_openhermes.py
+
+cd ~/sarvam-local-build/llama.cpp
+
+python3 convert_hf_to_gguf.py \
+  ../sarvam-1-openhermes-merged \
+  --outfile ../sarvam-1-openhermes-bf16.gguf \
+  --outtype bf16
+
+
+(venv) seenuvasan@seenuvasan-Victus-by-HP-Gaming-Laptop-15-fa2xxx:~/sarvam-local-build/llama.cpp$ ./build/bin/llama-quantize \
+  ../sarvam-1-openhermes-bf16.gguf \
+  ../sarvam-1-openhermes-Q4_K_M.gguf \
+  Q4_K_M
+
+
+
+cd ~/sarvam-local-build
+
+cat > Modelfile.openhermes <<'EOF'
+FROM ./sarvam-1-openhermes-Q4_K_M.gguf
+PARAMETER temperature 0.7
+PARAMETER num_ctx 2048
+EOF
+(venv) seenuvasan@seenuvasan-Victus-by-HP-Gaming-Laptop-15-fa2xxx:~/sarvam-local-build$ ollama create sarvam-openhermes -f Modelfile.openhermes
+
+
+
+ollama run sarvam-openhermes
+
+(venv) seenuvasan@seenuvasan-Victus-by-HP-Gaming-Laptop-15-fa2xxx:~/sarvam-local-build$ hf upload seenuvasanfoss/Sarvam-1-Seenu-Chat \
+  ./sarvam-1-openhermes-merged .

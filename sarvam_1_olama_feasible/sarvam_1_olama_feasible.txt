@@ -1,0 +1,189 @@
+echo "=== OS ===" && lsb_release -d && echo "=== RAM ===" && free -h && echo "=== GPU ===" && lspci | grep -i vga
+
+sudo apt update && sudo apt install -y git cmake build-essential python3-pip python3-venv
+mkdir -p ~/sarvam-local-build && cd ~/sarvam-local-build
+python3 -m venv venv && source venv/bin/activate
+pip install --upgrade pip huggingface_hub
+
+
+nvcc --version
+Command 'nvcc' not found, but can be installed with:
+sudo apt install nvidia-cuda-toolkit
+(venv) seenuvasan@seenuvasan-Victus-by-HP-Gaming-Laptop-15-fa2xxx:~/sarvam-local-build$ sudo apt install nvidia-cuda-toolkit
+
+but not instelled need to install
+
+nvidia-smi
+
+hf auth login
+
+
+hf download sarvamai/sarvam-1 --local-dir ./sarvam-1-official
+
+sudo apt update && sudo apt install -y cmake build-essential
+git clone --depth 1 https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+pip install -r requirements/requirements-convert_hf_to_gguf.txt
+
+----for GPU
+
+cmake -B build -DGGML_CUDA=ON
+cmake --build build --config Release -j $(nproc)
+cd ~/sarvam-local-build
+
+
+----for cpu
+
+cd ~/sarvam-local-build/llama.cpp
+rm -rf build
+cmake -B build
+cmake --build build --config Release -j $(nproc)
+cd ~/sarvam-local-build
+
+
+----1. Convert Official Safetensors to BF16 GGUF
+
+python3 ./llama.cpp/convert_hf_to_gguf.py ./sarvam-1-official \
+  --outfile ./sarvam-1-bf16.gguf \
+  --outtype bf16
+
+
+
+
+
+
+
+
+  cat << 'EOF' > ./calibration.txt
+Artificial intelligence models optimized for Indian languages require high token efficiency across scripts. Multilingual language models bridge the gap between low-resource and high-resource language processing, enabling seamless communication, document summarization, and machine translation across diverse linguistic landscapes. Foundation models trained on massive multilingual datasets demonstrate remarkable zero-shot cross-lingual transfer capabilities, allowing users to query and retrieve information effectively.
+
+தமிழ் மொழி உலகின் தொன்மையான செம்மொழிகளில் ஒன்றாகும். செம்மொழித் தகுதி பெற்ற தமிழ் மொழி பல்லாயிரம் ஆண்டுகள் பழமையான இலக்கிய வளமும் இலக்கணச் செழுமையும் கொண்டது. கணினி அறிவியல் மற்றும் செயற்கை நுண்ணறிவு துறையில் புதிய மாற்றங்கள் உருவாகி வருகின்றன. தமிழ்நாட்டில் தொழில்நுட்பக் கல்வி மற்றும் ஆராய்ச்சிப் பணிகள் மிகச் சிறப்பாக வளர்ந்து வருகின்றன. திறந்த மூல மென்பொருள் மற்றும் செயற்கை நுண்ணறிவு சமூகங்கள் நமது பிராந்தியத்தில் மிகப்பெரிய தாக்கத்தை ஏற்படுத்தி வருகின்றன.
+
+भारत में बहुभाषी प्राकृतिक भाषा प्रसंस्करण तेजी से विकसित हो रहा है। कृत्रिम बुद्धिमत्ता और मशीन लर्निंग तकनीकें आज हर क्षेत्र में अपनी महत्वपूर्ण भूमिका निभा रही हैं। हिंदी और अन्य भारतीय भाषाएं डिजिटल युग में तेजी से आगे बढ़ रही हैं। सरकार और निजी संस्थान मिलकर स्थानीय भाषाओं में तकनीकी समाधान विकसित करने पर जोर दे रहे हैं।
+
+Natural language processing systems must preserve semantic fidelity across low-resource and high-resource Indic languages alike. Tokenizers optimized for Indic scripts ensure higher compression ratios, lower sequence lengths, and faster inference speeds for real-world applications. Edge computing and localized deployments enable privacy-preserving architectures for enterprise applications.
+
+கல்வி, மருத்துவம் மற்றும் தொழில்நுட்பத் துறைகளில் செயற்கை நுண்ணறிவின் பயன்பாடு நாளுக்கு நாள் அதிகரித்து வருகிறது. இயந்திர கற்றல் வழிமுறைகள் மற்றும் ஆழமான கற்றல் கட்டமைப்புகள் இன்றைய நவீன காலத்தின் தேவைகளாக மாறிவிட்டன. திறந்த மூல செயற்கை நுண்ணறிவு கருவிகள் மாணவர்களுக்கும் டெவலப்பர்களுக்கும் மிகவும் பயனுள்ளதாக உள்ளன.
+
+The development of sovereign foundational models for India empowers regional innovation, local enterprise applications, and culturally aligned AI solutions. By training on curated corpora consisting of trillions of tokens, modern architectures achieve superior comprehension across multiple domains. Open-weight models drive academic research and commercial innovation alike.
+
+технологии искусственного интеллекта продолжают стремительно развиваться по всему миру, открывая новые возможности для автоматизации и анализа данных в различных отраслях промышленности и научных исследований. Современные модели обработки естественного языка обеспечивают высокую точность перевода и генерации текста.
+EOF
+
+# Run llama-imatrix with explicit smaller context chunks if needed
+./llama.cpp/build/bin/llama-imatrix \
+  -m ./sarvam-1-bf16.gguf \
+  -f ./calibration.txt \
+  -o ./sarvam-1-imatrix.gguf \
+  -c 512 --chunks 10
+
+
+
+
+
+
+  ./llama.cpp/build/bin/llama-quantize --imatrix ./sarvam-1-imatrix.gguf \
+  ./sarvam-1-bf16.gguf ./sarvam-1-Q4_K_M.gguf Q4_K_M
+
+./llama.cpp/build/bin/llama-quantize --imatrix ./sarvam-1-imatrix.gguf \
+  ./sarvam-1-bf16.gguf ./sarvam-1-Q8_0.gguf Q8_0
+
+
+
+
+
+
+  cat << 'EOF' > ./Modelfile
+FROM ./sarvam-1-Q4_K_M.gguf
+TEMPLATE "{{ .Prompt }}"
+PARAMETER num_ctx 8192
+PARAMETER num_gpu 99
+EOF
+
+ollama create sarvam-1-base -f ./Modelfile
+
+
+
+
+ollama run sarvam-1-base "what is ai"
+
+
+
+
+
+
+--- push
+
+
+cd ~/sarvam-local-build
+source venv/bin/activate
+
+python3 - <<'PY'
+from huggingface_hub import HfApi
+from pathlib import Path
+
+api = HfApi()
+repo_id = "seenuvasanfoss/sarvam-1-GGUF"
+
+api.create_repo(repo_id=repo_id, repo_type="model", exist_ok=True)
+
+readme = "\n".join([
+    "---",
+    "base_model: sarvamai/sarvam-1",
+    "tags:",
+    "- gguf",
+    "- llama-cpp",
+    "- indic",
+    "- tamil",
+    "- hindi",
+    "- ollama",
+    "---",
+    "",
+    "# sarvam-1-GGUF",
+    "",
+    "Quantized GGUF builds of Sarvam-1.",
+    "",
+    "## Files",
+    "- sarvam-1-Q4_K_M.gguf",
+    "- sarvam-1-Q8_0.gguf",
+    "- sarvam-1-imatrix.gguf",
+    "- Modelfile",
+    "",
+    "## Ollama",
+    "",
+    "Run:",
+    "",
+    "    ollama run hf.co/seenuvasanfoss/sarvam-1-GGUF:Q4_K_M",
+    "",
+])
+
+Path("README.md").write_text(readme, encoding="utf-8")
+
+files = [
+    "README.md",
+    "sarvam-1-Q4_K_M.gguf",
+    "sarvam-1-Q8_0.gguf",
+    "sarvam-1-imatrix.gguf",
+    "Modelfile",
+]
+
+for filename in files:
+    if not Path(filename).is_file():
+        raise FileNotFoundError(f"Missing file: {filename}")
+
+api.upload_folder(
+    folder_path=".",
+    repo_id=repo_id,
+    repo_type="model",
+    allow_patterns=files,
+)
+
+print(f"Upload complete: https://huggingface.co/{repo_id}")
+PY
+
+
+------ done 
+
+
+
+
